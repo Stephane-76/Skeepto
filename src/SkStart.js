@@ -14,7 +14,7 @@ class SkStart extends Component {
           </div>
           <div className="col-sm-4">
             <h3>Lazard Bank</h3>        
-            <p>Private bank backing Skeema</p>
+            <p>Private bank backing Skeepto</p>
           </div>
           <div className="col-sm-4">
             <h3>Sker project</h3>

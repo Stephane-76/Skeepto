@@ -20,6 +20,7 @@ import {
   setRibbonVisible,
   subscribeRibbonVisible,
 } from "./SkRibbonVisible.js";
+import { isDesktop } from "../desktop/SkDesktopMode.js";
 
 class SkSpControlPanel extends SkComponent {
   constructor(props) {
@@ -225,15 +226,17 @@ class SkSpControlPanel extends SkComponent {
           >
             {ribbonVisible ? '▲' : '▼'}
           </button>
-          <button
-            type="button"
-            className="SkPanelCloseBtn SkSpControlPanel-close"
-            title="Close and open Virtual disk"
-            aria-label="Close and open Virtual disk"
-            onClick={this.goToVirtualDisk}
-          >
-            ×
-          </button>
+          {!isDesktop && (
+            <button
+              type="button"
+              className="SkPanelCloseBtn SkSpControlPanel-close"
+              title="Close and open Virtual disk"
+              aria-label="Close and open Virtual disk"
+              onClick={this.goToVirtualDisk}
+            >
+              ×
+            </button>
+          )}
         </div>
         </div>
         {this.state.editSyntaxError ? (

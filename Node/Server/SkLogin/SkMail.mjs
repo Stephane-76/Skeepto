@@ -75,7 +75,7 @@ function sendViaMsmtp({ from, to, subject, text }) {
 /**
  * Send a plain-text email.
  * Uses SMTP_* env when SMTP_HOST is set, otherwise the system msmtp config
- * (Linux VPS relay to mail.skeema.fr).
+ * (Linux VPS relay to mail.skeepto.app).
  */
 export async function sendMail({ to, subject, text, from }) {
   const recipient = String(to || '').trim()
