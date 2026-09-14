@@ -1,10 +1,20 @@
-# Skeepto — Next-Generation Spreadsheet
+# Skeepto
 
-**High-Performance C++ Engine + Modern React UI + Real-Time Collaboration**
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![WebAssembly](https://img.shields.io/badge/engine-C%2B%2B20%20WASM-654FF0?logo=webassembly&logoColor=white)](https://webassembly.org/)
+[![React](https://img.shields.io/badge/UI-React-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 
-Skeepto is a professional spreadsheet built on a C++20 engine compiled to
-WebAssembly for maximum performance, a modern React interface, and real-time
-collaboration.
+A **real spreadsheet engine**, not a React grid widget. The engine is written
+once in **C++20**, compiled to **WebAssembly**, and runs in the **browser**
+(local editing) and on **Node.js** (headless calc, XLSX/PDF, AI). Same binary,
+no JavaScript rewrite.
+
+![Skeepto spreadsheet](./docs/budget-sker.png)
+
+![Virtual disk — Excel workbook ready to convert](./docs/virtual-disk-xlsx.png)
+
+Import a `.xlsx` on the virtual disk, convert it, then open the `.sker`. See
+[`docs/Import-Excel.md`](./docs/Import-Excel.md).
 
 ## Why Skeepto?
 

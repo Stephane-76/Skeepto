@@ -3,6 +3,23 @@
   "version": "0.1.0",
   "license": "MIT",
   "private": true,
+  "description": "Professional spreadsheet: C++20 engine compiled to WebAssembly, React UI, same binary in the browser and Node.js. Self-hosted, Excel import, Electron desktop.",
+  "homepage": "https://github.com/Stephane-76/Skeepto",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Stephane-76/Skeepto.git"
+  },
+  "keywords": [
+    "spreadsheet",
+    "webassembly",
+    "wasm",
+    "react",
+    "cpp",
+    "self-hosted",
+    "excel",
+    "xlsx",
+    "electron"
+  ],
   "main": "electron/main.js",
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
