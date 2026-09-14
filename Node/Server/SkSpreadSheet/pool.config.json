@@ -1,0 +1,88 @@
+{
+  "environments": {
+    "development": {
+      "minInstances": 1,
+      "maxInstances": 3,
+      "instanceTimeout": 300000,
+      "healthCheckInterval": 120000,
+      "loadBalancingStrategy": "round-robin",
+      "description": "Development environment - minimal instances for testing"
+    },
+    "staging": {
+      "minInstances": 2,
+      "maxInstances": 5,
+      "instanceTimeout": 450000,
+      "healthCheckInterval": 90000,
+      "loadBalancingStrategy": "least-busy",
+      "description": "Staging environment - balanced for testing"
+    },
+    "production": {
+      "minInstances": 5,
+      "maxInstances": 15,
+      "instanceTimeout": 600000,
+      "healthCheckInterval": 60000,
+      "loadBalancingStrategy": "least-busy",
+      "description": "Production environment - balanced performance and reliability"
+    },
+    "high-performance": {
+      "minInstances": 10,
+      "maxInstances": 50,
+      "instanceTimeout": 900000,
+      "healthCheckInterval": 30000,
+      "loadBalancingStrategy": "least-used",
+      "description": "High-performance environment - maximum throughput"
+    },
+    "memory-optimized": {
+      "minInstances": 2,
+      "maxInstances": 5,
+      "instanceTimeout": 180000,
+      "healthCheckInterval": 90000,
+      "loadBalancingStrategy": "round-robin",
+      "description": "Memory-optimized environment - minimal memory usage"
+    }
+  },
+  "loadBalancingStrategies": {
+    "round-robin": {
+      "description": "Distribute requests evenly across instances in sequence",
+      "bestFor": "Simple load distribution, predictable patterns"
+    },
+    "least-busy": {
+      "description": "Route requests to instances with lowest usage count",
+      "bestFor": "Balanced workload distribution, performance optimization"
+    },
+    "least-used": {
+      "description": "Route requests to instances used least recently",
+      "bestFor": "Preventing instance starvation, time-based distribution"
+    }
+  },
+  "monitoring": {
+    "healthCheckInterval": 60000,
+    "alertThresholds": {
+      "successRate": 95,
+      "responseTime": 5000,
+      "errorRate": 5
+    },
+    "metrics": [
+      "totalInstances",
+      "activeInstances",
+      "totalRequests",
+      "successfulRequests",
+      "failedRequests",
+      "averageResponseTime",
+      "instanceHealth"
+    ]
+  },
+  "instanceManagement": {
+    "autoScaling": {
+      "enabled": true,
+      "scaleUpThreshold": 0.8,
+      "scaleDownThreshold": 0.2,
+      "cooldownPeriod": 300000
+    },
+    "cleanup": {
+      "enabled": true,
+      "maxIdleTime": 600000,
+      "maxErrorCount": 10
+    }
+  }
+}

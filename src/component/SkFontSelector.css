@@ -1,0 +1,297 @@
+/* ============================================================================
+   SkFontSelector.css
+   Modern Font Selector Styling similar to Google Spreadsheet
+   ============================================================================ */
+@import './SkComponent.css';
+
+.Sk-font-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 16px;
+    background: var(--sk-dialog-bg);
+    color: var(--sk-dialog-text);
+    border-radius: 0;
+    box-shadow: none;
+    min-width: 280px;
+    font-family: var(--sk-font-family);
+}
+
+/* Font Selector Container */
+.Sk-font-selector-container,
+.Sk-size-selector-container {
+    display: flex;
+    margin: 3px;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.Sk-font-selector-label,
+.Sk-size-selector-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--sk-dialog-label);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Dropdown Buttons */
+.Sk-font-selector-button,
+.Sk-size-selector-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--sk-dialog-input-bg);
+    border: 1px solid var(--sk-dialog-input-border);
+    border-radius: var(--sk-radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 40px;
+    font-size: 16px;
+    color: var(--sk-dialog-text);
+}
+
+/* Fixed width for font selector button */
+.Sk-font-selector-button {
+    width: 160px; /* Fixed width for consistent layout */
+    min-width: 160px;
+    max-width: 160px;
+}
+
+/* Fixed width for size selector button */
+.Sk-size-selector-button {
+    width: 80px; /* Fixed width for size selector */
+    min-width: 80px;
+    max-width: 80px;
+}
+
+.font-selector-button:hover,
+.size-selector-button:hover {
+    border-color: var(--sk-accent-google);
+    box-shadow: 0 1px 3px var(--sk-accent-google-ring);
+}
+
+.font-selector-button:active,
+.size-selector-button:active {
+    background: var(--sk-surface-hover);
+}
+
+.Sk-font-selector-button {
+    font-family: inherit;
+}
+
+.Sk-font-name,
+.Sk-size-value {
+    flex: 1;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 20px); /* Leave space for dropdown arrow */
+}
+
+.Sk-dropdown-arrow {
+    color: var(--sk-dialog-label);
+    font-size: 10px;
+    margin-left: 8px;
+    transition: transform 0.2s ease;
+}
+
+.Sk-font-selector-dropdown.open .Sk-dropdown-arrow,
+.Sk-size-selector-dropdown.open .Sk-dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* Font Dropdown */
+.Sk-font-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: auto;
+    background: var(--sk-dialog-bg);
+    color: var(--sk-dialog-text);
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: var(--sk-radius-sm);
+    box-shadow: var(--sk-dialog-shadow);
+    z-index: 1000;
+    max-height: 300px;
+    overflow: hidden;
+    margin-top: 4px;
+    min-width: 200px;
+    width: max-content;
+    max-width: 300px;
+}
+
+.Sk-font-dropdown-header {
+    padding: 12px;
+    border-bottom: 1px solid var(--sk-dialog-border);
+    background: var(--sk-dialog-input-bg);
+}
+
+.Sk-font-search-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--sk-dialog-input-border);
+    border-radius: var(--sk-radius-sm);
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: var(--sk-dialog-input-color);
+    background: var(--sk-dialog-bg);
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.font-search-input:focus {
+    border-color: var(--sk-dialog-accent);
+}
+
+.Sk-font-category-select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--sk-dialog-input-border);
+    border-radius: var(--sk-radius-sm);
+    font-size: 14px;
+    color: var(--sk-dialog-input-color);
+    background: var(--sk-dialog-bg);
+    outline: none;
+    cursor: pointer;
+}
+
+.font-category-select:focus {
+    border-color: var(--sk-accent-google);
+}
+
+/* Font List */
+.Sk-font-list {
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 6px 0;
+}
+
+.Sk-font-option {
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    font-size: 16px;
+    border-bottom: 1px solid var(--sk-dialog-border);
+}
+
+.font-option:hover {
+    background-color: var(--sk-dialog-secondary);
+}
+
+.Sk-font-option.selected {
+    background-color: rgba(0, 120, 212, 0.25);
+    color: var(--sk-dialog-accent);
+    font-weight: 500;
+}
+
+.Sk-font-option.applied:not(.selected),
+.Sk-size-option.applied:not(.selected) {
+    font-weight: 600;
+}
+
+.font-option:last-child {
+    border-bottom: none;
+}
+
+.Sk-no-fonts-found {
+    padding: 20px;
+    text-align: center;
+    color: var(--sk-dialog-label);
+    font-style: italic;
+    font-size: 16px;
+}
+
+/* Size Dropdown */
+.Sk-size-dropdown {
+    position: absolute;
+    top: 100%;
+    left: auto;
+    right: 0;
+    background: var(--sk-dialog-bg);
+    color: var(--sk-dialog-text);
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: var(--sk-radius-sm);
+    box-shadow: var(--sk-dialog-shadow);
+    z-index: 1000;
+    max-height: 280px;
+    overflow-y: auto;
+    margin-top: 4px;
+    min-width: 120px;
+    width: max-content;
+    max-width: 150px;
+}
+
+/* Portaled dropdowns escape ribbon overflow clipping (SkSpContainerColumn). */
+.Sk-font-dropdown--portal,
+.Sk-size-dropdown--portal {
+    position: fixed;
+    z-index: 2000;
+}
+
+.Sk-size-dropdown--portal {
+    max-height: min(280px, calc(100vh - 16px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.Sk-size-list {
+    padding: 6px 0;
+}
+
+.Sk-size-option {
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    font-size: 16px;
+    border-bottom: 1px solid var(--sk-dialog-border);
+}
+
+.size-option:hover {
+    background-color: var(--sk-dialog-secondary);
+}
+
+.Sk-size-option.selected {
+    background-color: rgba(0, 120, 212, 0.25);
+    color: var(--sk-dialog-accent);
+    font-weight: 500;
+}
+
+.size-option:last-child {
+    border-bottom: none;
+}
+
+/* Dropdown Positioning */
+.Sk-font-selector-dropdown,
+.Sk-size-selector-dropdown {
+    position: relative;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .Sk-font-selector {
+        min-width: 250px;
+        padding: 12px;
+    }
+    
+    .font-selector-button,
+    .Sk-size-selector-button {
+        min-height: 36px;
+        font-size: 14px;
+    }
+    
+    .Sk-font-selector-button {
+        width: 140px;
+        min-width: 140px;
+        max-width: 140px;
+    }
+    
+    .Sk-size-selector-button {
+        width: 70px;
+        min-width: 70px;
+        max-width: 70px;
+    }
+}

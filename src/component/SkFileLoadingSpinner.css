@@ -1,0 +1,250 @@
+@import './SkComponent.css';
+
+.SkFileLoadingSpinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: var(--sk-surface-overlay);
+  backdrop-filter: blur(5px);
+}
+
+.SkFileLoadingSpinner__container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+  padding: 30px;
+  width: 360px;
+  max-width: min(360px, calc(100vw - 48px));
+  box-sizing: border-box;
+  background: var(--sk-surface);
+  border-radius: var(--sk-radius-xl);
+  box-shadow: var(--sk-shadow-xl);
+  border: 1px solid var(--sk-neutral-300);
+}
+
+.SkFileLoadingSpinner__icon {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.SkFileLoadingSpinner__file-icon {
+  font-size: 40px;
+  z-index: 2;
+  position: relative;
+}
+
+.SkFileLoadingSpinner__spinner-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 3px solid var(--sk-neutral-300);
+  border-top: 3px solid var(--sk-status-info);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.SkFileLoadingSpinner__text {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  min-height: 3.5em;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--sk-neutral-700);
+  text-align: center;
+  font-family: var(--sk-font-family);
+  line-height: 1.4;
+}
+
+.SkFileLoadingSpinner__label {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  word-break: break-word;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Reserved width so animated dots never resize the card. */
+.SkFileLoadingSpinner__dots {
+  flex: 0 0 1.35em;
+  width: 1.35em;
+  text-align: left;
+  white-space: pre;
+}
+
+.SkFileLoadingSpinner__progress-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.SkFileLoadingSpinner__progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--sk-neutral-300);
+  border-radius: var(--sk-radius-sm);
+  overflow: hidden;
+  position: relative;
+}
+
+.SkFileLoadingSpinner__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--sk-status-info), var(--sk-status-success));
+  border-radius: var(--sk-radius-sm);
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.SkFileLoadingSpinner__progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+.SkFileLoadingSpinner__progress-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sk-status-info);
+  font-family: var(--sk-font-family);
+  font-variant-numeric: tabular-nums;
+  min-width: 3.5ch;
+  text-align: center;
+}
+
+/* Size variants */
+.SkFileLoadingSpinner--small .SkFileLoadingSpinner__container {
+  padding: 20px;
+  gap: 20px;
+  width: 300px;
+  max-width: min(300px, calc(100vw - 48px));
+}
+
+.SkFileLoadingSpinner--small .SkFileLoadingSpinner__icon {
+  width: 60px;
+  height: 60px;
+}
+
+.SkFileLoadingSpinner--small .SkFileLoadingSpinner__file-icon {
+  font-size: 30px;
+}
+
+.SkFileLoadingSpinner--small .SkFileLoadingSpinner__text {
+  font-size: 16px;
+  min-height: 3.2em;
+}
+
+.SkFileLoadingSpinner--small .SkFileLoadingSpinner__progress-container {
+  width: 100%;
+}
+
+.SkFileLoadingSpinner--large .SkFileLoadingSpinner__container {
+  padding: 40px;
+  gap: 30px;
+  width: 400px;
+  max-width: min(400px, calc(100vw - 48px));
+}
+
+.SkFileLoadingSpinner--large .SkFileLoadingSpinner__icon {
+  width: 100px;
+  height: 100px;
+}
+
+.SkFileLoadingSpinner--large .SkFileLoadingSpinner__file-icon {
+  font-size: 50px;
+}
+
+.SkFileLoadingSpinner--large .SkFileLoadingSpinner__text {
+  font-size: 20px;
+  min-height: 3.6em;
+}
+
+.SkFileLoadingSpinner--large .SkFileLoadingSpinner__progress-container {
+  width: 100%;
+}
+
+/* Animations */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .SkFileLoadingSpinner__container {
+    padding: 20px;
+    gap: 20px;
+    width: min(320px, calc(100vw - 32px));
+    max-width: min(320px, calc(100vw - 32px));
+  }
+  
+  .SkFileLoadingSpinner__icon {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .SkFileLoadingSpinner__file-icon {
+    font-size: 30px;
+  }
+  
+  .SkFileLoadingSpinner__text {
+    font-size: 16px;
+    min-height: 3.2em;
+  }
+  
+  .SkFileLoadingSpinner__progress-container {
+    width: 100%;
+  }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .SkFileLoadingSpinner {
+    background: rgba(33, 37, 41, 0.95);
+  }
+  
+  .SkFileLoadingSpinner__container {
+    background: #2c3034;
+    border-color: #495057;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+  
+  .SkFileLoadingSpinner__text {
+    color: #f8f9fa;
+  }
+  
+  .SkFileLoadingSpinner__progress-bar {
+    background: #495057;
+  }
+}

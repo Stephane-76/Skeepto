@@ -1,0 +1,188 @@
+/* =============================================================================
+ * SkTextRotation
+ * Interactive dial used to configure cell text rotation.
+ * ============================================================================= */
+
+.SkTextRotation {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: fit-content;
+    max-width: 100%;
+    padding: 8px;
+    font: var(--sk-input-font);
+    color: var(--sk-color);
+    user-select: none;
+}
+
+.SkTextRotation.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* -- Dial ------------------------------------------------------------------- */
+.SkTextRotation-dial-wrap {
+    flex: 0 0 auto;
+}
+
+.SkTextRotation-dial {
+    position: relative;
+    border-radius: 50%;
+    background: var(--sk-color-background-tool);
+    border: 1px solid var(--sk-color-border);
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+/* Rotating handle: a thin bar pinned to the left pivot */
+.SkTextRotation-handle {
+    position: absolute;
+    top: 50%;
+    left: 18%;
+    width: 44%;
+    height: 2px;
+    background: var(--sk-accent-color-active);
+    transform-origin: 0% 50%;
+    pointer-events: none;
+}
+.SkTextRotation-handle::after {
+    content: '';
+    position: absolute;
+    right: -4px;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--sk-accent-color-active);
+}
+
+/* Pivot point */
+.SkTextRotation-center {
+    position: absolute;
+    left: 18%;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--sk-color-border);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+/* Tick marks around the dial */
+.SkTextRotation-tick {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--sk-color-background);
+    border: 1px solid var(--sk-color-border);
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    box-sizing: border-box;
+}
+.SkTextRotation-tick:hover {
+    background: var(--sk-accent-color-hover);
+}
+.SkTextRotation-tick.selected {
+    background: var(--sk-accent-color-active);
+    border-color: var(--sk-accent-color-active);
+}
+
+/* Preview text inside the dial */
+.SkTextRotation-preview {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform-origin: 50% 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.9rem;
+    color: var(--sk-color);
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.SkTextRotation-vertical-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+}
+.SkTextRotation-vertical-preview span {
+    display: block;
+}
+
+/* -- Controls --------------------------------------------------------------- */
+.SkTextRotation-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 110px;
+}
+
+.SkTextRotation-vertical-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 72px;
+    padding: 4px;
+    background: var(--sk-color-background-tool);
+    border: 1px solid var(--sk-color-border);
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--sk-color);
+}
+.SkTextRotation-vertical-btn:hover:not(:disabled) {
+    background: var(--sk-accent-color-hover);
+}
+.SkTextRotation-vertical-btn.active {
+    background: var(--sk-accent-color-active);
+    color: var(--sk-button-color);
+    border-color: var(--sk-accent-color-active);
+}
+.SkTextRotation-vertical-btn:disabled {
+    cursor: default;
+    opacity: 0.5;
+}
+
+.SkTextRotation-vertical-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+    font-size: 0.85rem;
+    gap: 1px;
+}
+
+.SkTextRotation-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.SkTextRotation-input-row label {
+    font-size: 0.85rem;
+    color: var(--sk-color);
+}
+
+.SkTextRotation-input {
+    width: 56px;
+    padding: var(--sk-input-padding);
+    font: var(--sk-input-font);
+    color: var(--sk-input-color);
+    background: var(--sk-input-color-background);
+    border: 1px solid var(--sk-color-border);
+    border-radius: 3px;
+    text-align: right;
+}
+
+.SkTextRotation-input:disabled {
+    background: var(--sk-input-disabled-background);
+    color: var(--sk-input-disabled-color);
+}
+
+.SkTextRotation-input-unit {
+    font-size: 0.9rem;
+    color: var(--sk-color);
+}

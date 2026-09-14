@@ -1,0 +1,287 @@
+/* =============================================================================
+   SkBorder Component Styles
+   ============================================================================= */
+@import './SkComponent.css';
+
+.SkBorder {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 8px;
+    background: var(--sk-dialog-bg);
+    color: var(--sk-dialog-text);
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: var(--sk-dialog-radius);
+    box-shadow: var(--sk-dialog-shadow);
+    min-width: 0;
+    width: max-content;
+    max-width: min(calc(100vw - 24px), 248px);
+    box-sizing: border-box;
+    /* Inline SkColor palette (10×20px + gaps) + colorSelector padding */
+    --sk-border-control-width: calc(10 * 20px + 9 * 4px + 4px);
+}
+
+/* Right panel (SkSpStackPanel): flush fill, no popup chrome. */
+.SkBorder--embedded {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 8px;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: var(--sk-color-background-tool);
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+
+.SkBorder-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.SkBorder-buttons {
+    display: grid;
+    grid-template-columns: repeat(5, 24px);
+    gap: 2px;
+    width: max-content;
+}
+
+/* Border-type icons: SVG strokes are black by default — force light on dark popup */
+.SkBorder-buttons .SkMenuElement {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    min-width: 24px;
+    margin: 0;
+    padding: 2px;
+    border: 1px solid transparent;
+    border-radius: var(--sk-radius-sm);
+    cursor: pointer;
+    background-color: var(--sk-dialog-input-bg);
+    box-sizing: border-box;
+}
+
+.SkBorder-buttons .SkMenuElement .SkMenuElement {
+    margin: 0;
+    min-height: 0;
+    min-width: 0;
+    padding: 0;
+}
+
+.SkBorder-buttons .SkMenuElement:hover,
+.SkBorder-buttons .SkMenuSelected {
+    background-color: var(--sk-dialog-secondary);
+    border-color: var(--sk-dialog-border);
+    color: var(--sk-dialog-text);
+}
+
+.SkBorder-buttons .SkSvg {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    color: var(--sk-dialog-text);
+    background-color: transparent;
+}
+
+.SkBorder-buttons .SkSvg path,
+.SkBorder-buttons .SkSvg line,
+.SkBorder-buttons .SkSvg rect {
+    stroke: currentColor !important;
+}
+
+.SkBorder-buttons .SkSvg:hover {
+    background-color: transparent;
+    box-shadow: none;
+}
+
+.SkBorder-styleSelector,
+.SkBorder-sizeSelector,
+.SkBorder-colorSelector {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    width: var(--sk-border-control-width);
+    max-width: 100%;
+    align-self: flex-start;
+    box-sizing: border-box;
+}
+
+.SkBorder-styleButton,
+.SkBorder-sizeButton {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px;
+    background: var(--sk-dialog-input-bg);
+    border: 1px solid var(--sk-dialog-input-border);
+    border-radius: var(--sk-radius-sm);
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--sk-dialog-text);
+    transition: all 0.2s ease;
+    width: 100%;
+    justify-content: space-between;
+    min-height: 24px;
+    box-sizing: border-box;
+}
+
+.SkBorder-styleButton:hover,
+.SkBorder-sizeButton:hover {
+    background: var(--sk-dialog-secondary);
+    border-color: var(--sk-dialog-accent);
+}
+
+.SkBorder-styleButton:active,
+.SkBorder-sizeButton:active {
+    background: var(--sk-surface-active);
+    transform: translateY(1px);
+}
+
+.SkBorder-stylePreview,
+.SkBorder-sizePreview {
+    display: inline-block;
+    min-width: 20px;
+    text-align: center;
+    font-family: var(--sk-font-family);
+    font-weight: bold;
+}
+
+.SkBorder-styleLabel,
+.SkBorder-sizeLabel {
+    font-size: 11px;
+    color: var(--sk-dialog-label);
+    flex-grow: 1;
+    text-align: left;
+}
+
+.SkBorder-dropdownArrow {
+    font-size: 8px;
+    color: var(--sk-dialog-label);
+    transition: transform 0.2s ease;
+}
+
+.SkBorder-styleDropdown,
+.SkBorder-sizeDropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    background: var(--sk-dialog-bg);
+    color: var(--sk-dialog-text);
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: var(--sk-radius-sm);
+    box-shadow: var(--sk-dialog-shadow);
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 2px;
+}
+
+.SkBorder-styleOption,
+.SkBorder-sizeOption {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid var(--sk-neutral-f0);
+}
+
+.SkBorder-styleOption:last-child,
+.SkBorder-sizeOption:last-child {
+    border-bottom: none;
+}
+
+.SkBorder-styleOption:hover,
+.SkBorder-sizeOption:hover {
+    background: var(--sk-dialog-secondary);
+}
+
+.SkBorder-colorSelector {
+    justify-content: flex-start;
+    padding: 2px;
+    background: var(--sk-dialog-input-bg);
+    border-radius: var(--sk-radius-sm);
+}
+
+.SkBorder-colorSelector .SkColor--inline {
+    width: 100%;
+    gap: 4px;
+}
+
+.SkBorder-colorSelector .SkColor--inline .SkColor__custom-input {
+    width: 28px;
+    height: 22px;
+}
+
+.SkBorder-colorSelector .SkColor--inline .SkColor__custom-text {
+    width: 72px;
+    padding: 2px 6px;
+    font-size: 11px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .SkBorder {
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px;
+        min-width: 250px;
+    }
+    
+    .SkBorder-buttons {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 3px;
+    }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+    .SkBorder {
+        background: #2d2d2d;
+        border-color: #404040;
+        color: #ffffff;
+    }
+    
+    .SkBorder-styleButton,
+    .SkBorder-sizeButton {
+        background: #3d3d3d;
+        border-color: #555;
+        color: #ffffff;
+    }
+    
+    .SkBorder-styleButton:hover,
+    .SkBorder-sizeButton:hover {
+        background: #4d4d4d;
+        border-color: var(--sk-accent-google);
+    }
+    
+    .SkBorder-styleLabel,
+    .SkBorder-sizeLabel {
+        color: #e0e0e0;
+    }
+    
+    .SkBorder-styleDropdown,
+    .SkBorder-sizeDropdown {
+        background: #3d3d3d;
+        border-color: #555;
+        color: #ffffff;
+    }
+    
+    .SkBorder-styleOption:hover,
+    .SkBorder-sizeOption:hover {
+        background: #4d4d4d;
+    }
+    
+    .SkBorder-colorSelector {
+        background: #3d3d3d;
+    }
+}

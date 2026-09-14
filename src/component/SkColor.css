@@ -1,0 +1,370 @@
+/* SkColor Component Styles */
+@import './SkComponent.css';
+
+.SkColor {
+    position: relative;
+    display: inline-block;
+    font-family: var(--sk-font, var(--sk-font-family));
+}
+
+/* Color preview button */
+.SkColor__preview {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    margin: 0;
+    border: 2px solid var(--sk-border-color, #ccc);
+    border-radius: 4px;
+    background-color: var(--sk-color-background, white);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.SkColor__preview:hover {
+    border-color: var(--sk-accent-color, #007bff);
+    box-shadow: var(--sk-shadow-sm);
+}
+
+.SkColor__preview:active {
+    transform: translateY(1px);
+}
+
+.SkColor__preview:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.SkColor__preview-inner {
+    width: 20px;
+    height: 20px;
+    border-radius: 2px;
+    border: 1px solid var(--sk-hairline-soft);
+}
+
+/* Dropdown menu */
+.SkColor__dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 2000;
+    background: var(--sk-dialog-bg);
+    color: var(--sk-dialog-text);
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: var(--sk-dialog-radius);
+    box-shadow: var(--sk-dialog-shadow);
+    padding: 16px;
+    min-width: 280px;
+    margin-top: 4px;
+    animation: Sk-fadeIn 0.2s ease;
+}
+
+/* Fixed position dropdown (for containers with overflow) */
+.SkColor__dropdown--fixed {
+    margin-top: 0;
+}
+
+@keyframes Sk-fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Color palette */
+.SkColor__palette {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+.SkColor__color-option {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--sk-hairline-soft);
+    border-radius: var(--sk-radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.SkColor__color-option:hover {
+    transform: scale(1.1);
+    box-shadow: var(--sk-shadow-option-hover);
+    z-index: 1;
+}
+
+.SkColor__color-option:active {
+    transform: scale(0.95);
+}
+
+/* Checkmark for selected color */
+.SkColor__checkmark {
+    width: 16px;
+    height: 16px;
+    filter: drop-shadow(0 1px 2px var(--sk-hairline-strong));
+}
+
+/* Divider */
+.SkColor__divider {
+    height: 1px;
+    background-color: var(--sk-dialog-border);
+    margin: 16px 0;
+}
+
+/* Custom color section */
+.SkColor__custom-section {
+    margin-bottom: 16px;
+}
+
+.SkColor__custom-toggle {
+    background: none;
+    border: none;
+    color: var(--sk-accent-color, #007bff);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 8px 0;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+
+.SkColor__custom-toggle:hover {
+    color: var(--sk-accent-color-hover, #0056b3);
+}
+
+.SkColor__custom-picker {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 12px;
+}
+
+.SkColor__color-input {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--sk-border-color, #ccc);
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.SkColor__color-text {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--sk-dialog-input-border);
+    border-radius: 4px;
+    font-family: var(--sk-font-family);
+    font-size: 14px;
+    color: var(--sk-dialog-input-color);
+    background: var(--sk-dialog-input-bg);
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.SkColor__color-text:focus {
+    border-color: var(--sk-dialog-accent);
+}
+
+/* Recent colors section */
+.SkColor__recent-section {
+    margin-top: 16px;
+}
+
+.SkColor__section-title {
+    margin-bottom: 8px;
+}
+
+.SkColor__section-title:not(.SkSpPanelTitle) {
+    font-size: 12px;
+    color: var(--sk-dialog-label);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Size variants */
+.SkColor--small .SkColor__preview {
+    width: 24px;
+    height: 24px;
+}
+
+.SkColor--small .SkColor__preview-inner {
+    width: 16px;
+    height: 16px;
+}
+
+.SkColor--large .SkColor__preview {
+    width: 40px;
+    height: 40px;
+}
+
+.SkColor--large .SkColor__preview-inner {
+    width: 24px;
+    height: 24px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .SkColor__dropdown {
+        min-width: 240px;
+        padding: 12px;
+    }
+    
+    .SkColor__palette {
+        grid-template-columns: repeat(8, 1fr);
+        gap: 3px;
+    }
+    
+    .SkColor__color-option {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .SkColor__dropdown {
+        background: #2d2d2d;
+        border-color: #444;
+        color: #fff;
+    }
+    
+    .SkColor__color-text {
+        background: #3d3d3d;
+        color: #fff;
+        border-color: #555;
+    }
+    
+    .SkColor__section-title {
+        color: #ccc;
+    }
+}
+
+/* Inline mode styles */
+.SkColor--inline {
+    display: flex;
+    flex-direction: column;
+    width: max-content;
+    max-width: 100%;
+    padding: 0;
+    gap: 8px;
+}
+
+.SkColor--inline .SkColor__palette {
+    display: grid;
+    grid-template-columns: repeat(10, 20px);
+    gap: 4px;
+    margin-bottom: 0;
+    width: max-content;
+}
+
+.SkColor--inline .SkColor__recent-section {
+    margin: 0;
+}
+
+.SkColor--inline .SkColor__section-title {
+    margin-bottom: 4px;
+    font-size: 11px;
+}
+
+.SkColor--inline .SkColor__custom-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+    margin-bottom: 0;
+}
+
+.SkColor--inline .SkColor__custom-section label:not(.SkSpPanelTitle) {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--sk-dialog-label);
+    margin-bottom: 0;
+}
+
+.SkColor--inline .SkColor__custom-section > div,
+.SkColor--inline .SkColor__custom-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.SkColor--inline .SkColor__custom-input {
+    width: 36px;
+    height: 28px;
+    border: 1px solid var(--sk-dialog-input-border);
+    border-radius: var(--sk-radius-sm);
+    cursor: pointer;
+    outline: none;
+    padding: 0;
+}
+
+.SkColor--inline .SkColor__custom-text {
+    padding: 4px 8px;
+    border: 1px solid var(--sk-dialog-input-border);
+    border-radius: var(--sk-radius-sm);
+    font-size: 12px;
+    color: var(--sk-dialog-input-color);
+    background: var(--sk-dialog-input-bg);
+    outline: none;
+    transition: border-color 0.2s ease;
+    width: 84px;
+}
+
+.SkColor--inline .SkColor__divider {
+    height: 1px;
+    background-color: var(--sk-dialog-border);
+    margin: 0;
+    width: 100%;
+}
+
+.SkColor--inline .SkColor__color-option {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    padding: 0;
+    border: 1px solid var(--sk-surface);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--sk-shadow-xs);
+    box-sizing: border-box;
+}
+
+.SkColor--inline .SkColor__color-option:hover {
+    transform: scale(1.1);
+    box-shadow: var(--sk-shadow-option-hover);
+    z-index: 1;
+}
+
+.SkColor--inline .SkColor__color-option:active {
+    transform: scale(0.95);
+}
+
+.SkColor--inline .SkColor__custom-text:focus {
+    border-color: var(--sk-dialog-accent);
+}
+
+.SkColor--inline .SkColor__checkmark {
+    width: 12px;
+    height: 12px;
+    filter: drop-shadow(0 1px 2px var(--sk-hairline-strong));
+}

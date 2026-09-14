@@ -1,0 +1,879 @@
+/* SkConditionalFormat Component Styles — Excel-like dark dialog */
+@import './SkComponent.css';
+
+.SkConditionalFormat {
+    position: relative;
+    display: inline-block;
+    font-family: var(--sk-font, var(--sk-font-family));
+}
+
+/* Preview button (toolbar) — flat like .SkSvg: no frame border */
+.SkConditionalFormat__preview {
+    position: relative;
+    width: var(--sk-svg-size, 24px);
+    height: var(--sk-svg-size, 24px);
+    min-width: var(--sk-svg-size, 24px);
+    margin: 1px;
+    padding: 3px;
+    border: none;
+    border-radius: 5%;
+    background-color: var(--sk-svg-color-background, transparent);
+    color: var(--sk-color-tool, #333);
+    cursor: pointer;
+    transition: opacity 0.3s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.SkConditionalFormat__preview:hover:not(:disabled) {
+    background-color: var(--sk-svg-color-background-hover, rgb(224, 240, 247));
+    box-shadow: 0 5px 15px var(--sk-hairline-strong);
+}
+
+.SkConditionalFormat__preview:active:not(:disabled) {
+    opacity: 0.85;
+}
+
+.SkConditionalFormat__preview:focus-visible {
+    outline: 2px solid var(--sk-accent-color, #007bff);
+    outline-offset: 2px;
+}
+
+.SkConditionalFormat__preview:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Embedded panel (right command panel) */
+.SkConditionalFormat--embedded {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+.SkConditionalFormat--embedded .SkConditionalFormat__panel {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    box-shadow: none;
+    overflow: hidden;
+}
+
+.SkConditionalFormat--embedded .SkConditionalFormat__content {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+}
+
+.SkConditionalFormat--embedded .SkConditionalFormat__new-rule {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Stacked edit panel (right command stack) — scroll body + pinned footer */
+.SkConditionalFormat--formOnly .SkConditionalFormat__panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+.SkConditionalFormat__new-rule--stacked {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.SkConditionalFormat__new-rule--stacked .SkConditionalFormat__header {
+    flex-shrink: 0;
+}
+
+.SkConditionalFormat__new-rule--stacked .SkConditionalFormat__scroll-body {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 8px 4px;
+}
+
+.SkConditionalFormat__new-rule--stacked .SkConditionalFormat__actions {
+    flex: 0 0 auto;
+    flex-shrink: 0;
+    margin-top: 0;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    padding: 8px;
+    border-top: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+.SkConditionalFormat__new-rule--stacked .SkConditionalFormat__field {
+    gap: 4px;
+}
+
+.SkConditionalFormat__new-rule--stacked .SkConditionalFormat__preview-container {
+    padding: 2px 0;
+}
+
+.SkConditionalFormat__new-rule--stacked .SkConditionalFormat__preview-canvas {
+    max-height: none;
+}
+
+.SkConditionalFormat__new-rule--stacked .SkConditionalFormat__section {
+    gap: 8px;
+}
+
+.SkConditionalFormat__new-rule--stacked .SkConditionalFormat__content {
+    flex: none;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+    padding: 4px 8px 8px;
+}
+
+.SkConditionalFormat__new-rule--stacked .SkConditionalFormat__grid,
+.SkConditionalFormat--inlineEdit .SkConditionalFormat__grid {
+    grid-template-columns: 68px minmax(112px, 1.15fr) minmax(100px, 1fr) 52px;
+    gap: 6px 6px;
+    min-width: min(100%, 320px);
+}
+
+.SkConditionalFormat__new-rule--stacked .SkConditionalFormat__grid select,
+.SkConditionalFormat--inlineEdit .SkConditionalFormat__grid select {
+    min-width: 0;
+    font-size: 12px;
+    padding: 5px 6px;
+}
+
+.SkConditionalFormat__grid-auto-value {
+    display: flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 5px 8px;
+    border: 1px solid var(--sk-dialog-input-border);
+    border-radius: 3px;
+    background: var(--sk-dialog-input-bg, #f3f4f6);
+    color: var(--sk-dialog-label);
+    font-size: 12px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.SkConditionalFormat__new-rule--stacked .SkConditionalFormat__style-row {
+    padding: 8px 8px 4px;
+}
+
+.SkConditionalFormat__new-rule--stacked .SkConditionalFormat__header {
+    padding: 8px 12px;
+}
+
+.SkConditionalFormat__new-rule--stacked .SkConditionalFormat__format-picker {
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+.SkConditionalFormat__new-rule--stacked .SkConditionalFormat__format-picker .SkColor__preview {
+    width: 100%;
+    height: 28px;
+}
+
+/* Inline edit inside SkSpConditionalFormat — matches named formulas panel */
+.SkConditionalFormat--inlineEdit {
+    width: 100%;
+}
+
+.SkConditionalFormat__new-rule--inline {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.SkConditionalFormat--inlineEdit .SkConditionalFormat__scroll-body {
+    flex: none;
+    max-height: 320px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0;
+}
+
+.SkConditionalFormat--inlineEdit .SkConditionalFormat__field label,
+.SkConditionalFormat--inlineEdit .SkConditionalFormat__field--panel label {
+    font-size: 11px;
+    color: var(--sk-row-label-color);
+    font-weight: 500;
+    margin-top: 6px;
+    margin-bottom: 2px;
+}
+
+.SkConditionalFormat--inlineEdit .SkConditionalFormat__field input[type="text"],
+.SkConditionalFormat--inlineEdit .SkConditionalFormat__field input[type="number"],
+.SkConditionalFormat--inlineEdit .SkConditionalFormat__field select,
+.SkConditionalFormat--inlineEdit .SkConditionalFormat__field textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.SkConditionalFormat--inlineEdit .SkConditionalFormat__content {
+    padding: 0;
+    max-height: none;
+    overflow: visible;
+}
+
+.SkConditionalFormat--inlineEdit .SkConditionalFormat__preview-container {
+    margin-top: 2px;
+    background: transparent;
+}
+
+.SkConditionalFormat--inlineEdit .SkConditionalFormat__preview-canvas {
+    max-height: none;
+    background: transparent;
+}
+
+.SkConditionalFormat--inlineEdit .SkConditionalFormat__format-picker {
+    margin-top: 2px;
+}
+
+.SkSpConditionalFormat-edit {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.SkSpConditionalFormat-edit .SkConditionalFormat--inlineEdit {
+    background: transparent;
+}
+
+/* Dropdown dialog */
+.SkConditionalFormat__dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    background: var(--sk-dialog-bg);
+    color: var(--sk-dialog-text);
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: var(--sk-dialog-radius);
+    box-shadow: var(--sk-dialog-shadow);
+    padding: 0;
+    min-width: 420px;
+    max-width: 520px;
+    margin-top: 4px;
+    animation: Sk-fadeIn 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+@keyframes Sk-fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Title bar */
+.SkConditionalFormat__header {
+    padding: 10px 14px;
+    background: var(--sk-dialog-title-bg);
+    color: var(--sk-dialog-title-color);
+    font-size: 14px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--sk-dialog-border);
+}
+
+/* Style selector row (Excel "Style:") */
+.SkConditionalFormat__style-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px 8px;
+}
+
+.SkConditionalFormat__style-row label {
+    flex-shrink: 0;
+    font-size: 13px;
+    color: var(--sk-dialog-label);
+}
+
+.SkConditionalFormat__style-row select {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Content area */
+.SkConditionalFormat__content {
+    padding: 8px 14px 12px;
+    max-height: 480px;
+    overflow-y: auto;
+    overflow-x: visible;
+}
+
+.SkConditionalFormat__section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Excel-style grid: Type | Value | Color */
+.SkConditionalFormat__grid {
+    display: grid;
+    grid-template-columns: 72px 1fr 1fr 1fr;
+    gap: 6px 8px;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.SkConditionalFormat__grid-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sk-dialog-label);
+    padding-bottom: 4px;
+}
+
+.SkConditionalFormat__grid-row-label {
+    font-size: 13px;
+    color: var(--sk-dialog-text);
+    white-space: nowrap;
+}
+
+.SkConditionalFormat__grid select,
+.SkConditionalFormat__grid input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.SkConditionalFormat__grid-color {
+    display: flex;
+    align-items: center;
+}
+
+.SkConditionalFormat__grid-color .SkColor {
+    width: 100%;
+}
+
+.SkConditionalFormat__grid-color .SkColor__preview {
+    width: 100%;
+    height: 22px;
+    min-height: 22px;
+    border: 1px solid var(--sk-dialog-input-border);
+    border-radius: 3px;
+}
+
+.SkConditionalFormat__grid-color .SkColor__preview-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 2px;
+    border: none;
+}
+
+/* Fields */
+.SkConditionalFormat__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow: visible;
+    position: relative;
+}
+
+.SkConditionalFormat__field label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sk-dialog-label);
+}
+
+.SkConditionalFormat__field input[type="text"],
+.SkConditionalFormat__field input[type="number"],
+.SkConditionalFormat__field select,
+.SkConditionalFormat__grid input,
+.SkConditionalFormat__grid select,
+.SkConditionalFormat__style-row select {
+    padding: 5px 8px;
+    border: 1px solid var(--sk-dialog-input-border);
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--sk-dialog-input-color);
+    background: var(--sk-dialog-input-bg);
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.SkConditionalFormat__field input[type="text"]:focus,
+.SkConditionalFormat__field input[type="number"]:focus,
+.SkConditionalFormat__field select:focus,
+.SkConditionalFormat__grid input:focus:not(:disabled),
+.SkConditionalFormat__grid select:focus,
+.SkConditionalFormat__style-row select:focus {
+    border-color: var(--sk-dialog-accent);
+}
+
+.SkConditionalFormat__field input:disabled,
+.SkConditionalFormat__grid input:disabled {
+    background: var(--sk-dialog-input-disabled-bg);
+    color: var(--sk-dialog-input-disabled-color);
+    cursor: not-allowed;
+}
+
+.SkConditionalFormat__field textarea {
+    padding: 6px 10px;
+    border: 1px solid var(--sk-dialog-input-border);
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: var(--sk-font-family);
+    color: var(--sk-dialog-input-color);
+    background: var(--sk-dialog-input-bg);
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s ease;
+    width: 100%;
+}
+
+.SkConditionalFormat__field textarea:focus {
+    border-color: var(--sk-dialog-accent);
+}
+
+.SkConditionalFormat__field input[type="checkbox"] {
+    margin-right: 6px;
+    cursor: pointer;
+}
+
+.SkConditionalFormat__field-row {
+    display: flex;
+    gap: 8px;
+}
+
+.SkConditionalFormat__field-row .SkConditionalFormat__field {
+    flex: 1;
+}
+
+/* Preview canvas — flat, no double border; matches stack edit background */
+.SkConditionalFormat__preview-container {
+    padding: 2px 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    display: flex;
+    justify-content: stretch;
+    align-items: center;
+}
+
+.SkConditionalFormat__preview-canvas {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* Cell format editor (Highlight / Custom formula rules) */
+.SkConditionalFormat__cell-format {
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: 4px;
+    overflow: visible;
+    background: var(--sk-dialog-input-bg);
+}
+
+.SkConditionalFormat__cell-format-preview {
+    padding: 10px 12px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--sk-dialog-border);
+}
+
+.SkConditionalFormat__cell-format-preview-text {
+    display: block;
+    width: 100%;
+    font-family: var(--sk-font-family, Roboto, sans-serif);
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--cf-preview-text-color, #000000) !important;
+}
+
+.SkConditionalFormat__cell-format-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 6px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+}
+
+.SkConditionalFormat__cell-format-colors {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    margin-left: 2px;
+}
+
+.SkConditionalFormat__cell-format-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--sk-dialog-text);
+    cursor: pointer;
+}
+
+.SkConditionalFormat__cell-format-btn:hover {
+    background: var(--sk-svg-color-background-hover, rgb(224, 240, 247));
+}
+
+.SkConditionalFormat__cell-format-btn--active {
+    background: var(--sk-toolbar-active-bg, rgba(26, 115, 232, 0.12));
+    color: var(--sk-dialog-accent, #1a73e8);
+}
+
+.SkConditionalFormat__cell-format-btn .SkSvg {
+    width: 18px;
+    height: 18px;
+}
+
+.SkConditionalFormat__cell-format-sep {
+    width: 1px;
+    height: 20px;
+    margin: 0 4px;
+    background: var(--sk-dialog-border);
+    flex-shrink: 0;
+}
+
+.SkConditionalFormat__cell-format-color-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.SkConditionalFormat__cell-format-color-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.SkConditionalFormat__cell-format-color-btn:hover {
+    background: var(--sk-svg-color-background-hover, rgb(224, 240, 247));
+}
+
+.SkConditionalFormat__cell-format-color-popup--portal {
+    position: fixed;
+    z-index: 20000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    background: var(--sk-dialog-input-bg, #fff);
+}
+
+.SkConditionalFormat__cell-format-color-btn .SkTextColorLetter {
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1;
+    user-select: none;
+}
+
+.SkConditionalFormat__cell-format-color-btn .SkBackgroundColorFill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    gap: 1px;
+    user-select: none;
+}
+
+.SkConditionalFormat__cell-format-color-btn .SkBackgroundColorFill-bucket {
+    width: 16px;
+    height: 12px;
+    color: var(--sk-dialog-text);
+    flex-shrink: 0;
+}
+
+.SkConditionalFormat__cell-format-color-btn .SkBackgroundColorFill-bar {
+    width: 16px;
+    height: 4px;
+    border-radius: 1px;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sk-dialog-text) 35%, transparent);
+    flex-shrink: 0;
+}
+
+/* Format preview / inline color picker */
+.SkConditionalFormat__format-preview,
+.SkConditionalFormat__format-picker {
+    padding: 6px;
+    background-color: var(--sk-dialog-input-bg);
+    border-radius: 4px;
+    border: 1px solid var(--sk-dialog-border);
+    overflow: visible;
+    position: relative;
+}
+
+.SkConditionalFormat__format-picker .SkColor--inline {
+    width: 100%;
+}
+
+/* Existing rules list */
+.SkConditionalFormat__rules {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--sk-dialog-border);
+    background: var(--sk-dialog-footer-bg);
+    flex-shrink: 0;
+    max-height: 220px;
+    min-height: 0;
+}
+
+.SkConditionalFormat--embedded .SkConditionalFormat__rules {
+    max-height: 180px;
+}
+
+.SkConditionalFormat__rules-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.SkConditionalFormat__rules-refresh {
+    border: 1px solid var(--sk-dialog-input-border);
+    background: var(--sk-dialog-input-bg);
+    color: var(--sk-dialog-text);
+    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+}
+
+.SkConditionalFormat__rules-refresh:hover:not(:disabled) {
+    border-color: var(--sk-dialog-accent);
+}
+
+.SkConditionalFormat__rules-refresh:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.SkConditionalFormat__rules-empty {
+    font-size: 12px;
+    color: var(--sk-dialog-label);
+    padding: 4px 0;
+}
+
+.SkConditionalFormat__rules-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.SkConditionalFormat__rules-row {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: 4px;
+    background: var(--sk-dialog-bg);
+    overflow: hidden;
+}
+
+.SkConditionalFormat__rules-select {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: none;
+    background: transparent;
+    color: var(--sk-dialog-text);
+    cursor: pointer;
+    text-align: left;
+}
+
+.SkConditionalFormat__rules-select:hover {
+    background: var(--sk-row-hover-background, rgba(0, 0, 0, 0.04));
+}
+
+.SkConditionalFormat__rules-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    border: 1px solid var(--sk-dialog-input-border);
+    flex-shrink: 0;
+}
+
+.SkConditionalFormat__rules-swatch--icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    background: var(--sk-dialog-input-bg);
+}
+
+.SkConditionalFormat__rules-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.SkConditionalFormat__rules-range {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sk-dialog-text);
+}
+
+.SkConditionalFormat__rules-desc {
+    font-size: 12px;
+    color: var(--sk-dialog-label);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.SkConditionalFormat__rules-delete {
+    flex-shrink: 0;
+    width: 32px;
+    border: none;
+    border-left: 1px solid var(--sk-dialog-border);
+    background: transparent;
+    color: var(--sk-dialog-label);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.SkConditionalFormat__rules-delete:hover {
+    background: rgba(220, 53, 69, 0.12);
+    color: #dc3545;
+}
+
+/* Fix SkColor dropdown clipping inside SkConditionalFormat */
+.SkConditionalFormat .SkColor {
+    position: static;
+}
+
+.SkConditionalFormat .SkColor__dropdown {
+    z-index: 10001 !important;
+}
+
+.SkConditionalFormat__field {
+    overflow: visible !important;
+}
+
+.SkConditionalFormat__format-preview {
+    overflow: visible !important;
+}
+
+.SkConditionalFormat__format-picker {
+    overflow: visible !important;
+}
+
+/* Footer actions — dialog dropdown only; stacked panel uses SkButton like NamedFormula */
+.SkConditionalFormat__actions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 14px;
+    border-top: 1px solid var(--sk-dialog-border);
+    justify-content: flex-end;
+    background-color: var(--sk-dialog-footer-bg);
+}
+
+.SkConditionalFormat__actions--stacked {
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    padding: 8px;
+    border-top: none;
+    background: transparent;
+}
+
+.SkConditionalFormat__actions .SkModal-toolbarBtn {
+    min-width: 88px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .SkConditionalFormat__dropdown {
+        min-width: 320px;
+        max-width: 90vw;
+    }
+
+    .SkConditionalFormat__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .SkConditionalFormat__grid-header {
+        display: none;
+    }
+
+    .SkConditionalFormat__field-row {
+        flex-direction: column;
+    }
+}
+
+.SkConditionalFormat__key-lock-hint {
+    font-size: 11px;
+    color: var(--sk-row-hint-color, #888);
+    margin: 4px 0 8px;
+    line-height: 1.35;
+}

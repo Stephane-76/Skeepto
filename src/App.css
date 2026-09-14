@@ -1,0 +1,1974 @@
+@import "./spreadsheet/SkSpreadSheet.css";
+@import "./SkTheme.css";
+
+/* Reset de base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Full-screen blocking overlay for global busy states (e.g. desktop Excel
+   import/export). Sits above panels/dialogs and blocks interaction. */
+.SkGlobalBusyOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+/* Fixed-size card so the spinner never "breathes" as the label text (e.g. the
+   current sheet name during a workbook PDF export) changes length. */
+.SkGlobalBusyOverlay .SkLoadingSpinner__card {
+  width: 24rem;
+  min-width: 24rem;
+  max-width: 24rem;
+  box-sizing: border-box;
+}
+
+.SkGlobalBusyOverlay .SkLoadingSpinner__text {
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+  /* Reduce Safari / Apple trackpad sideways swipe navigating history (paired with SPA GET fallback). */
+  overscroll-behavior-x: none;
+}
+
+/* Container principal */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  font-family: var(--sk-font-family);
+  background-color: var(--sk-color-background);
+  color: var(--sk-text-color);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overscroll-behavior-x: none;
+  touch-action: manipulation;
+}
+
+/* Top panel — darker chrome strip (Excel title/menu area) */
+.top-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 48px;
+  min-height: 48px;
+  background-color: var(--sk-color-background);
+  border-bottom: 1px solid var(--sk-border-color);
+  color: var(--sk-text-color);
+  flex: 0 0 48px;
+  z-index: 10050;
+  touch-action: manipulation;
+}
+
+.top-left-panel {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.top-left-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.top-menu-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.top-active-file-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  color: var(--sk-text-color);
+}
+
+.top-middle-panel {
+  flex: 1;
+  padding: 10px;
+}
+
+.top-right-panel {
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 200px;
+  box-sizing: border-box;
+}
+
+.top-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.top-user-name {
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.top-user-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.top-logout-btn,
+.top-user-actions .SkThemeFlipToggle {
+  box-sizing: border-box;
+  margin: 0;
+  height: 28px;
+  min-height: 28px;
+  flex-shrink: 0;
+}
+
+.top-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--sk-border-color);
+  background-color: transparent;
+  color: var(--sk-color-tool);
+  border-radius: 4px;
+  padding: 0 10px;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.top-logout-btn:hover {
+  background-color: var(--sk-accent-color-hover);
+}
+
+.toggle-panel-btn {
+  background-color: transparent;
+  border: 1px solid var(--sk-left-panel-toggle-border, var(--sk-border-color));
+  color: var(--sk-left-panel-link, var(--sk-text-color));
+  font-size: 18px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.toggle-panel-btn:hover {
+  background-color: var(--sk-left-panel-toggle-hover-bg, var(--sk-menu-color-background-selected));
+  border-color: var(--sk-border-color);
+}
+
+.top-toolbar-toggles {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.toggle-panel-btn--compact {
+  font-size: 12px;
+  line-height: 1;
+  padding: 3px 6px;
+  min-width: 22px;
+  min-height: 22px;
+  border-radius: 3px;
+}
+
+/* Shared square icon control — panel close, ribbon toggle, etc. */
+.SkIconBtn,
+.SkPanelCloseBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  margin: 0;
+  border: 1px solid var(--sk-border-color);
+  border-radius: 4px;
+  background-color: var(--sk-color-background);
+  color: var(--sk-color-tool);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.SkPanelCloseBtn {
+  font-size: 18px;
+}
+
+.SkIconBtn:hover,
+.SkPanelCloseBtn:hover {
+  background-color: var(--sk-svg-color-background-hover);
+  border-color: var(--sk-border-color);
+}
+
+/* Contenu principal */
+.main-content {
+  display: flex;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Panneau de gauche */
+.left-panel {
+  width: 0px;
+  background-color: var(--sk-left-panel-bg, var(--sk-color-background));
+  border-right: 1px solid var(--sk-left-panel-border, var(--sk-border-color));
+  transition: none;
+  user-select: none;
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  overflow: hidden;
+  color: var(--sk-text-color);
+}
+
+.left-panel a {
+  color: var(--sk-left-panel-link, var(--sk-text-color));
+}
+
+.left-panel a:hover {
+  color: var(--sk-left-panel-link-hover, var(--sk-text-muted));
+}
+
+.left-panel .toggle-panel-btn {
+  background-color: transparent;
+  border: 1px solid var(--sk-left-panel-toggle-border, var(--sk-border-color));
+  color: var(--sk-left-panel-link, var(--sk-text-color));
+  font-size: 18px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.left-panel .toggle-panel-btn:hover {
+  background-color: var(--sk-left-panel-toggle-hover-bg, var(--sk-menu-color-background-selected));
+  border-color: var(--sk-border-color);
+}
+
+.left-panel nav {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.left-panel nav .SkFlex.SkFlexColumn {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: stretch;
+}
+
+.left-panel nav .SkFlex.SkFlexColumn > div,
+.left-panel nav .SkFlex.SkFlexColumn > .SkButton {
+  width: 100%;
+}
+
+.left-panel .SkButton {
+  padding: 0;
+  width: 100%;
+  margin: 0 0 4px 0;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  background-color: transparent;
+  color: var(--sk-left-panel-link, var(--sk-text-color));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.left-panel .SkButton:hover {
+  background-color: var(--sk-menu-color-background-selected);
+}
+
+.left-panel .SkButton svg {
+  color: currentColor;
+  flex-shrink: 0;
+}
+
+.left-panel .SkButton a {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 6px;
+}
+
+/* Icon-only row when the item is a button (no <a>), e.g. Guided tour */
+.left-panel .SkButton > span {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 6px;
+  color: inherit;
+}
+
+.left-panel-menu-title {
+  color: var(--sk-text-color);
+  padding: 0;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.left-panel-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0;
+  padding: 6px 10px;
+  min-height: 0;
+  border-bottom: 1px solid var(--sk-left-panel-border, var(--sk-border-color));
+}
+
+.left-panel-menu-header .SkPanelCloseBtn {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  font-size: 16px;
+}
+
+.left-panel-theme {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--sk-left-panel-border, var(--sk-border-color));
+}
+
+.left-panel-theme-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sk-text-muted);
+  padding: 0 10px 4px;
+}
+
+.left-panel-theme-btn {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--sk-text-color);
+  cursor: pointer;
+  font: inherit;
+}
+
+.left-panel-theme-btn:hover {
+  background: var(--sk-menu-color-background-selected);
+}
+
+.left-panel-theme-btn.is-active {
+  background: var(--sk-menu-color-background-selected);
+  border-color: var(--sk-border-color);
+}
+
+/* Zone de contenu */
+.content-area {
+  flex: 1;
+  background-color: var(--sk-color-background);
+  padding: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  height: 100%;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Handle de redimensionnement */
+.resize-handle {
+  position: absolute;
+  width: 4px;
+  height: 100%;
+  background-color: transparent;
+  cursor: ew-resize;
+  z-index: 5;
+  transform: translateX(-50%);
+  transition: background-color 0.2s ease;
+  pointer-events: auto;
+  margin-left: 0px;
+}
+
+.resize-handle:hover,
+.resize-handle:active {
+  background-color: #0078d4;
+}
+
+/* Styles pour les cartes */
+.SkCards {
+  display: flex;
+  flex-wrap: wrap;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  outline: none;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+.SkCard {
+  margin: 16px;
+  padding: 10px;
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: auto;
+  color: var(--sk-color-tool);
+  background-color: var(--sk-color-background-tool);
+  border: 1px solid var(--sk-border-color);
+  border-radius: 4px;
+  border-bottom-right-radius: 20%;
+  min-width: 100px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  overflow: hidden;
+}
+
+.SkCard-selected {
+  background-color: var(--sk-button-color-hover-background);
+  border: 1px dotted black;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+.SkCard:focus {
+  box-shadow: 0 0 0 2px var(--sk-accent-color);
+}
+
+/* Login page */
+.SkLogin-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(0, 120, 212, 0.18), transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, rgba(16, 124, 65, 0.12), transparent 50%),
+    var(--sk-color-background);
+  color: var(--sk-text-color);
+  font-family: var(--sk-font-family);
+}
+
+.SkLogin-brand {
+  flex: 0 0 auto;
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid var(--sk-border-color);
+  background: color-mix(in srgb, var(--sk-color-background) 88%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.SkLogin-brandRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+}
+
+.SkLogin-brandText {
+  min-width: 0;
+}
+
+.SkLogin-brandIdentity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.SkLogin-brandLogo {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  display: block;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(10, 90, 128, 0.28);
+}
+
+.SkLogin-brandActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.SkThemeFlipToggle {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--sk-border-color);
+  background: var(--sk-color-background-tool);
+  color: var(--sk-text-color);
+  cursor: pointer;
+  perspective: 240px;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+
+/* Top bar: match logout chip height (48px header) */
+.SkThemeFlipToggle--compact,
+.top-user-actions .SkThemeFlipToggle {
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  border-radius: 6px;
+}
+
+.SkThemeFlipToggle--compact .SkThemeFlipToggle-icon,
+.top-user-actions .SkThemeFlipToggle-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.SkThemeFlipToggle:hover {
+  border-color: var(--sk-accent-color);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.SkThemeFlipToggle-face {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+}
+
+.SkThemeFlipToggle--flip .SkThemeFlipToggle-face {
+  animation: SkThemeFlipSpin 0.42s ease-in-out;
+}
+
+@keyframes SkThemeFlipSpin {
+  0% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(90deg);
+  }
+  100% {
+    transform: rotateY(0deg);
+  }
+}
+
+.SkThemeFlipToggle-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.SkThemeFlipToggle--dark {
+  color: #f5c842;
+}
+
+.SkThemeFlipToggle--light {
+  color: #4a5568;
+}
+
+html[data-theme="light"] .SkThemeFlipToggle--light {
+  color: #2b4a7a;
+}
+
+.SkLogin-aboutBtn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--sk-accent-color);
+  background: color-mix(in srgb, var(--sk-accent-color) 12%, transparent);
+  color: var(--sk-accent-color);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.SkLogin-aboutBtn:hover {
+  background: var(--sk-accent-color);
+  color: #fff;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--sk-accent-color) 35%, transparent);
+}
+
+.SkLogin-mainStack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  width: min(100%, 440px);
+}
+
+.SkLogin-aboutPromo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--sk-accent-color) 45%, var(--sk-border-color));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--sk-accent-color) 8%, var(--sk-color-background-tool));
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.SkLogin-aboutPromo:hover {
+  border-color: var(--sk-accent-color);
+  background: color-mix(in srgb, var(--sk-accent-color) 14%, var(--sk-color-background-tool));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.SkLogin-aboutPromoTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--sk-text-color);
+}
+
+.SkLogin-aboutPromoText {
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--sk-text-muted);
+}
+
+.SkLogin-aboutPromoAction {
+  margin-top: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--sk-accent-color);
+}
+
+.SkLogin-aboutPromo:hover .SkLogin-aboutPromoAction {
+  text-decoration: underline;
+}
+
+.SkLogin-brandTitle {
+  margin: 0;
+  font-size: clamp(1.6rem, 2.8vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--sk-text-color);
+}
+
+.SkLogin-brandSubtitle {
+  margin: 6px 0 0;
+  font-size: 0.95rem;
+  color: var(--sk-text-muted);
+}
+
+.SkLogin-main {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.SkLogin-card {
+  width: 100%;
+  padding: 28px 28px 24px;
+  border: 1px solid var(--sk-border-color);
+  border-radius: 12px;
+  background: var(--sk-color-background-tool);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+}
+
+.SkLogin-cardTitle {
+  margin: 0 0 16px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--sk-text-color);
+}
+
+.SkLogin-modeToggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 4px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--sk-color-background) 70%, transparent);
+  border: 1px solid var(--sk-border-color);
+}
+
+.SkLogin-modeBtn {
+  flex: 1 1 50%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--sk-text-muted);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.SkLogin-modeBtn:hover:not(:disabled) {
+  color: var(--sk-text-color);
+}
+
+.SkLogin-modeBtn--active {
+  background: var(--sk-accent, #0078d4);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.SkLogin-switchMode {
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--sk-text-muted);
+}
+
+.SkLogin-switchModeLink {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--sk-accent, #0078d4);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.SkLogin-switchModeLink:hover:not(:disabled) {
+  color: color-mix(in srgb, var(--sk-accent, #0078d4) 85%, white);
+}
+
+.SkLogin-switchModeLink:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.SkLogin-modeBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.SkLogin-success {
+  background-color: rgba(16, 124, 65, 0.12);
+  border: 1px solid rgba(16, 124, 65, 0.35);
+  color: #4ade80;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.SkLogin {
+  padding: 0;
+  height: auto;
+  overflow: visible;
+}
+
+.SkLogin-verifyHint {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--sk-text-muted);
+  text-align: center;
+}
+
+.SkLogin-verifyHint strong {
+  color: var(--sk-text-color);
+  font-weight: 600;
+}
+
+#verificationCode.SkInput {
+  letter-spacing: 0.35em;
+  font-size: 1.25rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.SkLogin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.SkLogin-field label {
+  color: var(--sk-text-color);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.SkLogin-error {
+  background-color: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  color: #ff6b6b;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.SkLogin-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.SkLogin-submit {
+  min-width: 120px;
+  padding: 8px 18px;
+  background-color: var(--sk-accent-color);
+  color: #ffffff;
+}
+
+.SkLogin-submit:hover {
+  background-color: var(--sk-accent-color-hover, #0086e7);
+}
+
+.SkLogin-submit:disabled {
+  background-color: var(--sk-button-disabled, #666666);
+  cursor: not-allowed;
+}
+
+.SkLogin-quick-login {
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--sk-border-color);
+}
+
+.SkLogin-quick-label {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sk-text-muted);
+}
+
+.SkLogin-quick-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.SkLogin-quick-btn {
+  width: 100%;
+  padding: 7px 10px;
+  font-size: 0.82rem;
+  background: transparent;
+  color: var(--sk-text-color);
+  border: 1px solid var(--sk-border-color);
+}
+
+.SkLogin-quick-btn:hover:not(:disabled) {
+  background: var(--sk-menu-color-background-selected);
+  border-color: var(--sk-accent-color);
+}
+
+.SkLogin-footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  flex-wrap: wrap;
+  padding: 14px 24px;
+  border-top: 1px solid var(--sk-border-color);
+  font-size: 0.82rem;
+  color: var(--sk-text-muted);
+  background: color-mix(in srgb, var(--sk-color-background) 92%, transparent);
+}
+
+.SkLogin-footerCopy {
+  margin-left: auto;
+  text-align: right;
+}
+
+.SkLogin-footerLink {
+  color: var(--sk-accent-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.SkLogin-footerLink--prominent {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--sk-accent-color) 50%, transparent);
+  background: color-mix(in srgb, var(--sk-accent-color) 10%, transparent);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.SkLogin-footerLink--prominent:hover {
+  background: color-mix(in srgb, var(--sk-accent-color) 18%, transparent);
+  text-decoration: none;
+}
+
+.SkLogin-footerLink:hover {
+  text-decoration: underline;
+}
+
+/* SkSpreadSheet public about page */
+.SkAbout-shell .SkAbout-main {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 24px 16px 32px;
+}
+
+.SkAbout-content {
+  max-width: 52rem;
+  margin: 0 auto;
+  line-height: 1.55;
+}
+
+.SkAbout-content h2 {
+  margin: 2rem 0 0.75rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--sk-text-color);
+}
+
+.SkAbout-content h2:first-of-type {
+  margin-top: 0;
+}
+
+.SkAbout-content h3 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--sk-text-color);
+}
+
+.SkAbout-content p,
+.SkAbout-content ul,
+.SkAbout-content ol {
+  margin: 0 0 0.85rem;
+  color: var(--sk-text-color);
+}
+
+.SkAbout-content ul,
+.SkAbout-content ol {
+  padding-left: 1.35rem;
+}
+
+.SkAbout-content li {
+  margin-bottom: 0.35rem;
+}
+
+.SkAbout-meta {
+  font-size: 0.88rem;
+  color: var(--sk-text-muted);
+  font-style: italic;
+  margin-bottom: 1.25rem !important;
+}
+
+.SkAbout-tableWrap {
+  overflow-x: auto;
+  margin: 0.75rem 0 1rem;
+  border: 1px solid var(--sk-border-color);
+  border-radius: 6px;
+}
+
+.SkAbout-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.SkAbout-table th,
+.SkAbout-table td {
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid var(--sk-border-color);
+  text-align: left;
+  vertical-align: top;
+}
+
+.SkAbout-table th {
+  background: color-mix(in srgb, var(--sk-color-background-tool) 85%, transparent);
+  font-weight: 600;
+}
+
+.SkAbout-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.SkAbout-code {
+  margin: 0.75rem 0 1rem;
+  padding: 14px 16px;
+  overflow-x: auto;
+  border-radius: 6px;
+  border: 1px solid var(--sk-border-color);
+  background: color-mix(in srgb, var(--sk-color-background-tool) 90%, transparent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.SkAbout-code code {
+  white-space: pre;
+}
+
+.SkAbout-partners {
+  margin-top: 2rem;
+  padding: 1rem 1.15rem;
+  border-left: 3px solid var(--sk-accent-color);
+  border-radius: 0 6px 6px 0;
+  background: color-mix(in srgb, var(--sk-accent-color) 8%, transparent);
+}
+
+.SkAbout-partners p {
+  margin: 0;
+}
+
+.SkAbout-copyright {
+  margin: 1.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--sk-text-muted);
+}
+
+.SkAboutModal-intro {
+  margin: -8px 0 12px;
+}
+
+.SkAboutModal-tagline {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--sk-text-muted);
+}
+
+.SkAboutModal-intro + .SkAbout-content .SkAbout-meta {
+  margin-top: 0;
+}
+
+/* Keyboard shortcuts modal */
+.SkShortcuts-intro {
+  margin: 0 0 16px;
+  font-size: 0.9rem;
+  color: var(--sk-text-muted);
+  line-height: 1.45;
+}
+
+.SkShortcuts-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  column-gap: 28px;
+  row-gap: 16px;
+  align-items: start;
+}
+
+.SkShortcuts-sectionTitle {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--sk-text-color);
+}
+
+.SkShortcuts-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.SkShortcuts-table td {
+  padding: 6px 0;
+  vertical-align: top;
+  border-bottom: 1px solid color-mix(in srgb, var(--sk-border-color) 70%, transparent);
+}
+
+.SkShortcuts-table tr:last-child td {
+  border-bottom: none;
+}
+
+.SkShortcuts-tableKeys {
+  width: 42%;
+  padding-right: 12px;
+  white-space: nowrap;
+}
+
+.SkShortcuts-tableDesc {
+  color: var(--sk-text-color);
+  line-height: 1.4;
+}
+
+.SkShortcuts-keys {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.SkShortcuts-plus {
+  font-size: 0.75rem;
+  color: var(--sk-text-muted);
+  padding: 0 1px;
+}
+
+.SkShortcuts-kbd {
+  display: inline-block;
+  min-width: 1.5em;
+  padding: 2px 7px;
+  border: 1px solid var(--sk-border-color);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--sk-color-background-tool) 88%, transparent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--sk-text-color);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--sk-border-color) 60%, transparent);
+}
+
+@media (max-width: 520px) {
+  .SkLogin-brand {
+    padding: 20px 16px 16px;
+  }
+
+  .SkLogin-brandRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .SkLogin-brandActions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .SkLogin-brandActions .SkThemeFlipToggle {
+    align-self: flex-end;
+  }
+
+  .SkLogin-aboutBtn {
+    width: 100%;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .SkLogin-card {
+    padding: 22px 18px 18px;
+  }
+
+  .SkLogin-quick-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .SkLogin-footer {
+    padding: 12px 16px;
+    font-size: 0.75rem;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .SkLogin-footerCopy {
+    margin-left: 0;
+    text-align: center;
+  }
+
+  .SkLogin-footerLink--prominent {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+.SkLogin-cancel {
+  min-width: 100px;
+}
+
+/* Styles pour l'utilisateur */
+.SkUser-name {
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+.SkUser-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.SkUser-email {
+  color: var(--sk-text-muted);
+  font-size: 0.9em;
+}
+
+/* Style for the disabled menu */
+.SkMenuElement[disabled] {
+  opacity: 0.6;
+  cursor: default;
+  background-color: var(--sk-darker-background);
+}
+
+/* Styles pour le formulaire de widget */
+.SkWidgetForm {
+  flex: 1;
+  left: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Styles pour la grille de test */
+.SkTestGridTreeView {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  background-color: var(--sk-color-background);
+  color: var(--sk-text-color);
+  position: relative;
+}
+
+.SkVirtualDisk-openingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.SkVirtualDisk-actionsFab {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 20;
+}
+
+.SkVirtualDisk-actionsBackdrop {
+  position: fixed;
+  inset: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  cursor: default;
+  z-index: 0;
+}
+
+.SkVirtualDisk-actionsPanel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 1;
+  min-width: 240px;
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: var(--sk-vd-footer-bg, var(--sk-color-background-tool));
+  color: var(--sk-vd-footer-text, var(--sk-text-color));
+  border: 1px solid var(--sk-vd-footer-border, var(--sk-border-color));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.SkVirtualDisk-actionsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.SkVirtualDisk-actionsSectionTitle {
+  padding: 2px 4px 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sk-text-muted, #6b7280);
+}
+
+.SkVirtualDisk-actionsFabBtn {
+  position: relative;
+  z-index: 2;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 999px;
+  background-color: var(--sk-color-accent, #1565C0);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.SkVirtualDisk-actionsFabBtn--open {
+  background-color: #455A64;
+}
+
+.SkVirtualDisk-actionsItem {
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 6px;
+  text-align: left;
+  color: #fff;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.SkVirtualDisk-actionsItem--disabled,
+.SkVirtualDisk-actionsItem:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.SkVirtualDisk-actionsItem--upload { background-color: #4CAF50; }
+.SkVirtualDisk-actionsItem--folder { background-color: #00897B; }
+.SkVirtualDisk-actionsItem--spreadsheet { background-color: #6C5CE7; }
+.SkVirtualDisk-actionsItem--document { background-color: #1565C0; }
+.SkVirtualDisk-actionsItem--access { background-color: #78909C; }
+.SkVirtualDisk-actionsItem--download { background-color: #2196F3; }
+.SkVirtualDisk-actionsItem--snapshot { background-color: #546E7A; }
+.SkVirtualDisk-actionsItem--versions { background-color: #455A64; }
+.SkVirtualDisk-actionsItem--convert { background-color: #FF9800; }
+.SkVirtualDisk-actionsItem--excel { background-color: #217346; }
+.SkVirtualDisk-actionsItem--rename { background-color: #5E35B1; }
+.SkVirtualDisk-actionsItem--delete { background-color: #f44336; }
+
+.SkVirtualDisk-fileIcon--html {
+  color: #e44d26;
+}
+
+.SkVirtualDisk-actionsItem:not(:disabled):hover {
+  filter: brightness(1.06);
+}
+
+.SkVirtualDisk-lockNotice {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  line-height: 1.5;
+}
+
+.SkVirtualDisk-lockNotice-lead {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.SkVirtualDisk-lockNotice-detail {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.SkVirtualDisk-lockNotice-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sk-text-muted, #a19f9d);
+}
+
+.SkVirtualDisk-lockNotice-detail strong {
+  font-size: 0.95rem;
+  word-break: break-word;
+}
+
+.SkVirtualDisk-lockNotice-hint {
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--sk-menu-color-background-selected, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--sk-border-color);
+  font-size: 0.88rem;
+  color: var(--sk-text-muted, #a19f9d);
+}
+
+.SkDialog {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.SkDialog-message {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.SkDialog-detail {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--sk-menu-color-background-selected, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--sk-border-color);
+  color: var(--sk-text-muted, #a19f9d);
+}
+
+.SkDialog--error .SkDialog-message {
+  color: var(--sk-error-color, #f1707b);
+}
+
+.SkDialog--success .SkDialog-message {
+  color: var(--sk-accent-color, #0078d4);
+}
+
+/* Rich text editor (TipTap) */
+.SkTextEditor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background-color: var(--sk-texteditor-workspace-bg, var(--sk-color-background));
+  color: var(--sk-text-color);
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.SkTextEditor-header,
+.SkTextEditor-toolbar {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.SkTextEditor-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--sk-border-color);
+  background-color: var(--sk-menu-color-background, var(--sk-color-background));
+}
+
+.SkTextEditor-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.SkTextEditor-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.SkTextEditor-status {
+  font-size: 0.85rem;
+  color: var(--sk-text-muted);
+}
+
+.SkTextEditor-toolbar.SkSpTopCommand {
+  flex-shrink: 0;
+}
+
+.SkTextEditor .SkSpTopCommand .SkSpTopTool > div.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.SkTextEditor .SkSpTopCommand .SkSpTopTool > div.active {
+  background-color: var(--sk-toolbar-active-background, #dbeafe);
+  box-shadow: inset 0 0 0 1px var(--sk-toolbar-active-border, #1565c0);
+}
+
+.SkTextEditor-fontTool {
+  min-width: 0;
+}
+
+.SkTextEditor-fontTool--disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.SkTextEditor .SkSpTopCommand .Sk-font-selector {
+  max-width: min(100%, 420px);
+}
+
+.SkTextEditor-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 24px 32px;
+  background-color: var(--sk-texteditor-workspace-bg, var(--sk-color-background));
+}
+
+.SkTextEditor-loading,
+.SkTextEditor-path {
+  max-width: 860px;
+  margin-left: auto;
+  margin-right: auto;
+  color: var(--sk-text-muted);
+}
+
+.SkTextEditor-loading {
+  margin-bottom: 12px;
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.SkTextEditor-path {
+  margin-top: 12px;
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.SkTextEditor-mount {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  min-height: calc(100% - 32px);
+}
+
+.SkTextEditor-mount .SkTextEditor-content,
+.SkTextEditor-mount .ProseMirror {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 480px;
+  padding: 24px 28px;
+  border: 1px solid var(--sk-texteditor-page-border, var(--sk-border-color));
+  border-radius: 8px;
+  background-color: var(--sk-texteditor-page-bg, #ffffff);
+  color: var(--sk-texteditor-page-text, #201f1e);
+  outline: none;
+  line-height: 1.6;
+  word-break: normal;
+  overflow-wrap: break-word;
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
+}
+
+.SkTextEditor-mount .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+}
+
+.SkTextEditor-mount .ProseMirror:focus {
+  border-color: var(--sk-accent-color);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sk-accent-color) 15%, transparent);
+}
+
+/* Override global h1 { width: 100px } from SkComponent.css */
+.SkTextEditor-mount h1,
+.SkTextEditor-mount h2,
+.SkTextEditor-mount h3 {
+  width: auto;
+  max-width: 100%;
+  line-height: 1.25;
+  margin: 1.2em 0 0.5em;
+}
+
+.SkTextEditor-mount h1 {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.SkTextEditor-mount h1:first-child,
+.SkTextEditor-mount h2:first-child,
+.SkTextEditor-mount h3:first-child,
+.SkTextEditor-mount p:first-child {
+  margin-top: 0;
+}
+
+.SkTextEditor-mount ul,
+.SkTextEditor-mount ol {
+  padding-left: 1.5rem;
+}
+
+.SkTextEditor-mount blockquote {
+  margin: 1em 0;
+  padding-left: 1em;
+  border-left: 3px solid var(--sk-texteditor-page-border, var(--sk-border-color));
+  color: var(--sk-texteditor-page-muted, var(--sk-text-muted));
+}
+
+/* Spreadsheet-like tables in the HTML editor. */
+.SkTextEditor-mount .SkTextEditor-spreadsheetTableWrap {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetTableWrap[data-table-align='left'] {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetTableWrap[data-table-align='center'] {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetTableWrap[data-table-align='right'] {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.SkTextEditor-mount .SkTextEditor-tableChrome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.SkTextEditor-mount .SkTextEditor-tableSelectHandle,
+.SkTextEditor-mount .SkTextEditor-tableRemoveHandle {
+  border: 1px solid var(--sk-border-color);
+  border-radius: 4px;
+  background: var(--sk-color-background-tool, var(--sk-color-background));
+  color: var(--sk-text-color);
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.SkTextEditor-mount .SkTextEditor-tableSourceHandle {
+  border: 1px solid var(--sk-border-color);
+  border-radius: 4px;
+  background: var(--sk-color-background-tool, var(--sk-color-background));
+  color: var(--sk-text-color);
+  font-size: 11px;
+  line-height: 1.2;
+  padding: 4px 8px;
+  cursor: pointer;
+  max-width: min(420px, 70vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.SkTextEditor-mount .SkTextEditor-tableSourceHandle:hover,
+.SkTextEditor-mount .SkTextEditor-tableSelectHandle:hover,
+.SkTextEditor-mount .SkTextEditor-tableRemoveHandle:hover {
+  background: var(--sk-menu-color-background-selected, #eef3f8);
+}
+
+.SkTextEditor-mount .SkTextEditor-tableRemoveHandle {
+  padding: 4px 10px;
+  font-size: 14px;
+  color: #c62828;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable {
+  width: max-content;
+  max-width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 0;
+  font-family: Calibri, Arial, sans-serif;
+  font-size: 11pt;
+  line-height: 1.15;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetRangeImage {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetRangeWrap {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetRangeWrap.ProseMirror-selectednode {
+  outline: 2px solid var(--sk-accent-color, #1565c0);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* JsonView import — borders come from cell inline styles (Excel adjacency resolved in JS). */
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td,
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th {
+  padding: 0 4px;
+  border: none;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background-color: var(--sk-texteditor-page-bg, #ffffff);
+  color: var(--sk-texteditor-page-text, #201f1e);
+  position: relative;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td > *,
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th > * {
+  margin: 0;
+  line-height: inherit;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Keep TipTap marks inline — flex-column on <p> was stacking each <strong>/<em> on its own line. */
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td p strong,
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td p em,
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td p s,
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td p u,
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td p span,
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th p strong,
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th p em,
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th p s,
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th p u,
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th p span {
+  display: inline;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td[data-h-align='left'],
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th[data-h-align='left'] {
+  text-align: left;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td[data-h-align='center'],
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th[data-h-align='center'] {
+  text-align: center;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td[data-h-align='right'],
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th[data-h-align='right'] {
+  text-align: right;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td:not([data-h-align]),
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th:not([data-h-align]) {
+  text-align: left;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td[data-v-align='top'],
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th[data-v-align='top'] {
+  vertical-align: top;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td[data-v-align='middle'],
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th[data-v-align='middle'] {
+  vertical-align: middle;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td[data-v-align='bottom'],
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th[data-v-align='bottom'],
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td:not([data-v-align]),
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th:not([data-v-align]) {
+  vertical-align: bottom;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable .SkSpCell > *,
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable td > *,
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable th > * {
+  margin: 0;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetTableWrap.tableWrapper.ProseMirror-selectednode,
+.SkTextEditor-mount .tableWrapper.ProseMirror-selectednode {
+  outline: 2px solid var(--sk-accent-color, #1565c0);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.SkTextEditor-mount .SkTextEditor-spreadsheetTable .selectedCell:after {
+  background: color-mix(in srgb, var(--sk-accent-color, #1565c0) 18%, transparent);
+  content: '';
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+.SkTextEditor-printTitle {
+  display: none;
+}
+
+@media print {
+  html,
+  body {
+    overflow: visible !important;
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+  }
+
+  /* Preserve spreadsheet / highlight backgrounds in Save as PDF (Chrome, Safari, Firefox). */
+  body.SkTextEditor-print,
+  body.SkTextEditor-print * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  body.SkTextEditor-print .top-panel,
+  body.SkTextEditor-print .left-panel,
+  body.SkTextEditor-print .resize-handle,
+  body.SkTextEditor-print .SkTextEditor-toolbar,
+  body.SkTextEditor-print .SkTextEditor-header,
+  body.SkTextEditor-print .SkTextEditor-path,
+  body.SkTextEditor-print .SkTextEditor-loading,
+  body.SkTextEditor-print .SkTextEditor-tableChrome {
+    display: none !important;
+  }
+
+  body.SkTextEditor-print .app-container,
+  body.SkTextEditor-print .main-content,
+  body.SkTextEditor-print .content-area,
+  body.SkTextEditor-print .SkTextEditor,
+  body.SkTextEditor-print .SkTextEditor-body {
+    display: block !important;
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  body.SkTextEditor-print .SkTextEditor-printTitle {
+    display: block;
+    max-width: 860px;
+    margin: 0 auto 16px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #000;
+  }
+
+  body.SkTextEditor-print .SkTextEditor-mount {
+    max-width: none;
+    min-height: 0;
+    margin: 0;
+  }
+
+  body.SkTextEditor-print .SkTextEditor-mount .ProseMirror {
+    border: none !important;
+    box-shadow: none !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  /* Imported JsonView tables — do not override inline Excel colors from theme vars. */
+  body.SkTextEditor-print .SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported td,
+  body.SkTextEditor-print .SkTextEditor-mount .SkTextEditor-spreadsheetTable--imported th {
+    background-color: unset;
+    color: unset;
+  }
+
+  body.SkTextEditor-print .SkTextEditor-mount .ProseMirror img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  body.SkTextEditor-print .SkTextEditor-mount h1,
+  body.SkTextEditor-print .SkTextEditor-mount h2,
+  body.SkTextEditor-print .SkTextEditor-mount h3 {
+    page-break-after: avoid;
+  }
+}
+
+/* Styles pour le conteneur de mot de passe */
+.SkLogin-password-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.SkLogin-password-container .SkInput {
+  flex: 1;
+  margin-right: 5px;
+}
+
+.SkLogin-toggle-password {
+  padding: 5px 10px;
+  min-width: 40px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--sk-button-color-background);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.SkLogin-toggle-password:hover {
+  background-color: var(--sk-button-color-hover-background);
+}

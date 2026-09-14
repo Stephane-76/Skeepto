@@ -1,0 +1,183 @@
+/* Dark theme (default) — shell + spreadsheet chrome */
+
+html[data-theme="dark"] {
+  --sk-left-panel-bg: var(--sk-color-background, #1e1e1e);
+  --sk-left-panel-border: #484848;
+  --sk-left-panel-link: #ffffff;
+  --sk-left-panel-link-hover: #cccccc;
+  --sk-left-panel-toggle-border: #555555;
+  --sk-left-panel-toggle-hover-bg: #333333;
+  --sk-vd-footer-bg: #1e1e1e;
+  --sk-vd-footer-border: #484848;
+  --sk-vd-footer-text: #f3f2f1;
+
+  /* Read-only chip: white on dark chrome */
+  --sk-readonly-banner-bg: #ffffff;
+  --sk-readonly-banner-border: #000000;
+  --sk-readonly-banner-title: #000000;
+  --sk-readonly-banner-text: #000000;
+  --sk-readonly-banner-hint: #201f1e;
+  --sk-readonly-banner-sep: rgba(0, 0, 0, 0.4);
+
+  --sk-color-background-chrome: #1e1e1e;
+  --sk-color-background-ribbon: #2d2d2d;
+  --sk-formula-bg: #454545;
+  --sk-formula-text: #f3f2f1;
+  --sk-tab-inactive-text: #a19f9d;
+  --sk-tab-strip-bg: #1e1e1e;
+  --sk-tab-active-bg: #ffffff;
+  --sk-tab-active-text: #201f1e;
+  --sk-tab-active-border: #8a8886;
+  --sk-tab-active-accent: #0078d4;
+  --sk-tab-hover-bg: rgba(255, 255, 255, 0.06);
+  --sk-color-grid: #3e3e42;
+  --sk-color-header-background: #252526;
+  --sk-color-header-text: #cccccc;
+  --sk-color-header-grid: #3e3e42;
+  --sk-color-corner-background: #252526;
+  --sk-toolbar-button-hover-background: rgba(255, 255, 255, 0.06);
+  --sk-toolbar-button-active-background: rgba(255, 255, 255, 0.10);
+  --sk-tabstrip-thumb-background: rgba(255, 255, 255, 0.25);
+
+  /* Named range / formula lists */
+  --sk-row-hover-background: rgba(255, 255, 255, 0.06);
+  --sk-row-highlight-background: rgba(0, 120, 212, 0.35);
+  --sk-row-pencil-hover-background: rgba(0, 120, 212, 0.25);
+  --sk-row-pencil-hover-border: rgba(0, 120, 212, 0.55);
+  --sk-row-pencil-hover-color: #ffffff;
+  --sk-row-edit-background: rgba(0, 120, 212, 0.12);
+  --sk-row-edit-border: rgba(0, 120, 212, 0.45);
+  --sk-row-editing-background: rgba(0, 120, 212, 0.12);
+  --sk-row-hint-warn-color: #ffb900;
+
+  /* Text editor — white document page on dark chrome (like Excel sheet area) */
+  --sk-texteditor-workspace-bg: #252526;
+  --sk-texteditor-page-bg: #ffffff;
+  --sk-texteditor-page-text: #201f1e;
+  --sk-texteditor-page-muted: #605e5c;
+  --sk-texteditor-page-border: #d0d0d0;
+}
+
+/* Light theme — overrides dark defaults from SkComponent.css / SkSpreadSheet.css */
+
+html[data-theme="light"] {
+  --sk-color: #323130;
+  --sk-color-background: #ffffff;
+  --sk-border-color: #d0d0d0;
+  --sk-color-tool: #323130;
+  --sk-color-background-tool: #f3f2f1;
+  --sk-color-border: #d0d0d0;
+
+  --sk-color-modal-title: #323130;
+  --sk-color-modal-footer: #323130;
+  --sk-color-modal: #323130;
+
+  --sk-input-color: #323130;
+  --sk-input-color-background: #ffffff;
+  --sk-input-disabled-background: #f3f2f1;
+  --sk-input-disabled-color: #a19f9d;
+
+  --sk-inplace-selection-bg: #0078d4;
+  --sk-inplace-selection-color: #ffffff;
+
+  --sk-svg-color-background-hover: rgba(0, 0, 0, 0.06);
+
+  --sk-menu-color: #323130;
+  --sk-menu-color-background: #ffffff;
+  --sk-menu-color-selected: #000000;
+  --sk-menu-color-background-selected: #edebe9;
+
+  --sk-text-color: #323130;
+  --sk-text-muted: #605e5c;
+  --sk-color-muted: #605e5c;
+
+  --sk-grid-row-hover-bg: rgba(0, 120, 212, 0.08);
+  --sk-grid-row-selected-bg: #deecf9;
+  --sk-grid-row-selected-text: #201f1e;
+
+  --sk-scrollbar-thumb-color: #c8c8c8;
+  --sk-darker-background: #edebe9;
+
+  --sk-dialog-bg: #ffffff;
+  --sk-dialog-title-bg: #ffffff;
+  --sk-dialog-title-color: #323130;
+  --sk-dialog-text: #323130;
+  --sk-dialog-label: #605e5c;
+  --sk-dialog-border: #d0d0d0;
+  --sk-dialog-input-bg: #ffffff;
+  --sk-dialog-input-color: #323130;
+  --sk-dialog-input-border: #8a8886;
+  --sk-dialog-input-disabled-bg: #f3f2f1;
+  --sk-dialog-input-disabled-color: #a19f9d;
+  --sk-dialog-footer-bg: #ffffff;
+  --sk-dialog-secondary: #edebe9;
+  --sk-dialog-secondary-hover: #e1dfdd;
+  --sk-dialog-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+
+  /* Right stack-panel surfaces (Tables, Find, ...) */
+  --sk-panel-bg: #ffffff;
+  --sk-panel-subtle-bg: rgba(0, 0, 0, 0.02);
+
+  /* Spreadsheet chrome */
+  --sk-color-background-chrome: #ffffff;
+  --sk-color-background-ribbon: #f3f2f1;
+  --sk-formula-bg: #ffffff;
+  --sk-formula-text: #323130;
+
+  --sk-tab-inactive-text: #605e5c;
+  --sk-tab-strip-bg: #f3f2f1;
+  --sk-tab-active-bg: #ffffff;
+  --sk-tab-active-text: #201f1e;
+  --sk-tab-active-border: #c8c8c8;
+  --sk-tab-active-accent: #0078d4;
+  --sk-tab-hover-bg: rgba(0, 0, 0, 0.06);
+
+  --sk-color-grid: #d4d4d4;
+  --sk-color-header-background: #f2f2f2;
+  --sk-color-header-text: #333333;
+  --sk-color-header-grid: #d4d4d4;
+  --sk-color-corner-background: #f2f2f2;
+
+  --sk-toolbar-button-hover-background: rgba(0, 0, 0, 0.06);
+  --sk-toolbar-button-active-background: rgba(0, 0, 0, 0.10);
+
+  --sk-popup-shadow-small: 0 2px 8px rgba(0, 0, 0, 0.12);
+  --sk-tabstrip-thumb-background: rgba(0, 0, 0, 0.25);
+
+  /* App shell — same surface as top menu bar */
+  --sk-left-panel-bg: var(--sk-color-background, #ffffff);
+  --sk-left-panel-border: #d0d0d0;
+  --sk-left-panel-link: #323130;
+  --sk-left-panel-link-hover: #000000;
+  --sk-left-panel-toggle-border: #c8c8c8;
+  --sk-left-panel-toggle-hover-bg: #edebe9;
+  --sk-vd-footer-bg: #f3f2f1;
+  --sk-vd-footer-border: #d0d0d0;
+  --sk-vd-footer-text: #323130;
+
+  /* Read-only chip: black on light chrome */
+  --sk-readonly-banner-bg: #000000;
+  --sk-readonly-banner-border: #000000;
+  --sk-readonly-banner-title: #ffffff;
+  --sk-readonly-banner-text: #ffffff;
+  --sk-readonly-banner-hint: #f3f2f1;
+  --sk-readonly-banner-sep: rgba(255, 255, 255, 0.45);
+
+  /* Named range / formula lists */
+  --sk-row-hover-background: #f0f6ff;
+  --sk-row-highlight-background: #d9e8ff;
+  --sk-row-pencil-hover-background: #e3edff;
+  --sk-row-pencil-hover-border: #b3d4ff;
+  --sk-row-pencil-hover-color: #0b57d0;
+  --sk-row-edit-background: #f7faff;
+  --sk-row-edit-border: #b3d4ff;
+  --sk-row-editing-background: #f7faff;
+  --sk-row-hint-warn-color: #a15c00;
+
+  /* Text editor — page matches light document surface */
+  --sk-texteditor-workspace-bg: var(--sk-color-background, #ffffff);
+  --sk-texteditor-page-bg: #ffffff;
+  --sk-texteditor-page-text: var(--sk-text-color, #323130);
+  --sk-texteditor-page-muted: var(--sk-text-muted, #605e5c);
+  --sk-texteditor-page-border: var(--sk-border-color, #d0d0d0);
+}

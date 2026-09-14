@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Login icon - door with arrow -->
+  <!-- Door frame -->
+  <rect x="12" y="8" width="32" height="48" rx="2" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Door opening arc -->
+  <path d="M12 14C12 11 14 10 17 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Arrow right -->
+  <path d="M48 32L56 32" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M52 24L56 32L52 40" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+

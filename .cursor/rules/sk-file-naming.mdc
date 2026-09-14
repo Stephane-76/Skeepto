@@ -1,0 +1,34 @@
+---
+description: New source files under skeepto must use the Sk prefix (SkMyModule.js)
+alwaysApply: true
+---
+
+# skeepto — Sk file naming
+
+When **creating a new file** under `skeepto/src/`, the basename must start with **`Sk`** (PascalCase after `Sk`). `Skeepto…` is also allowed (it starts with `Sk`).
+
+## Required
+
+```text
+✅ src/spreadsheet/SkRangeToHtmlTable.js
+✅ src/component/SkMyDialog.js
+✅ src/SkeeptoLang.js
+```
+
+## Imports
+
+Import paths must match the real filename (case-sensitive):
+
+```javascript
+import { foo } from './SkJsonViewFormatHydrate.js';
+// not './jsonViewFormatHydrate.js'
+```
+
+## Exceptions (do not rename; no Sk prefix required)
+
+- Static assets: `*.css`, `*.svg`, `*.webp`, `*.png`, `*.json` (data), fonts
+- CRA/bootstrap entry points already in the tree: `index.js`, `App.js`, `App.css`
+- Test/setup files under `src/setupTests.js`, `src/reportWebVitals.js`
+- Files outside `skeepto/src/` (e.g. `Node/Server/`, `public/`, config at repo root)
+
+When adding a module next to existing non-`Sk` legacy files, prefer **`Sk…`** for the **new** file rather than extending the old naming pattern.

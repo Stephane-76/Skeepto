@@ -1,0 +1,25 @@
+---
+description: Sync WASM to build/ after sker rebuild — user serves from skeepto/build/
+alwaysApply: true
+---
+
+# skeepto WASM → build/
+
+The user serves/tests the app from `skeepto/build/`, not `public/` directly.
+
+After `compil2Wasm.sh` (or any WASM rebuild in `sker/`), artifacts land in `skeepto/public/`. The user serves from `build/` — **remind them** to sync; do not run sync yourself unless they ask (see `user-compiles.mdc`).
+
+Full sync:
+
+```bash
+cd /Users/stephaneallez/Projects/skeepto && npm run build
+```
+
+WASM-only:
+
+```bash
+cp public/SkReactSpreadSheet.{mjs,wasm,wasm.map} build/
+cp public/SkReactSpreadSheet.{mjs,wasm,wasm.map} Node/Server/
+```
+
+Remind hard-refresh (**Cmd+Shift+R**) so the browser reloads `.wasm`.

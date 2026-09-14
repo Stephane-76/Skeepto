@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Group icon - multiple users -->
+  <!-- Left user head -->
+  <circle cx="16" cy="18" r="8" fill="currentColor"/>
+  
+  <!-- Left user body -->
+  <path d="M16 28C8 28 2 32.5 2 38V46C2 47.1 2.9 48 4 48H28C29.1 48 30 47.1 30 46V38C30 32.5 24 28 16 28Z" fill="currentColor"/>
+  
+  <!-- Right user head -->
+  <circle cx="48" cy="18" r="8" fill="currentColor"/>
+  
+  <!-- Right user body -->
+  <path d="M48 28C56 28 62 32.5 62 38V46C62 47.1 61.1 48 60 48H36C34.9 48 34 47.1 34 46V38C34 32.5 40 28 48 28Z" fill="currentColor"/>
+  
+  <!-- Middle user head (smaller) -->
+  <circle cx="32" cy="24" r="6" fill="currentColor"/>
+  
+  <!-- Middle user body -->
+  <path d="M32 38C38 38 42 41 42 45V50C42 50.6 41.6 51 41 51H23C22.4 51 22 50.6 22 50V45C22 41 26 38 32 38Z" fill="currentColor"/>
+</svg>
+

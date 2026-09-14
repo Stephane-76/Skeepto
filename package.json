@@ -1,0 +1,129 @@
+{
+  "name": "skeepto",
+  "version": "0.1.0",
+  "license": "MIT",
+  "private": true,
+  "main": "electron/main.js",
+  "dependencies": {
+    "@monaco-editor/react": "^4.6.0",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@tiptap/core": "^3.27.1",
+    "@tiptap/extension-font-family": "^3.27.1",
+    "@tiptap/extension-image": "^3.27.1",
+    "@tiptap/extension-table": "^3.27.1",
+    "@tiptap/extension-table-cell": "^3.27.1",
+    "@tiptap/extension-table-header": "^3.27.1",
+    "@tiptap/extension-table-row": "^3.27.1",
+    "@tiptap/extension-text-align": "^3.27.1",
+    "@tiptap/extension-text-style": "^3.27.1",
+    "@tiptap/starter-kit": "^3.27.1",
+    "bcryptjs": "^3.0.2",
+    "bootstrap": "^5.3.3",
+    "numbro": "^2.5.0",
+    "pdf-lib": "^1.17.1",
+    "react": "^18.2.1",
+    "react-color": "^2.19.3",
+    "react-devtools": "^6.0.1",
+    "react-dom": "^18.3.1",
+    "react-joyride": "^3.1.0",
+    "react-router-dom": "^6.30.4",
+    "react-scripts": "^5.0.1",
+    "treeview-react-bootstrap": "^0.4.6",
+    "web-vitals": "^2.1.4"
+  },
+  "compilerOptions": {
+    "target": "ES2017"
+  },
+  "scripts": {
+    "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-scripts start",
+    "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "electron": "electron .",
+    "electron:dev": "concurrently -k \"cross-env BROWSER=none react-scripts start\" \"wait-on http://localhost:3000 && cross-env ELECTRON_START_URL=http://localhost:3000 electron .\"",
+    "electron:start": "electron .",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:mac:universal": "npm run build && electron-builder --mac --universal",
+    "dist:win": "npm run build && electron-builder --win"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "build": {
+    "appId": "fr.skeema.skeepto",
+    "productName": "Skeepto",
+    "asar": true,
+    "files": [
+      "electron/**/*",
+      "build/**/*",
+      "package.json",
+      "Node/Server/SkExcelLib.cjs",
+      "Node/Server/SkExcelLib.wasm"
+    ],
+    "asarUnpack": [
+      "electron/SkExcelWorker.js",
+      "Node/Server/SkExcelLib.cjs",
+      "Node/Server/SkExcelLib.wasm"
+    ],
+    "extraMetadata": {
+      "main": "electron/main.js"
+    },
+    "directories": {
+      "output": "dist-electron",
+      "buildResources": "build-resources"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.productivity",
+      "icon": "build-resources/icon.icns"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "icon": "build-resources/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "browser": {
+    "fs": false,
+    "os": false,
+    "path": false
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "proxy": "http://localhost:8000",
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@babel/plugin-transform-private-property-in-object": "^7.24.7",
+    "concurrently": "^9.2.4",
+    "cross-env": "^7.0.3",
+    "electron": "^43.1.1",
+    "electron-builder": "^26.15.3",
+    "wait-on": "^8.0.5"
+  }
+}

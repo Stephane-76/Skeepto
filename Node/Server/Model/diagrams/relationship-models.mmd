@@ -1,0 +1,16 @@
+flowchart TB
+    subgraph rigide ["Liens rigides — FK DataModel"]
+        U["User.Group"] --> G["Group.Code"]
+        R["Relationship.RelationshipType"] --> RT["RelationshipType.Code"]
+    end
+
+    subgraph graphe ["Liens souples — graphe Relationship"]
+        RF["FromType + FromId"] --> E1["Toute entité du metamodel"]
+        RT2["ToType + ToId"] --> E2["Toute entité du metamodel"]
+        RT3["RelationshipType"] --> RF
+        RT3 --> RT2
+    end
+
+    subgraph exemple ["Exemple memberOf"]
+        U2["User\nEmail: lallez@skeema.fr"] -->|"memberOf"| G2["Group\nCode: admin"]
+    end

@@ -1,0 +1,130 @@
+/* Read-only chip on chrome — inverted contrast per theme (see SkTheme.css) */
+
+.sk-readonly-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 12px;
+  background: transparent;
+  border-bottom: 1px solid var(--sk-border-color, #484848);
+  flex-shrink: 0;
+  z-index: 1200;
+  position: relative;
+}
+
+.sk-readonly-banner__chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  max-width: 100%;
+  padding: 4px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  background: var(--sk-readonly-banner-bg, #ffffff);
+  color: var(--sk-readonly-banner-text, #000000);
+  border: 1px solid var(--sk-readonly-banner-border, #000000);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="dark"] .sk-readonly-banner__chip {
+  background: #ffffff;
+  color: #000000;
+  border-color: #000000;
+}
+
+html[data-theme="light"] .sk-readonly-banner__chip {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.sk-readonly-banner__lock {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.sk-readonly-banner__title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sk-readonly-banner-title, inherit);
+  letter-spacing: 0.02em;
+}
+
+html[data-theme="dark"] .sk-readonly-banner__title,
+html[data-theme="dark"] .sk-readonly-banner__file,
+html[data-theme="dark"] .sk-readonly-banner__hint {
+  color: #000000;
+}
+
+html[data-theme="light"] .sk-readonly-banner__title,
+html[data-theme="light"] .sk-readonly-banner__file,
+html[data-theme="light"] .sk-readonly-banner__hint {
+  color: #ffffff;
+}
+
+.sk-readonly-banner__sep {
+  color: var(--sk-readonly-banner-sep, currentColor);
+  opacity: 0.45;
+  user-select: none;
+}
+
+.sk-readonly-banner__file {
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--sk-readonly-banner-text, inherit);
+  max-width: min(36vw, 360px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sk-readonly-banner__hint {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--sk-readonly-banner-hint, inherit);
+  opacity: 0.85;
+}
+
+/* Inside formula bar row (SkSpControlPanel) */
+.sk-readonly-banner--in-control-panel.sk-readonly-banner {
+  width: auto;
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  align-self: stretch;
+  align-items: center;
+  padding: 0;
+  margin: 0 10px 0 0;
+  border-bottom: none;
+  background: transparent;
+}
+
+.sk-readonly-banner--in-control-panel .sk-readonly-banner__chip {
+  font-size: 14px;
+  padding: 7px 18px;
+  border-radius: 5px;
+  gap: 8px 12px;
+}
+
+.sk-readonly-banner--in-control-panel .sk-readonly-banner__title {
+  font-size: 14px;
+}
+
+.sk-readonly-banner--in-control-panel .sk-readonly-banner__file,
+.sk-readonly-banner--in-control-panel .sk-readonly-banner__hint {
+  font-size: 13px;
+}
+
+.sk-readonly-banner--in-control-panel .sk-readonly-banner__lock {
+  font-size: 15px;
+}
+
+.SkSpControlPanel--readOnly .SkSpControlPanel-formula .SkSpInplaceEditStatic {
+  opacity: 0.65;
+}

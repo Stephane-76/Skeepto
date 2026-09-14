@@ -1,0 +1,17 @@
+ic_undo_24px.svg
+ic_redo_24px.svg
+ic_format_align_left_24px.svg
+ic_format_align_right_24px.svg
+ic_format_align_center_24px.svg
+ic_format_bold_24px.svg
+ic_format_italic_24px.svg
+ic_strikethrough_s_24px.svg
+ic_border_all_24px.svg
+ic_border_clear_24px.svg
+ic_border_left_24px.svg
+ic_border_right_24px.svg
+ic_border_top_24px.svg
+ic_border_bottom_24px.svg
+ic_vertical_align_top_24px.svg
+ic_vertical_align_bottom_24px.svg
+ic_vertical_align_center_24px.svg

@@ -1,0 +1,281 @@
+/* Function selector — theme-aware (embedded in SkSpCommand / popup) */
+
+.SkFunctionSelector {
+  --sk-fn-text: var(--sk-dialog-text);
+  --sk-fn-label: var(--sk-dialog-label);
+  --sk-fn-muted: var(--sk-text-muted);
+  --sk-fn-border: var(--sk-dialog-border);
+  --sk-fn-list-bg: var(--sk-dialog-input-bg);
+  --sk-fn-item-bg: var(--sk-dialog-bg);
+  --sk-fn-item-hover: rgba(255, 255, 255, 0.08);
+  --sk-fn-item-selected-bg: rgba(0, 120, 212, 0.35);
+  --sk-fn-item-selected-text: #ffffff;
+  --sk-fn-detail-bg: #454545;
+  --sk-fn-preview-bg: rgba(76, 175, 80, 0.2);
+  --sk-fn-preview-border: rgba(76, 175, 80, 0.55);
+  --sk-fn-error-bg: rgba(241, 112, 123, 0.2);
+  --sk-fn-error-text: var(--sk-error-color);
+  --sk-fn-apply-bg: #4caf50;
+  --sk-fn-insert-bg: var(--sk-dialog-accent);
+  --sk-fn-btn-disabled-bg: var(--sk-dialog-secondary);
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+  color: var(--sk-fn-text);
+}
+
+html[data-theme="light"] .SkFunctionSelector {
+  --sk-fn-list-bg: #ffffff;
+  --sk-fn-item-bg: #ffffff;
+  --sk-fn-item-hover: var(--sk-neutral-100);
+  --sk-fn-item-selected-bg: #e3f2fd;
+  --sk-fn-item-selected-text: #201f1e;
+  --sk-fn-detail-bg: #f9f9f9;
+  --sk-fn-preview-bg: #e8f5e9;
+  --sk-fn-preview-border: #4caf50;
+  --sk-fn-error-bg: #ffebee;
+  --sk-fn-error-text: #c62828;
+}
+
+.SkFunctionSelector--embedded {
+  padding: 8px 10px 10px;
+  box-sizing: border-box;
+}
+
+.SkFunctionSelector:not(.SkFunctionSelector--embedded) {
+  padding: 10px;
+}
+
+.SkFunctionSelector-loading {
+  padding: 10px;
+  text-align: center;
+  color: var(--sk-fn-muted);
+}
+
+.SkFunctionSelector-error {
+  padding: 10px;
+  color: var(--sk-fn-error-text);
+  background-color: var(--sk-fn-error-bg);
+  border-radius: var(--sk-radius-sm);
+  margin-bottom: 10px;
+}
+
+.SkFunctionSelector-field {
+  margin-bottom: 10px;
+}
+
+.SkFunctionSelector-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: var(--sk-fn-label);
+}
+
+.SkFunctionSelector-select {
+  width: 100%;
+  padding: 5px;
+  font-size: 14px;
+  color: var(--sk-dialog-input-color);
+  background-color: var(--sk-dialog-input-bg);
+  border: 1px solid var(--sk-dialog-input-border);
+  border-radius: var(--sk-radius-sm);
+}
+
+.SkFunctionSelector-targetRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.SkFunctionSelector-targetInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.SkFunctionSelector .SkButton.SkFunctionSelector-applyBtn {
+  padding: 2px 8px;
+  font-size: 14px;
+  line-height: 1;
+  color: #ffffff;
+  background-color: var(--sk-fn-btn-disabled-bg);
+  cursor: not-allowed;
+}
+
+.SkFunctionSelector .SkButton.SkFunctionSelector-applyBtn.is-enabled {
+  background-color: var(--sk-fn-apply-bg);
+  cursor: pointer;
+}
+
+.SkFunctionSelector .SkButton.SkFunctionSelector-applyBtn.is-enabled:hover {
+  filter: brightness(1.08);
+}
+
+.SkFunctionSelector-list {
+  margin-bottom: 10px;
+  border: 1px solid var(--sk-fn-border);
+  border-radius: var(--sk-radius-sm);
+  /* Grow to fill the available vertical space instead of a fixed cap. */
+  flex: 1 1 auto;
+  min-height: 120px;
+  overflow-y: auto;
+  background-color: var(--sk-fn-list-bg);
+}
+
+.SkFunctionSelector-listItem {
+  padding: 8px;
+  cursor: pointer;
+  background-color: var(--sk-fn-item-bg);
+  border-bottom: 1px solid var(--sk-fn-border);
+  color: var(--sk-fn-text);
+}
+
+.SkFunctionSelector-listItem:last-child {
+  border-bottom: none;
+}
+
+.SkFunctionSelector-listItem:hover {
+  background-color: var(--sk-fn-item-hover);
+}
+
+.SkFunctionSelector-listItem.is-selected {
+  background-color: var(--sk-fn-item-selected-bg);
+  color: var(--sk-fn-item-selected-text);
+}
+
+.SkFunctionSelector-listItem.is-selected:hover {
+  background-color: var(--sk-fn-item-selected-bg);
+}
+
+.SkFunctionSelector-listTitle {
+  font-weight: bold;
+  color: inherit;
+}
+
+.SkFunctionSelector-listSyntax {
+  font-size: 12px;
+  color: var(--sk-fn-muted);
+  font-family: var(--sk-font-family);
+  margin-top: 4px;
+}
+
+.SkFunctionSelector-listItem.is-selected .SkFunctionSelector-listSyntax,
+.SkFunctionSelector-listItem.is-selected .SkFunctionSelector-listDesc {
+  color: var(--sk-fn-muted);
+}
+
+.SkFunctionSelector-listDesc {
+  font-size: 11px;
+  color: var(--sk-fn-muted);
+  margin-top: 4px;
+}
+
+.SkFunctionSelector-detail {
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: var(--sk-fn-detail-bg);
+  border-radius: var(--sk-radius-sm);
+  border: 1px solid var(--sk-fn-border);
+  color: var(--sk-fn-text);
+}
+
+.SkFunctionSelector-detailTitle {
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: var(--sk-fn-text);
+}
+
+.SkFunctionSelector-detailDesc {
+  font-size: 12px;
+  color: var(--sk-fn-muted);
+  margin-bottom: 10px;
+}
+
+.SkFunctionSelector-argsTitle {
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--sk-fn-label);
+}
+
+.SkFunctionSelector-argBlock {
+  margin-bottom: 8px;
+}
+
+.SkFunctionSelector-argLabel {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 12px;
+  color: var(--sk-fn-text);
+}
+
+.SkFunctionSelector-argRequired {
+  color: var(--sk-error-color);
+}
+
+.SkFunctionSelector-argType {
+  color: var(--sk-fn-muted);
+  font-size: 11px;
+  margin-left: 5px;
+}
+
+.SkFunctionSelector-argHint {
+  font-size: 11px;
+  color: var(--sk-fn-muted);
+  margin-bottom: 3px;
+}
+
+.SkFunctionSelector-preview {
+  margin-bottom: 10px;
+  padding: 8px;
+  background-color: var(--sk-fn-preview-bg);
+  border-radius: var(--sk-radius-sm);
+  border: 1px solid var(--sk-fn-preview-border);
+  color: var(--sk-fn-text);
+}
+
+.SkFunctionSelector-previewLabel {
+  font-size: 11px;
+  color: var(--sk-fn-muted);
+  margin-bottom: 4px;
+}
+
+.SkFunctionSelector-previewFormula {
+  font-family: var(--sk-font-family);
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--sk-fn-text);
+}
+
+.SkFunctionSelector-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--sk-fn-border);
+}
+
+.SkFunctionSelector .SkButton.SkFunctionSelector-insertBtn {
+  color: #ffffff;
+  background-color: var(--sk-fn-btn-disabled-bg);
+  cursor: not-allowed;
+}
+
+.SkFunctionSelector .SkButton.SkFunctionSelector-insertBtn.is-enabled {
+  background-color: var(--sk-fn-insert-bg);
+  cursor: pointer;
+}
+
+.SkFunctionSelector .SkButton.SkFunctionSelector-insertBtn.is-enabled:hover {
+  background-color: var(--sk-dialog-accent-hover);
+}
+
+/* Panel range pickers inside the function selector */
+.SkFunctionSelector .SkSpInplaceEditStatic--panel,
+.SkFunctionSelector textarea.SkSpInplaceEditStatic[id^="InplaceEditFunc"] {
+  color: var(--sk-dialog-input-color);
+  background-color: var(--sk-dialog-input-bg);
+  border: 1px solid var(--sk-dialog-input-border);
+}

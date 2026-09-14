@@ -1,0 +1,31 @@
+---
+description: User runs builds/compiles — agent does not unless explicitly asked
+alwaysApply: true
+---
+
+# User compiles (do not run builds yourself)
+
+The user compiles and builds locally. **Do not** run compile or build commands unless they explicitly ask you to in that conversation.
+
+## Do not run (unless asked)
+
+- WASM: `compil2Wasm.sh`, `emcmake`, Emscripten builds in `sker/`
+- App sync: `npm run build`, copying WASM artifacts to `skeepto/build/`
+- Native C++ builds in `sker/` (CMake, make, xcodebuild, etc.)
+
+## Instead
+
+After C++/WASM or frontend changes that require a rebuild, **tell the user** what to run — do not launch it yourself.
+
+Example reminder (WASM + skeepto):
+
+```bash
+cd /Users/stephaneallez/Projects/sker/SkReactSpreadSheet && ./compil2Wasm.sh
+cd /Users/stephaneallez/Projects/skeepto && npm run build
+```
+
+Then hard-refresh (**Cmd+Shift+R**) when testing `.wasm` changes.
+
+## When you may compile
+
+Only when the user explicitly asks, e.g. “compile le WASM”, “lance npm run build”, “build et teste”.

@@ -1,0 +1,22 @@
+ 
+.ElemHeader {
+  color:black;
+  display: flex;
+  width: 20%;
+}
+
+div.dropdown-menu.show {
+  color : var(--Sk-header-color);
+  background-color: var(--Sk-header-bg);
+}
+
+.Color-nav {
+  color : var(--Sk-header-color);
+  background-color: var(--Sk-header-bg);
+}
+
+.Item-Nav {
+  display:flex;
+  flex-direction: row;
+  background-color: blue;
+}

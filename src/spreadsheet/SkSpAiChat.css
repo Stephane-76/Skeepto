@@ -1,0 +1,257 @@
+.SkSpAiChat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 280px;
+  max-height: calc(100vh - 160px);
+  color: #1a1a1a;
+  font-size: 13px;
+}
+
+.SkSpAiChat-status {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #fff8e6;
+  border: 1px solid #f0d78c;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.SkSpAiChat-status--ok {
+  background: #eef9f0;
+  border-color: #9fd4a8;
+}
+
+.SkSpAiChat-steps {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  line-height: 1.5;
+}
+
+.SkSpAiChat-stepNote {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: #555;
+  line-height: 1.45;
+}
+
+.SkSpAiChat-mcpUrl {
+  margin-top: 8px;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.SkSpAiChat-workbook {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #444;
+  word-break: break-all;
+}
+
+.SkSpAiChat-messages {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  border: 1px solid #d8dce2;
+  border-radius: 6px;
+  background: #fafbfc;
+  padding: 8px;
+  margin-bottom: 8px;
+}
+
+.SkSpAiChat-empty {
+  color: #6c757d;
+  font-style: italic;
+  padding: 12px 4px;
+}
+
+.SkSpAiChat-help {
+  padding: 4px 2px 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #343a40;
+}
+
+.SkSpAiChat-helpLead {
+  margin: 0 0 10px;
+  color: #495057;
+}
+
+.SkSpAiChat-helpSection {
+  margin-bottom: 10px;
+}
+
+.SkSpAiChat-helpTitle {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5c6670;
+  margin-bottom: 4px;
+}
+
+.SkSpAiChat-helpTools {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  list-style: disc;
+}
+
+.SkSpAiChat-helpTools li {
+  margin: 0;
+}
+
+.SkSpAiChat-helpTools code {
+  font-size: 11px;
+  background: #eef1f4;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.SkSpAiChat-helpNote {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.SkSpAiChat-helpExamples {
+  margin: 0;
+  padding-left: 18px;
+  color: #495057;
+}
+
+.SkSpAiChat-helpExamples li {
+  margin-bottom: 3px;
+}
+
+.SkSpAiChat-msg {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  line-height: 1.45;
+}
+
+.SkSpAiChat-msgHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.SkSpAiChat-msgBody {
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+  cursor: text;
+}
+
+.SkSpAiChat-copyBtn {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 2px 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background: #fff;
+  color: #495057;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.SkSpAiChat-copyBtn:hover:not(:disabled) {
+  background: #f1f3f5;
+  border-color: #adb5bd;
+}
+
+.SkSpAiChat-copyBtn--done {
+  border-color: #9fd4a8;
+  background: #eef9f0;
+  color: #2f6f3e;
+}
+
+.SkSpAiChat-copyBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.SkSpAiChat-copyBtn--all {
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+.SkSpAiChat-copyAllRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.SkSpAiChat-msg--user {
+  background: #e8f0fe;
+  border: 1px solid #c6dafc;
+  margin-left: 12px;
+}
+
+.SkSpAiChat-msg--assistant {
+  background: #ffffff;
+  border: 1px solid #e2e6ea;
+  margin-right: 12px;
+}
+
+.SkSpAiChat-msg--system {
+  background: #f8f9fa;
+  border: 1px dashed #ced4da;
+  font-size: 12px;
+  color: #495057;
+}
+
+.SkSpAiChat-msgRole {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #5c6670;
+  margin-bottom: 0;
+}
+
+.SkSpAiChat-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.SkSpAiChat-input {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+  padding: 8px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.SkSpAiChat-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.SkSpAiChat-actions .SkButton {
+  min-width: 88px;
+}
+
+.SkSpAiChat-busy {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.SkSpAiChat-error {
+  margin-top: 6px;
+  color: #b42318;
+  font-size: 12px;
+  white-space: pre-wrap;
+}

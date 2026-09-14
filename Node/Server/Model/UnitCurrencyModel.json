@@ -1,0 +1,142 @@
+{
+  "schemaVersion": "1.1",
+  "description": "Physical units and ISO currencies. No FX quotes; all money normalization factors set to 1.",
+
+  "dimensionBasis": {
+    "L": "length",
+    "M": "mass",
+    "T": "time",
+    "I": "electricCurrent",
+    "Θ": "temperature",
+    "N": "amountOfSubstance",
+    "J": "luminousIntensity",
+    "CURRENCY": "currencyAmount"
+  },
+
+  "units": [
+    { "id": "m", "symbol": "m", "label": "metre", "dimensions": { "L": 1 } },
+    { "id": "km", "symbol": "km", "label": "kilometre", "dimensions": { "L": 1 }, "siEquivalent": { "unitId": "m", "factor": 1000 } },
+    { "id": "s", "symbol": "s", "label": "second", "dimensions": { "T": 1 } },
+    { "id": "h", "symbol": "h", "label": "hour", "dimensions": { "T": 1 }, "siEquivalent": { "unitId": "s", "factor": 3600 } },
+    { "id": "kg", "symbol": "kg", "label": "kilogram", "dimensions": { "M": 1 } },
+    { "id": "A", "symbol": "A", "label": "ampere", "dimensions": { "I": 1 } },
+    { "id": "K", "symbol": "K", "label": "kelvin", "dimensions": { "Θ": 1 } },
+    { "id": "mol", "symbol": "mol", "label": "mole", "dimensions": { "N": 1 } },
+    { "id": "cd", "symbol": "cd", "label": "candela", "dimensions": { "J": 1 } },
+    { "id": "m_per_s", "symbol": "m/s", "label": "metre per second", "dimensions": { "L": 1, "T": -1 } }
+  ],
+
+  "currencies": [
+    {
+      "id": "EUR",
+      "iso4217": "EUR",
+      "numericCode": 978,
+      "symbol": "€",
+      "label": "euro",
+      "minorUnits": 2,
+      "factor": 1,
+      "dimensions": { "CURRENCY": { "code": "EUR", "power": 1 } },
+      "tags": ["EU"]
+    },
+    {
+      "id": "USD",
+      "iso4217": "USD",
+      "numericCode": 840,
+      "symbol": "$",
+      "label": "US dollar",
+      "minorUnits": 2,
+      "factor": 1,
+      "dimensions": { "CURRENCY": { "code": "USD", "power": 1 } },
+      "tags": []
+    },
+    {
+      "id": "GBP",
+      "iso4217": "GBP",
+      "numericCode": 826,
+      "symbol": "£",
+      "label": "pound sterling",
+      "minorUnits": 2,
+      "factor": 1,
+      "dimensions": { "CURRENCY": { "code": "GBP", "power": 1 } },
+      "tags": []
+    },
+    {
+      "id": "CHF",
+      "iso4217": "CHF",
+      "numericCode": 756,
+      "symbol": "CHF",
+      "label": "Swiss franc",
+      "minorUnits": 2,
+      "factor": 1,
+      "dimensions": { "CURRENCY": { "code": "CHF", "power": 1 } },
+      "tags": []
+    },
+    {
+      "id": "JPY",
+      "iso4217": "JPY",
+      "numericCode": 392,
+      "symbol": "¥",
+      "label": "yen",
+      "minorUnits": 0,
+      "factor": 1,
+      "dimensions": { "CURRENCY": { "code": "JPY", "power": 1 } },
+      "tags": []
+    }
+  ],
+
+  "moneyRules": {
+    "addSubtractRequireSameCurrencyDimension": true,
+    "multiplyPhysicalByMoney": {
+      "allowed": true,
+      "description": "Scalar * money keeps the currency dimension."
+    },
+    "multiplyMoneyByMoney": {
+      "allowed": false,
+      "reason": "Default blocked; enable only for specialized product models."
+    },
+    "roundingPolicy": {
+      "mode": "half_even",
+      "applyPerOperation": true
+    }
+  },
+
+  "conversionPaths": [],
+
+  "explicitIncompatibilities": [
+    {
+      "left": { "kind": "currency", "id": "EUR" },
+      "right": { "kind": "currency", "id": "USD" },
+      "operations": ["add", "subtract"],
+      "severity": "error",
+      "unless": ["same_operation_after_explicit_convert"],
+      "messageKey": "money.cross_currency_without_conversion"
+    },
+    {
+      "left": { "kind": "dimensions", "signature": { "L": 1 } },
+      "right": { "kind": "dimensions", "signature": { "T": 1 } },
+      "operations": ["add", "subtract"],
+      "severity": "error",
+      "messageKey": "physics.dimension_mismatch"
+    },
+    {
+      "left": { "kind": "currency", "id": "EUR" },
+      "right": { "kind": "unit", "id": "m" },
+      "operations": ["add", "subtract"],
+      "severity": "error",
+      "messageKey": "mixed.money_and_length"
+    },
+    {
+      "left": { "kind": "dimensions", "signature": { "I": 1 } },
+      "right": { "kind": "dimensions", "signature": { "Θ": 1 } },
+      "operations": ["add", "subtract"],
+      "severity": "error",
+      "messageKey": "physics.dimension_mismatch"
+    }
+  ],
+
+  "compatibilityMatrixHints": {
+    "description": "Derive compatibility from dimensions and explicitIncompatibilities. No FX table in this file.",
+    "sameCurrencyAddition": true,
+    "crossCurrencyAdditionWithoutFx": false
+  }
+}

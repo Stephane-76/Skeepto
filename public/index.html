@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon" type="image/svg+xml" href="%PUBLIC_URL%/favicon.svg" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <!-- Google Fonts: Roboto (UI) + Roboto Mono (code / formulas). -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap"
+    >
+    <!--
+      Material Symbols Rounded — used by drawIconSets() (SkUtility.js) to render
+      conditional-formatting icon sets on the canvas. We deliberately do NOT
+      pass icon_names=... here: when Google Fonts builds an icon subset it
+      remaps the PUA codepoints, which breaks fillText() calls that target
+      the canonical codepoints (e.g. "\ue5db" for arrow_downward). Loading
+      the full FILL=1 face keeps the original PUA mapping so canvas2d can
+      render every Material Symbols glyph our IconSets reference.
+      The 'block' display strategy lets canvas.fillText() pick up the real font
+      synchronously once it's ready, which is what we want for a one-shot draw.
+    -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400..700,1,0&display=block"
+    >
+    <script>
+      // Canvas2D's fillText() does not auto-fetch web fonts: it falls back
+      // silently to a system font if the requested family hasn't fully loaded
+      // yet. We force-load Material Symbols Rounded as soon as the page
+      // parses, then flip a global flag + dispatch a repaint event so
+      // drawIconSets() (SkUtility.js) and the spreadsheet canvas can swap from
+      // the legacy iconString fallback to the actual Material Symbols glyph
+      // without requiring a user interaction.
+      window.__SkMaterialSymbolsReady = false;
+      if (document.fonts && document.fonts.load) {
+        Promise.all([
+          document.fonts.load('500 16px "Material Symbols Rounded"'),
+          document.fonts.load('700 16px "Material Symbols Rounded"'),
+        ]).then(() => {
+          window.__SkMaterialSymbolsReady = true;
+          window.dispatchEvent(new Event("sk-material-symbols-loaded"));
+        }).catch(() => {
+          window.__SkMaterialSymbolsReady = false;
+        });
+      }
+    </script>
+    <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+    <title>Skeepto</title>
+  </head>
+  <script  type='text/javascript'>
+     function delay(time) {
+          return new Promise(resolve => setTimeout(resolve, time));
+     }
+     // SkCreateModule() runs WASM before React mounts; C++ may call these before SkSpInterface.loadWebAssembly().
+     if (typeof window.OnCellChange !== 'function') {
+       window.OnCellChange = function() {};
+     }
+     if (typeof window.PostMessage !== 'function') {
+       window.PostMessage = function() {};
+     }
+
+     // Emscripten TTY often calls Module.print only on newline (put_char flushes at \n).
+     // Custom stdout/stderr receive every byte; queueMicrotask flush so std::cout without std::endl still reaches the console.
+     function skEmscriptenByteSink(logFn, label) {
+       var bytes = [];
+       var scheduled = false;
+       function flush() {
+         scheduled = false;
+         if (bytes.length === 0) return;
+         logFn(label, new TextDecoder('utf-8', { fatal: false }).decode(new Uint8Array(bytes)));
+         bytes.length = 0;
+       }
+       function schedule() {
+         if (!scheduled) {
+           scheduled = true;
+           queueMicrotask(flush);
+         }
+       }
+       function sink(b) {
+         if (b === 10) {
+           flush();
+           return;
+         }
+         if (b === null || b === undefined) {
+           flush();
+           return;
+         }
+         if (b !== 0) bytes.push(b & 0xff);
+         schedule();
+       }
+       sink.buffer = bytes;
+       return sink;
+     }
+
+     var Module = {
+      preRun: [],
+      postRun: [],
+      env: {
+        abort(_msg, _file, line, column) {
+          console.error("SkReactSpreadSheet abort called at index.html" + line + ":" + column);
+        }
+      },
+      stdout: skEmscriptenByteSink(console.log.bind(console), 'C++ ->'),
+      stderr: skEmscriptenByteSink(console.error.bind(console), 'C++ Error ->'),
+      print: (function(text) {
+        console.log("C++ ->",text)
+      }),
+      printErr: (function(text) {
+        console.error("C++ Error ->",text)
+      }),
+      setStatus: (function(text) {
+        console.log("-->Status",text)
+      }),
+
+      // Add required functions to Module for WASM callbacks BEFORE initialization
+      OnCellChange: function(sText) {
+        console.log("OnCellChange called with:", sText);
+        // Call the global OnCellChange function if it exists
+        if (typeof window.OnCellChange === 'function') {
+          window.OnCellChange(sText);
+        }
+      },
+      
+      PostMessage: function(sJson) {
+        console.log("PostMessage called with:", sJson);
+        // Call the global PostMessage function if it exists
+        if (typeof window.PostMessage === 'function') {
+          window.PostMessage(sJson);
+        }
+      },
+      
+      GenericFunction: function(sArg) {
+        console.log("GenericFunction called with:", sArg);
+        return "Generic response";
+      },
+
+      onRuntimeInitialized: function() {
+        // Global variable for access 
+        console.log("SkReactSpreadSheet Loaded........");
+        console.log("Module.OnCellChange exists:", typeof Module.OnCellChange);
+        console.log("Module.PostMessage exists:", typeof Module.PostMessage);
+        console.log("Module.GenericFunction exists:", typeof Module.GenericFunction);
+        
+        window.SpreadSheet=Module;  
+        window.__SkModuleReady = true;
+       
+        // Instance de UISpreadSheet créée par le wrapper JS (SkUISpreadSheet.js)
+        // Éviter de créer une seconde instance ici pour ne pas dupliquer l'état C++
+
+        // Reset SpreadSheet
+        window.ResetSpreadSheet=1;
+        
+        // Store the module instance globally
+        window.SkModuleInstance = Module;
+        
+        // Fonction pour appeler ready() quand le composant est disponible
+        function callReadyWhenAvailable() {
+          if (window.SkSpreadSheet !== undefined && typeof window.SkSpreadSheet.ready === 'function') {
+            console.log("SkSpreadSheet component found, calling ready()");
+            window.SkSpreadSheet.ready();
+            return true;
+          }
+          return false;
+        }
+
+        // Vérifier immédiatement si le composant est déjà disponible
+        if (!callReadyWhenAvailable()) {
+          // Si pas encore disponible, vérifier périodiquement avec un timeout
+          const checkInterval = setInterval(() => {
+            if (callReadyWhenAvailable()) {
+              clearInterval(checkInterval);
+            }
+          }, 100);
+
+          // Safety: SpreadSheet may mount much later (e.g. user opens file from virtual disk first)
+          setTimeout(() => {
+            clearInterval(checkInterval);
+            const w = window.SkSpreadSheet;
+            if (w === undefined || typeof w.ready !== "function") {
+              console.warn(
+                "[SkReactSpreadSheet] SkSpreadSheet not mounted after 60s — OK if the grid opens later (e.g. from virtual disk).",
+              );
+              Module.setStatus("");
+            }
+          }, 60000);
+        }
+      
+        console.log(Module);
+      }
+    };
+
+    Module.setStatus('Downloading SkReactSpreadSheet ...');
+    // Define a global error handler
+    window.onerror = function(message, source, lineno, colno, error) {
+      // Log the error information
+      console.log("An error occurred!");
+      console.log("Error message:", message);
+      console.log("Error source:", source);
+      console.log("Line number:", lineno);
+      console.log("Column number:", colno);
+
+      if (error) {
+          console.log("Error object:", error);
+      } else {
+          console.log("No error object is available.");
+      }
+
+      // Example: send the error information to a reporting server
+      /*
+      fetch('https://yourserver.com/report-error', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+              message: message,
+              source: source,
+              lineno: lineno,
+              colno: colno,
+              stack: error ? error.stack : null
+          })
+      });
+      */
+
+      // Return true to prevent the error from propagating to the browser console
+      // return true; 
+    };
+
+  
+    //console.log(Module)
+    
+    //Module.onRuntimeInitialized()
+  
+  </script>
+  <!-- Safari debugger-->
+  <!--script src="http://localhost:8097"></script-->
+  <script type="module">
+    // Store the createModule function globally for use by SkSpreadSheet component
+    window.SkCreateModule = async () => {
+        if (window.__SkModuleReady && window.SkModuleInstance && window.SpreadSheet) {
+          console.log('[SkCreateModule] Module already loaded');
+          return window.SkModuleInstance;
+        }
+        if (window.__SkWasmLoading) {
+          console.log('[SkCreateModule] Module is already loading, waiting...');
+          return window.__SkWasmLoading;
+        }
+        Module.setStatus('Loading WebAssembly module...');
+        // Desktop AND web both run the wasm32 module for now. A wasm64 (Memory64)
+        // build exists (SkReactSpreadSheet64.mjs) but is NOT usable yet:
+        //   1. Under Memory64 embind marshals pointers/sizes as BigInt, while the
+        //      JS frontend (SkUISpreadSheet, SkSpInterface, syncFrozenPanes, …)
+        //      does number arithmetic on them → "Cannot convert a BigInt value to
+        //      a number" all over the boundary.
+        //   2. Current Chromium/V8 (Electron 32 = Chromium 128) can't grow a
+        //      memory64 heap either.
+        // So we stay on wasm32 (2 GiB ceiling, works everywhere). To experiment
+        // with the 64-bit module, set window.skerUseWasm64 = true before load.
+        // The .catch falls back to wasm32 if the 64-bit glue is missing.
+        const wUseMemory64 = typeof window !== 'undefined'
+          && !!window.skerDesktop && window.skerUseWasm64 === true;
+        const importer = (wUseMemory64
+          ? import('./SkReactSpreadSheet64.mjs').catch((e) => {
+              console.warn('[SkCreateModule] wasm64 glue missing, falling back to wasm32:', e);
+              return import('./SkReactSpreadSheet.mjs');
+            })
+          : import('./SkReactSpreadSheet.mjs'));
+        window.__SkWasmLoading = importer.then(async ({ default: createModule }) => {
+          // Initialize the module with our configuration
+          console.log('[SkCreateModule] Creating WASM module...');
+          const mod = await createModule(Module);
+          window.SkModuleInstance = mod;
+          
+          // CRITICAL: Ensure window.SpreadSheet is set for compatibility
+          // The onRuntimeInitialized callback should set this, but ensure it's set here too
+          if (!window.SpreadSheet && mod) {
+            window.SpreadSheet = mod;
+            console.log('[SkCreateModule] Set window.SpreadSheet from module');
+          }
+          
+          window.__SkModuleReady = true;
+          Module.setStatus('Module initialized:'+ mod);
+          console.log('[SkCreateModule] Module initialized successfully');
+          console.log('[SkCreateModule] window.SpreadSheet:', window.SpreadSheet);
+          console.log('[SkCreateModule] window.SpreadSheet.UISpreadSheet:', window.SpreadSheet?.UISpreadSheet);
+          return mod;
+        }).catch((e) => {
+          // Reset loading flag on failure
+          console.error('[SkCreateModule] Error loading module:', e);
+          window.__SkWasmLoading = null;
+          throw e;
+        });
+        return window.__SkWasmLoading;
+      };
+
+    // Ensure WASM is loaded as early as possible (dev/prod), independently of React flow
+    if (!window.__SkModuleReady && !window.__SkWasmLoading) {
+      window.SkCreateModule().catch(e => console.error('Error initializing WASM module:', e));
+    }
+  </script>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  </body>
+</html>

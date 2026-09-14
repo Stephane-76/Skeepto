@@ -1,0 +1,1891 @@
+:root {
+    --sk-font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+    --sk-color: #f3f2f1;
+    --sk-color-background: #1e1e1e;
+    --sk-font: var(--sk-font-family);
+    --sk-font-size: 0.9rem;
+    --sk-accent-color: #0078d4;
+    --sk-accent-color-hover: #106ebe;
+    --sk-accent-color-active: #005a9e;
+
+    --sk-grid-row-hover-bg: rgba(255, 255, 255, 0.06);
+    --sk-grid-row-selected-bg: var(--sk-accent-color-active);
+    --sk-grid-row-selected-text: #ffffff;
+
+    --sk-error-color: #f1707b;
+    --sk-error-color-background: transparent;
+
+    --sk-border-color: #484848;
+    
+    --sk-color-tool: #f3f2f1;
+    --sk-color-background-tool: #2d2d2d;
+
+    --sk-color-border: #484848;
+
+    --sk-color-modal-title: #ffffff;
+    --sk-color-background-modal-title: var(--sk-color-background-tool);
+
+    --sk-color-modal-footer: #f3f2f1;
+    --sk-color-background-modal-footer: var(--sk-color-background-tool);
+
+    --sk-color-modal: #f3f2f1;
+    --sk-color-background-modal: var(--sk-color-background-tool);
+
+    --sk-input-font: 0.9rem var(--sk-font-family);
+    --sk-input-padding: 3px;
+    --sk-input-margin: 2px;
+
+    --sk-input-color: #ffffff;
+    --sk-input-color-background: #454545;
+
+    --sk-input-disabled-background: #3a3a3a;
+    --sk-input-disabled-color: #888888;
+
+    --sk-inplace-selection-bg: #0078d4;
+    --sk-inplace-selection-color: #ffffff;
+
+    --sk-button-color: #ffffff;
+    --sk-button-color-background: #0078d4;
+    
+    --sk-button-color-hover-background: #106ebe;
+    --sk-button-color-active-background: #005a9e;
+
+    --sk-svg-size: 24px;
+    --sk-svg-color-background: transparent;
+    --sk-svg-color-background-hover: rgba(255, 255, 255, 0.08);
+
+    --sk-menu-color: #f3f2f1;
+    --sk-menu-color-background: var(--sk-color-background-tool);
+    --sk-menu-color-selected: #ffffff;
+    --sk-menu-color-background-selected: #3a3a3a;
+
+    --sk-text-color: #f3f2f1;
+    --sk-text-muted: #a19f9d;
+    --sk-darker-background: #2d2d2d;
+
+    --sk-vscrollbar-size:10px;
+    --sk-hscrollbar-size:10px;
+    --sk-scrollbar-opacity:0.5;
+    --sk-scrollbar-thumb-color:rgb(5, 4, 15);
+
+    --sk-menu-item-spacing: calc(var(--sk-font-size) * 0.5);
+
+    /* -----------------------------------------------------------------------
+       Shared component palette (neutral grays, accents, shadows).
+       All component CSS files (SkBorder, SkColor, SkConditionalFormat,
+       SkFontSelector, SkLoadingSpinner, SkFileLoadingSpinner, ...) read from
+       these tokens so a single override re-tints every widget.
+       --------------------------------------------------------------------- */
+
+    /* Neutral grays (Material-ish). */
+    --sk-neutral-50 : #f8f9fa;
+    --sk-neutral-100 : #f1f3f4;
+    --sk-neutral-200 : #e8eaed;
+    --sk-neutral-300 : #e0e0e0;
+    --sk-neutral-400 : #dadce0;
+    --sk-neutral-500 : #d0d0d0;
+    --sk-neutral-600 : #5f6368;
+    --sk-neutral-700 : #333;
+    --sk-neutral-800 : #202124;
+    --sk-neutral-f0  : #f0f0f0;
+
+    /* Google-blue accent used for hover/focus rings inside popups. */
+    --sk-accent-google : #1a73e8;
+    --sk-accent-google-soft : #e8f0fe;
+    --sk-accent-google-ring : rgba(26, 115, 232, 0.2);
+    --sk-accent-google-ring-light : rgba(26, 115, 232, 0.05);
+
+    /* Utility accents (loading spinner colored rings). */
+    --sk-status-info : #007bff;
+    --sk-status-success : #28a745;
+    --sk-status-warning : #ffc107;
+    --sk-status-info-soft : rgba(0, 123, 255, 0.05);
+    --sk-status-info-ring : rgba(0, 123, 255, 0.1);
+
+    /* Surface colors for modal/card backgrounds. */
+    --sk-surface : #ffffff;
+    --sk-surface-hover : #f8f9fa;
+    --sk-surface-active : #e3f2fd;
+    --sk-surface-overlay : rgba(255, 255, 255, 0.95);
+
+    /* Subtle shadows reused across floating surfaces. */
+    --sk-shadow-xs : 0 1px 3px rgba(0, 0, 0, 0.1);
+    --sk-shadow-sm : 0 2px 4px rgba(0, 0, 0, 0.1);
+    --sk-shadow-md : 0 2px 8px rgba(0, 0, 0, 0.1);
+    --sk-shadow-lg : 0 4px 12px rgba(0, 0, 0, 0.15);
+    --sk-shadow-xl : 0 10px 30px rgba(0, 0, 0, 0.1);
+    --sk-shadow-option-hover : 0 2px 8px rgba(0, 0, 0, 0.2);
+
+    /* Border radius scale. */
+    --sk-radius-sm : 4px;
+    --sk-radius-md : 6px;
+    --sk-radius-lg : 8px;
+    --sk-radius-xl : 15px;
+
+    /* Generic on-black hairline used inside color swatches. */
+    --sk-hairline-soft : rgba(0, 0, 0, 0.1);
+    --sk-hairline-medium : rgba(0, 0, 0, 0.18);
+    --sk-hairline-strong : rgba(0, 0, 0, 0.3);
+
+    /* Muted label color (section titles, secondary captions). Reused both by
+       the component layer and by the spreadsheet. */
+    --sk-color-muted: #a19f9d;
+
+    /* -----------------------------------------------------------------------
+       Excel-like dark popup / dialog chrome (toolbar popups, modals, pickers).
+       --------------------------------------------------------------------- */
+    --sk-dialog-bg : #383838;
+    --sk-dialog-title-bg : #383838;
+    --sk-dialog-title-color : #ffffff;
+    --sk-dialog-text : #e8e8e8;
+    --sk-dialog-label : #c8c8c8;
+    --sk-dialog-border : #555555;
+    --sk-dialog-input-bg : #454545;
+    --sk-dialog-input-color : #ffffff;
+    --sk-dialog-input-border : #666666;
+    --sk-dialog-input-disabled-bg : #3a3a3a;
+    --sk-dialog-input-disabled-color : #888888;
+    --sk-dialog-footer-bg : #383838;
+    --sk-dialog-accent : #0078d4;
+    --sk-dialog-accent-hover : #106ebe;
+    --sk-dialog-secondary : #5a5a5a;
+    --sk-dialog-secondary-hover : #6a6a6a;
+    --sk-dialog-shadow : 0 8px 32px rgba(0, 0, 0, 0.45);
+    --sk-dialog-radius : 6px;
+
+    /* Right stack-panel surfaces (Tables, Find, ...). Dark defaults; overridden
+       for the light theme in SkTheme.css. */
+    --sk-panel-bg : #383838;
+    --sk-panel-subtle-bg : rgba(255, 255, 255, 0.04);
+}
+/* RAZ */
+select {
+    appearance: none; /* Remove default browser styles */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    border: none; /* Remove borders */
+    background: none; /* Remove background */
+    padding: 0; /* Reset margins and spaces */
+    margin: 0;
+    font: inherit; /* Inherit font from parent */
+    color: inherit; /* Inherit text color from parent */
+    outline: none; /* Remove outline */
+    box-shadow: none; /* Remove shadows */
+
+    /* Optional: To resemble a plain text as much as possible */
+    /*line-height: 1;*/ 
+}
+
+option {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border: none;
+    background: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+}
+
+.SkFlex {
+    display: inline-flex;
+    flex-wrap: wrap;
+}
+
+.SkFlexColumn {
+    flex-direction: column;
+}
+
+.SkFlexRow {
+    flex-direction: row;
+}
+
+.SkScrollY {
+    overflow-y: auto;
+}
+.SkScrollX {
+    overflow-x: auto;
+}
+
+.SkMargin {
+    margin: 10px;
+}
+
+.SkError {
+    margin: var(--sk-input-margin);
+    padding:var(--sk-input-padding);
+    color:var(--sk-error-color);
+    background-color: var(--sk-error-color-background);
+    border: 1px solid #ccc; /* Bordure grise */
+    border-radius: 4px; /* Arrondir les bords */
+    transition: border 0.3s ease; /* Transition pour la bordure */
+}
+
+.SkInput {
+    margin: var(--sk-input-margin);
+    padding:var(--sk-input-padding);
+    font: var(--sk-input-font);
+    color:var(--sk-input-color);
+    background-color: var(--sk-input-color-background);
+    border: 1px solid transparent; 
+}
+
+.SkInput:disabled {
+    background-color: var(--sk-input-disabled-background);
+    cursor: not-allowed;
+}
+
+.SkInput:focus {
+    border: 1px solid blue; 
+    outline: none; 
+}
+
+.SkInput:hover {
+    border: 1px solid lightgray; /* Border lighter gray when hovering */
+}
+
+.SkSelect {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    min-height: 36px;
+    margin: var(--sk-input-margin);
+    padding: 8px 12px;
+    font: var(--sk-input-font);
+    font-size: 1rem;
+    line-height: 1.25;
+    color: var(--sk-input-color);
+    background-color: var(--sk-color-background-tool);
+    border: 1px solid var(--sk-border-color, #ccc);
+    border-radius: 4px;
+    transition: border 0.3s ease;
+}
+
+.SkSelect option {
+    background-color: var(--sk-color-background-tool);
+    color: var(--sk-input-color);
+}
+
+.SkSelect option:checked {
+    background-color: var(--sk-accent-color);
+    color: white;
+}
+
+.SkSelect option:hover {
+    background-color: var(--sk-accent-color-hover);
+    color: white;
+}
+
+.SkSelect:focus {
+    outline: none;
+    border: 1px solid var(--sk-accent-color);
+}
+
+.SkSelect:hover {
+    border: 1px solid var(--sk-accent-color-hover);
+}
+
+/* Scrollable checkbox list (filter pickers, multi-select panels). */
+.SkListBox {
+  display: block;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  border: 1px solid var(--sk-dialog-input-border, var(--sk-border-color));
+  border-radius: 4px;
+  background: var(--sk-dialog-input-bg, var(--sk-input-color-background));
+  color: var(--sk-dialog-input-color, var(--sk-input-color));
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+.SkListBox:focus {
+  outline: 2px solid var(--sk-dialog-accent, #0078d4);
+  outline-offset: -2px;
+}
+.SkListBox:focus:not(:focus-visible) {
+  outline: none;
+}
+.SkListBox-row {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--sk-dialog-text, var(--sk-text-color));
+}
+.SkListBox-row:hover {
+  background: var(--sk-grid-row-hover-bg, rgba(255, 255, 255, 0.06));
+}
+.SkListBox-row input[type="checkbox"] {
+  margin: 0;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.SkListBox-row-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  font-weight: 600;
+  border-bottom: 1px solid var(--sk-dialog-input-border, var(--sk-border-color));
+  background: var(--sk-dialog-input-bg, var(--sk-input-color-background));
+  color: var(--sk-dialog-text, var(--sk-text-color));
+}
+.SkListBox-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.35;
+  color: inherit;
+}
+.SkListBox-empty {
+  padding: 8px 10px;
+  opacity: 0.7;
+  color: var(--sk-dialog-label, var(--sk-text-muted));
+}
+
+.SkButton {
+    margin: var(--sk-input-margin);
+    padding:var(--sk-input-padding);
+    font: var(--sk-input-font);
+    cursor: pointer;
+    color: var(--sk-button-color);
+    background-color: var(--sk-button-color-background);
+    border-radius: 4px;
+    border: none; /* Optional: Remove default border */
+    transition: background-color 0.3s ease, color 0.3s ease; /* Transition for a smooth effect */
+}
+
+.SkButton:hover {
+    background-color: var(--sk-button-color-hover-background); /* Background color on hover */
+}
+
+.SkButton:active {
+    background-color: var(--sk-button-color-active-background); /* Background color on click */
+}
+
+.SkButton:disabled,
+.SkButton.SkButtonDisabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+select {
+    color:var(--sk-input-color);
+    background-color: var(--sk-input-color-background);
+}
+
+h1 {
+    width: 100px;
+}
+
+
+.SkTopContainer {
+    position: relative;
+}
+
+.SkTopRight {
+    position: absolute;
+    top :0;
+    right:0;
+}
+
+.SkSeparator_h {
+    width: 2px;
+    height: 80%;
+    border-left: 2px solid var(--sk-border-color);
+}
+
+
+.SkSeparator_v {
+    height: 2px;
+    width: 100%;
+    border-top: 2px solid var(--sk-border-color);
+}
+
+.SkSvg {
+    margin: 1px;
+    padding: 3px;
+    width: var(--sk-svg-size);
+    height:var(--sk-svg-size);
+    min-width:var(--sk-svg-size);
+    color:var(--sk-color-tool);
+    background-color: var(--sk-svg-color-background);
+    transition: opacity 0.3s ease;
+    border-radius: 5%;
+    cursor: pointer;
+}
+
+.SkSvg:hover {
+    width: var(--sk-svg-size);
+    height:var(--sk-svg-size);
+    background-color: var(--sk-svg-color-background-hover);
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+.SkSeparator_Svg {
+    width: 2px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    height: var(--sk-svg-size);
+    border-left: 2px dotted var(--sk-border-color);
+    align-self: center;
+}
+
+.SkSvg:not(.disabled):hover {
+    opacity: 0.8;
+}
+
+.SkSvg.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+.SkButtomCde {
+    margin: 2px;
+    padding: 4px;
+    width: 36px;
+    height: 36px;
+    color:var(--sk-color-tool);
+    background-color: var(--sk-color-background);
+}
+
+.SkButtomCde:hover {
+    padding: 3px;
+    background-color: white;
+}
+
+.SkVScrollBar {
+    position: absolute;
+    right: 0px; 
+    top:0px;
+    width: var(--sk-vscrollbar-size);
+    height: calc(100% - var(--sk-hscrollbar-size));
+    z-index: 2;
+    background-color: rgba(0, 0, 0, 0.0);
+    /*border: 1px solid gray solid;*/
+    border-radius: calc(var(--sk-vscrollbar-size) /2 );
+    opacity: var(--sk-scrollbar-opacity);
+}
+
+.SksetHScrollBar {
+    position: absolute;
+    bottom: 0px; 
+    left:0px;
+    width:  calc(100% - var(--sk-vscrollbar-size));
+    height: var(--sk-hscrollbar-size);
+    z-index: 2;
+    background-color: rgba(0, 0, 0, 0.0);
+    /*border: 1px solid gray solid;*/
+    border-radius: calc(var(--sk-hscrollbar-size) /2 );
+    opacity: var(--sk-scrollbar-opacity);
+}
+
+.SkTextRight {
+    text-align: right;
+}
+
+.SkPopUp {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    z-index: 4;
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: var(--sk-dialog-radius);
+    background-color: var(--sk-dialog-bg);
+    box-shadow: var(--sk-dialog-shadow);
+    opacity: 0.98;
+    color: var(--sk-dialog-text);
+    overflow: hidden;
+}
+
+.SkPopUp .draggable-label {
+    background-color: var(--sk-dialog-title-bg) !important;
+    color: var(--sk-dialog-title-color) !important;
+    border-bottom: 1px solid var(--sk-dialog-border);
+}
+
+.SkTabs {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.SkTab-list {
+    padding-left: 0;
+}
+
+.SkTabs-strip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.SkTabs-scroll {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+.SkTabs-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.SkTabs-scroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 3px;
+}
+
+.SkTabs-scroll .SkTab-list {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    white-space: nowrap;
+}
+
+.SkTabs-scroll .SkTab-list-item {
+    flex-shrink: 0;
+}
+
+.SkTabs-scrollNavGroup {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 0;
+}
+
+.SkTabs-scrollNav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.SkTabs-scrollNav--disabled {
+    cursor: default;
+    pointer-events: none;
+}
+
+.SkTab {
+    width: 100%;
+}
+
+.SkTab-content {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    flex: 1;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.SkTab-list-item {
+    top: 0px;
+    display: inline-block;
+    list-style: none;
+    margin-bottom: -1px;
+    padding: 0.5rem 0.75rem;
+}
+  
+.SkTab-list-active {
+    background-color: var(--sk-accent-color);
+    color: #ffffff;
+    border-width: 1px 1px 0 1px;
+}
+
+.SkAutoSizePanel {
+    padding: 10px;
+    width: auto;
+    height: auto;
+    border: 1px solid var(--sk-border-color);
+}
+
+.SkColorMaterials {
+    overflow: hidden;
+    width: 100%;
+}
+
+/* Shared right-panel section header (Named formulas, Font color, Border, …). */
+.SkSpPanelTitle {
+    margin: 0 0 8px 0;
+    font-weight: bold;
+    font-size: 14px;
+    color: var(--sk-color-tool);
+    text-transform: none;
+    letter-spacing: normal;
+    border-bottom: none;
+    padding: 0;
+    line-height: 1.3;
+}
+
+.SkMenuPopUp {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    height: auto;
+    color: var(--sk-dialog-text);
+    background-color: var(--sk-dialog-bg);
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: var(--sk-dialog-radius);
+    /* Above the grid layers: cells (1-2), grid panel (3), selection overlay (5),
+       inplace edit (6) and floating layer (10) so the menu is never covered. */
+    z-index: 100;
+    box-shadow: var(--sk-dialog-shadow);
+}
+
+.SkMenuPopUp--fixed {
+    position: fixed;
+    z-index: 200;
+}
+
+.SkMenuPopUp--anchorBottom {
+    min-width: 160px;
+    max-height: min(320px, 50vh);
+    overflow-y: auto;
+}
+
+.SkMenuPopUp--openUpward {
+    transform: translateY(calc(-100% - 4px));
+}
+
+.SkMenuPopUp--alignRight {
+    transform: translateX(-100%);
+}
+
+.SkMenuPopUp--openUpward.SkMenuPopUp--alignRight {
+    transform: translate(-100%, calc(-100% - 4px));
+}
+
+.SkMenuElement--disabled {
+    opacity: 0.45;
+    pointer-events: none;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.SkMenuElement {
+    margin-left: 2px;
+    margin-right: 2px;
+    display: flex;
+    flex-direction: row;
+    background-color: transparent;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.SkMenuSelected {
+    color :var(--sk-menu-color-selected);
+    background-color: var(--sk-menu-color-background-selected);  
+}
+
+.SkMenuHeader {
+    background-color: var(--sk-dialog-input-bg);
+    color: var(--sk-dialog-text);
+    padding: 4px;
+    border-radius: 4px;
+}
+
+/* Context-menu (right-click) separators and nested flyout submenus. */
+.SkMenuSeparator {
+    height: 1px;
+    margin: 5px 2px;
+    background-color: var(--sk-dialog-border, var(--sk-border-color));
+}
+
+.SkMenuSubmenu {
+    position: relative;
+}
+
+.SkMenuSubmenu__label {
+    cursor: default;
+}
+
+.SkMenuSubmenu:hover > .SkMenuSubmenu__label {
+    color: var(--sk-menu-color-selected);
+    background-color: var(--sk-menu-color-background-selected);
+}
+
+.SkMenuSubmenu__arrow {
+    margin-left: auto;
+    padding-left: 16px;
+    opacity: 0.75;
+}
+
+.SkMenuSubmenu__flyout {
+    display: none;
+    position: absolute;
+    top: -6px;
+    left: 100%;
+    min-width: 220px;
+    padding: 6px;
+    color: var(--sk-dialog-text);
+    background-color: var(--sk-dialog-bg);
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: var(--sk-dialog-radius);
+    box-shadow: var(--sk-dialog-shadow);
+    z-index: 101;
+}
+
+.SkMenuSubmenu:hover > .SkMenuSubmenu__flyout {
+    display: flex;
+}
+
+/* Context-menu icons: many SVGs ship with a hardcoded dark fill (#444/#000)
+   that is invisible on the dark popup. Follow the dialog text color instead,
+   mirroring the .SkMenuWindow normalization used by the top menu bar. */
+.SkMenuPopUp .SkSvg {
+    color: var(--sk-dialog-text);
+    background-color: transparent;
+    box-shadow: none;
+}
+
+.SkMenuPopUp .SkSvg:hover {
+    background-color: transparent;
+    box-shadow: none;
+    opacity: 1;
+}
+
+.SkMenuPopUp .SkSvg path:not([fill]),
+.SkMenuPopUp .SkSvg polygon:not([fill]),
+.SkMenuPopUp .SkSvg circle:not([fill]),
+.SkMenuPopUp .SkSvg rect:not([fill]) {
+    fill: currentColor;
+}
+
+.SkMenuPopUp .SkSvg [fill="#444"],
+.SkMenuPopUp .SkSvg [fill="#000"],
+.SkMenuPopUp .SkSvg [fill="#000000"],
+.SkMenuPopUp .SkSvg [fill="#101112"],
+.SkMenuPopUp .SkSvg [fill="black"],
+.SkMenuPopUp .SkSvg .cls-1 {
+    fill: currentColor;
+}
+
+.SkMenuPopUp .SkSvg[fill="#444"],
+.SkMenuPopUp .SkSvg[fill="#000000"],
+.SkMenuPopUp .SkSvg[fill="#000"],
+.SkMenuPopUp .SkSvg[fill="black"] {
+    fill: currentColor;
+}
+
+.SkMenuPopUp .SkSvg path[fill="none"],
+.SkMenuPopUp .SkSvg line {
+    stroke: currentColor;
+}
+
+
+.SkFontSelector {
+    overflow: hidden;
+}
+
+.SkWidth100 {
+    width: 100%;
+}
+
+.SkWidth90 {
+    width: 90%;
+    margin: 5%;
+}
+
+.SkHeight100 {
+    height: 100%;
+  }
+
+.SkSlider {
+    margin: var(--sk-input-margin);
+    padding: var(--sk-input-padding);
+    width: 200px;
+    height: 15px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--sk-input-color-background);
+    outline: none;
+    border-radius: 15px;
+}
+
+.SkSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--sk-button-color-background);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.SkSlider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--sk-button-color-background);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.SkCirclePicker {
+    margin: var(--sk-input-margin);
+    padding: var(--sk-input-padding);
+    background-color: transparent;
+    /*border: 1px solid var(--sk-button-color-background);*/
+    display: inline-block;
+}
+
+.SkCirclePicker:hover {
+    border-color: var(--sk-button-color-hover-background);
+}
+
+.SkTreeView {
+    margin: var(--sk-input-margin);
+    padding: var(--sk-input-padding);
+    background-color: var(--sk-input-color-background);
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    min-width: 200px;
+    max-height: 400px;
+    overflow: auto;
+}
+
+.SkTreeNode {
+    font: var(--sk-font);
+}
+
+.SkTreeNode-content {
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin: 2px 0;
+}
+
+.SkTreeNode-content:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.SkTreeNode-selected {
+    background-color: var(--sk-button-color-background) !important;
+    color: white;
+}
+
+.SkTreeNode-toggle {
+    margin-right: 8px;
+    width: 20px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.SkTreeNode-label {
+    flex: 1;
+}
+
+.SkTreeNode-children {
+    padding-left: 20px; /* Indentation des enfants */
+}
+
+.SkTreeNode-content:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--sk-button-color-background);
+}
+
+.SkModal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.SkModal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--sk-dialog-text);
+    background-color: var(--sk-dialog-bg);
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: var(--sk-dialog-radius);
+    box-shadow: var(--sk-dialog-shadow);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    overflow: hidden;
+    /* Never exceed the viewport: the inline width/height are capped here so a
+       modal taller than the window stays fully visible and its body scrolls
+       (flex-child .SkModal-content has overflow:auto) instead of the footer and
+       bottom rows being pushed off-screen. */
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 32px);
+}
+
+.SkModal-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 36px;
+    padding: 8px 12px;
+    background-color: var(--sk-dialog-title-bg);
+    color: var(--sk-dialog-title-color);
+    cursor: default;
+    align-items: center;
+    border-bottom: 1px solid var(--sk-dialog-border);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.SkModal-content {
+    flex: 1;
+    /* min-height:0 lets this flex child shrink below its content height so
+       overflow:auto actually scrolls. Without it the default min-height:auto
+       keeps the body at full content height, overflowing the modal (the footer
+       and last rows get clipped instead of scrolling). */
+    min-height: 0;
+    background-color: var(--sk-dialog-bg);
+    color: var(--sk-dialog-text);
+    overflow: auto;
+    padding: 16px;
+}
+
+.SkModal-close {
+    background: none;
+    border: none;
+    color: var(--sk-dialog-title-color);
+    font-size: 20px; /* for X */
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.SkModal-footer {
+    padding: 12px 16px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-top: 1px solid var(--sk-dialog-border);
+    color: var(--sk-dialog-text);
+    background-color: var(--sk-dialog-footer-bg);
+}
+
+/* Dark popup inputs inside modals and floating panels */
+.SkModal-content .SkInput,
+.SkModal-content input[type="text"],
+.SkModal-content input[type="number"],
+.SkModal-content input[type="password"],
+.SkModal-content select,
+.SkModal-content textarea {
+    color: var(--sk-dialog-input-color);
+    background-color: var(--sk-dialog-input-bg);
+    border: 1px solid var(--sk-dialog-input-border);
+    border-radius: 4px;
+}
+
+.SkModal-content .SkInput:focus,
+.SkModal-content input:focus,
+.SkModal-content select:focus,
+.SkModal-content textarea:focus {
+    border-color: var(--sk-dialog-accent);
+    outline: none;
+}
+
+/* Flat action buttons — matches SkVirtualDisk bottom toolbar (padding, radius, solid fills). */
+button.SkModal-toolbarBtn {
+    margin: 0;
+    padding: 8px 16px;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font: inherit;
+    line-height: 1.25;
+}
+
+button.SkModal-toolbarBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+button.SkModal-toolbarBtn--secondary {
+    background-color: var(--sk-dialog-secondary);
+}
+
+button.SkModal-toolbarBtn--secondary:hover:not(:disabled) {
+    background-color: var(--sk-dialog-secondary-hover);
+}
+
+button.SkModal-toolbarBtn--primary {
+    background-color: var(--sk-dialog-accent);
+}
+
+button.SkModal-toolbarBtn--primary:hover:not(:disabled) {
+    background-color: var(--sk-dialog-accent-hover);
+}
+
+button.SkModal-toolbarBtn--accent {
+    background-color: var(--sk-dialog-accent);
+}
+
+button.SkModal-toolbarBtn--accent:hover:not(:disabled) {
+    background-color: var(--sk-dialog-accent-hover);
+}
+
+button.SkModal-toolbarBtn--danger {
+    background-color: #f44336;
+}
+
+button.SkModal-toolbarBtn--danger:hover:not(:disabled) {
+    background-color: #e53935;
+}
+
+/* Styles pour SkForm */
+.SkForm {
+    display: inline-flex;
+    margin: 5px;
+    padding: 5px;
+    /*box-sizing: border-box;*/
+}
+
+.SkForm input:disabled,
+.SkForm select:disabled,
+.SkForm textarea:disabled {
+    background-color: var(--sk-input-disabled-background, #2d2d2d);
+    color: var(--sk-input-disabled-color, #666);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.SkForm input:disabled::placeholder {
+    color: var(--sk-input-disabled-color, #666);
+}
+
+.SkForm-group {
+    margin: 5px;
+    padding: 2px;
+}
+
+.SkCalendar-container {
+    position: relative;
+    display: inline-block;
+}
+
+.SkCalendar-input {
+    margin: var(--sk-input-margin);
+    padding:var(--sk-input-padding);
+    font: var(--sk-input-font);
+    color:var(--sk-input-color);
+    background-color: var(--sk-input-color-background);
+    border: 1px solid transparent; 
+}
+
+.SkCalendar-input:focus {
+    border: 1px solid blue; 
+    outline: none; 
+}   
+
+.SkCalendar-input:disabled {
+    background-color: var(--sk-color-background-disabled);
+    cursor: not-allowed;
+}
+
+.SkCalendar-popup {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 4;
+    color: var(--sk-dialog-text);
+    background: var(--sk-dialog-bg);
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: var(--sk-dialog-radius);
+    box-shadow: var(--sk-dialog-shadow);
+    padding: 10px;
+    margin-top: 5px;
+}
+
+.SkCalendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.SkCalendar-header button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.SkCalendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.SkCalendar-weekday {
+    text-align: center;
+    font-weight: bold;
+    padding: 5px;
+    background: var(--sk-color-background-tool);
+}
+
+.SkCalendar-day {
+    text-align: center;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.SkCalendar-day:hover {
+    background-color: #f0f0f0;
+}
+
+.SkCalendar-day.empty {
+    cursor: default;
+}
+
+
+/* Styles for the password field with visibility button */
+.SkPassword-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .SkPassword-input {
+    flex: 1;
+    padding-right: 40px; /* Space for the button */
+  }
+  
+  .SkPassword-toggle {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--sk-text-muted);
+  }
+  
+  .SkPassword-toggle:hover {
+    color: var(--sk-text-color);
+  }
+  
+  /* Ensure the button does not disrupt the focus of the field */
+  .SkPassword-toggle:focus {
+    outline: none;
+  }
+  
+  .SkPassword-container:focus-within .SkPassword-toggle {
+    color: var(--sk-text-color);
+  }
+  
+  .SkGrid {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    color: var(--sk-text-color);
+    background-color: var(--sk-color-background);
+}
+
+.SkGrid:focus {
+    outline: none;
+}
+
+.SkGridFocused {
+    border: 1px solid var(--sk-accent-color-active);
+}
+
+.SkGridFocused .SkGridHeader {
+    background-color: var(--sk-color-background-tool);
+}
+
+
+.SkGridHeader {
+    background-color: var(--sk-color-background-tool);
+    overflow: hidden;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+
+.SkGridTable {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: max-content;
+    min-width: 100%;
+}
+
+.SkGridTable th,
+.SkGridTable td {
+    box-sizing: border-box;
+    padding: 6px 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
+}
+
+/* Default left alignment for all grid cells to avoid unintended centering */
+.SkGridTable td {
+    text-align: left;
+}
+
+.SkGridTable th {
+    background-color: var(--sk-color-background-tool);
+    font-weight: 600;
+    border-bottom: 2px solid var(--sk-border-color);
+    position: relative;
+    user-select: none;
+    line-height: 1;
+    color: var(--sk-text-color);
+}
+
+.SkGridHeader-sortable {
+    padding: 0;
+}
+
+.SkGridHeader-sortButton {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    width: calc(100% - 8px);
+    min-height: 100%;
+    margin: 0;
+    padding: 6px 12px;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    text-align: inherit;
+    cursor: pointer;
+}
+
+.SkGridHeader-sortButton:hover {
+    background: color-mix(in srgb, var(--sk-accent, #0078d4) 12%, transparent);
+}
+
+.SkGridHeader-sorted .SkGridHeader-sortButton {
+    color: var(--sk-accent, #0078d4);
+}
+
+.SkGridHeader-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.SkGridSortIcon {
+    flex: 0 0 auto;
+    font-size: 10px;
+    line-height: 1;
+    opacity: 0.95;
+}
+
+.SkGridBody {
+    overflow: auto;
+    flex: 1;
+    scroll-behavior: smooth;
+    position: relative;
+    width: 100%;
+}
+
+.SkGridCell {
+    transition: background-color 0.3s ease;
+    position: relative;
+    z-index: 0;
+    line-height: 1.2;
+}
+
+.SkGridHeader-resizer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    cursor: col-resize;
+    background-color: var(--sk-color-background);
+    transition: background-color 0.2s ease;
+    z-index: 2;
+}
+
+.SkGridHeader-resizer:hover,
+.SkGridHeader-resizer:active {
+    background-color: var(--sk-accent-color);
+}
+
+.SkGridHeader:last-child .SkGridHeader-resizer {
+    display: none;
+}
+
+.SkGridRow {
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    position: relative;
+}
+
+.SkGridRow:hover:not(.SkGridRow-selected) {
+    background-color: var(--sk-grid-row-hover-bg);
+}
+
+.SkGridRow-selected,
+.SkGridRow-selected:hover {
+    background-color: var(--sk-grid-row-selected-bg, var(--sk-accent-color-active));
+}
+
+.SkGridRow-selected .SkGridCell {
+    color: var(--sk-grid-row-selected-text, #ffffff);
+}
+
+.SkGridRow-selected .SkGridModified {
+    color: var(--sk-grid-row-selected-text, #ffffff);
+}
+
+.SkGridActionButton {
+    margin: 0px;
+    padding: 0px;
+    border: 1px solid var(--sk-border-color);
+    background-color: var(--sk-color-background);
+    min-width: 15px;
+    min-height: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.SkGridActionButton:hover {
+    background-color: var(--sk-accent-color-hover);
+    border-color: var(--sk-accent-color);
+}
+
+.SkGridModified {
+    color: #007bff;
+    margin-right: 8px;
+}
+
+
+/* Scroll animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.SkGridRow {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .SkGrid {
+        font-size: var(--sk-font-size);
+    }
+
+    .SkGridheader,
+    .SkGridcell {
+        padding: 8px;
+    }
+
+    .SkGridBody::-webkit-scrollbar {
+        width: 4px;
+    }
+}
+
+/* SkGridTreeView specific styles */
+.SkGridTreeCell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 4px 8px;
+    width: 100%;
+}
+
+.SkGridTreeCell svg {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+}
+
+.SkGridTree-toggle {
+    cursor: pointer;
+    user-select: none;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sk-text-muted);
+}
+
+.SkGridTree-toggle:hover {
+    color: var(--sk-text-color);
+}
+
+.SkGridTree-spacer {
+    width: 16px;
+}
+
+.SkGridTree-content {
+    flex: 1;
+    min-width: 0; /* Allow ellipsis to work properly in flex */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left; /* Ensure left alignment for filenames */
+}
+
+/* Ensure inner wrapper (icon + text) expands to the left edge and fills available space */
+.SkGridTreeCell > div {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* Styles pour SkMenu */
+.SkMenu {
+    position: relative;
+    width: 100%;
+    background-color: var(--sk-color-background);
+}
+
+.SkMenuBar {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 4px;
+    background-color: var(--sk-color-background);
+}
+
+.SkMenuBarItem {
+    padding: 0 12px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    color: var(--sk-menu-color);
+    background-color: transparent;
+    transition: background-color 0.2s ease;
+    position: relative;
+    outline: none;
+}
+
+.SkMenuBarItem-active,
+.SkMenuBarItem-focused {
+    background-color: var(--sk-menu-color-background-selected);
+    color: var(--sk-menu-color);
+}
+
+.SkMenuWindow {
+    position: fixed;
+    background-color: var(--sk-dialog-bg);
+    color: var(--sk-dialog-text);
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: var(--sk-dialog-radius);
+    box-shadow: var(--sk-dialog-shadow);
+    min-width: 200px;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 10060;
+    padding: 4px 0;
+}
+
+.SkMenuWindow-item {
+    padding: var(--sk-menu-item-spacing) 12px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    white-space: nowrap;
+    font: var(--sk-font);
+    color: var(--sk-dialog-text);
+}
+
+.SkMenuWindow-item.SkMenuWindow-item-focused,
+.SkMenuWindow-item-with-submenu.SkMenuWindow-item-focused,
+.SkMenuWindow-item-with-submenu.SkMenuWindow-item-focused > .SkMenuWindow-item {
+    background-color: var(--sk-menu-color-background-selected);
+}
+
+.SkMenuWindow-item-check {
+    flex: 0 0 16px;
+    width: 16px;
+    margin-left: auto;
+    padding-left: 16px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1;
+    color: var(--sk-dialog-text);
+}
+
+.SkMenuWindow-item-icon {
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.SkMenuWindow-item-svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* Menu icons: SVGs often ship with dark hardcoded fills — follow dialog text color. */
+.SkMenuWindow .SkSvg,
+.SkMenuWindow-item-icon .SkSvg {
+    color: var(--sk-dialog-text);
+    background-color: transparent;
+    padding: 0;
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    box-shadow: none;
+    border-radius: 0;
+    cursor: inherit;
+}
+
+.SkMenuWindow .SkSvg:hover {
+    background-color: transparent;
+    box-shadow: none;
+    opacity: 1;
+}
+
+.SkMenuWindow .SkSvg path:not([fill]),
+.SkMenuWindow .SkSvg polygon:not([fill]),
+.SkMenuWindow .SkSvg circle:not([fill]),
+.SkMenuWindow .SkSvg rect:not([fill]) {
+    fill: currentColor;
+}
+
+.SkMenuWindow .SkSvg [fill="#444"],
+.SkMenuWindow .SkSvg [fill="#000"],
+.SkMenuWindow .SkSvg [fill="#000000"],
+.SkMenuWindow .SkSvg [fill="#101112"],
+.SkMenuWindow .SkSvg [fill="black"],
+.SkMenuWindow .SkSvg .cls-1 {
+    fill: currentColor;
+}
+
+.SkMenuWindow .SkSvg[fill="#000000"],
+.SkMenuWindow .SkSvg[fill="#000"],
+.SkMenuWindow .SkSvg[fill="black"] {
+    fill: currentColor;
+}
+
+.SkMenuWindow .SkSvg path[fill="none"],
+.SkMenuWindow .SkSvg line {
+    stroke: currentColor;
+}
+
+.SkMenuWindow-separator {
+    height: 1px;
+    background-color: var(--sk-border-color);
+    margin: var(--sk-menu-item-spacing) 0;
+}
+
+.SkMenuWindow-label {
+    padding: 6px 12px 4px;
+    font: var(--sk-font);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--sk-dialog-label);
+    cursor: default;
+    user-select: none;
+}
+
+.SkMenuWindow-submenu {
+    position: fixed;
+    background-color: var(--sk-dialog-bg);
+    color: var(--sk-dialog-text);
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: var(--sk-dialog-radius);
+    box-shadow: var(--sk-dialog-shadow);
+    min-width: 200px;
+    z-index: 10061;
+}
+
+.SkMenuWindow-item-with-submenu {
+    position: relative;
+}
+
+.SkMenuWindow-item.disabled,
+.SkMenuWindow-item-with-submenu.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.SkMenuWindow-item.disabled:hover,
+.SkMenuWindow-item-with-submenu.disabled:hover {
+    background-color: transparent;
+}
+
+.SkMenuWindow-item.disabled .SkMenuWindow-item-icon,
+.SkMenuWindow-item-with-submenu.disabled .SkMenuWindow-item-icon {
+    opacity: 0.5;
+}
+
+.SkGridActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px;
+}
+
+/* ================= SkComboBox ================= */
+.SkComboBox {
+    position: relative;
+    display: inline-block;
+}
+
+.SkComboBox-input {
+    margin: var(--sk-input-margin);
+    padding: var(--sk-input-padding);
+    font: var(--sk-input-font);
+    color: var(--sk-input-color);
+    background-color: var(--sk-input-color-background);
+    border: 1px solid transparent;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.SkComboBox-input:focus {
+    border: 1px solid blue;
+    outline: none;
+}
+
+.SkComboBox-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 4;
+    min-width: 100%;
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid var(--sk-dialog-border);
+    border-radius: var(--sk-dialog-radius);
+    background-color: var(--sk-dialog-bg);
+    color: var(--sk-dialog-text);
+    box-shadow: var(--sk-dialog-shadow);
+}
+
+.SkComboBox-option {
+    padding: 2px 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.2;
+    text-align: left;
+    width: 100%;
+}
+.SkComboBox-option-label {
+    flex: 1 1 auto;
+    text-align: left;
+}
+
+.SkComboBox-option:hover,
+.SkComboBox-option--active {
+    background-color: var(--sk-accent-color-hover);
+}
+
+.SkComboBox-empty {
+    padding: 6px 8px;
+    color: #666;
+}
+
+.SkComboBox-option-checkbox {
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    margin-left: auto; /* push checkbox to the right */
+    margin-right: 16px; /* generous right margin */
+}
+
+.SkComboBox-chips {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 2px 2px 0 2px;
+}
+
+.SkComboBox-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 6px;
+    border-radius: 12px;
+    background-color: var(--sk-accent-color-hover);
+}
+
+.SkComboBox-chip-text {
+    font: var(--sk-font);
+}
+
+.SkComboBox-chip-remove {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.SkComboBox.SkComboBox--cell {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.SkComboBox.SkComboBox--cell .SkComboBox-input {
+    margin: 0;
+    border: none !important;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    line-height: normal;
+}
+
+.SkComboBox.SkComboBox--cell .SkComboBox-input:focus {
+    border: none !important;
+    outline: none;
+}
+
+.SkComboBox.SkComboBox--cell .SkComboBox-toggle {
+    position: absolute;
+    right: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 6;
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.85);
+    border: none;
+    border-radius: 3px;
+    padding: 0 4px;
+    height: 90%;
+    min-width: 18px;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+}
+
+.SkComboBox.SkComboBox--attribute-enum {
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.SkComboBox.SkComboBox--attribute-enum .SkComboBox-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    margin: 0;
+    padding: 3px 26px 3px 6px;
+    box-sizing: border-box;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid var(--sk-dialog-input-border, var(--sk-border-color));
+    border-radius: 3px;
+    color: var(--sk-dialog-input-color, var(--sk-formula-text));
+    background-color: var(--sk-dialog-input-bg, var(--sk-formula-bg));
+    font: 12px var(--sk-font-family);
+    line-height: 1.4;
+    min-height: 28px;
+}
+
+.SkComboBox.SkComboBox--attribute-enum .SkComboBox-input:focus {
+    border-color: var(--sk-dialog-accent, #0078d4);
+    outline: none;
+}
+
+.SkComboBox.SkComboBox--attribute-enum .SkComboBox-input:disabled {
+    cursor: default;
+    opacity: 0.85;
+}
+
+.SkComboBox.SkComboBox--attribute-enum .SkComboBox-toggle {
+    position: absolute;
+    right: 1px;
+    top: 1px;
+    bottom: 1px;
+    z-index: 2;
+    pointer-events: auto;
+    background: var(--sk-dialog-input-bg, var(--sk-formula-bg));
+    border: none;
+    border-left: 1px solid var(--sk-dialog-input-border, var(--sk-border-color));
+    border-radius: 0 2px 2px 0;
+    padding: 0 6px;
+    min-width: 22px;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sk-dialog-text, inherit);
+}
+
+.SkComboBox.SkComboBox--attribute-enum .SkComboBox-toggle:disabled {
+    cursor: default;
+    opacity: 0.6;
+}
+
+.SkComboBox.SkComboBox--attribute-enum .SkComboBox-list {
+    z-index: 2500;
+}
+
+/* Theme tokens must load last — this file is also imported directly from JS modules. */
+@import url("../SkTheme.css");

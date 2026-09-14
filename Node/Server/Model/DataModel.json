@@ -1,0 +1,274 @@
+{
+    "_comment": "Main data model for the application - Defines database structure and UI components",
+    "Name": "Model Spreadshet",
+    "_comment_version": "Current version of the data model",
+    "Version": 1.1,
+    "_comment_tables": "Database tables definition with their columns and relationships",
+    "Tables": [
+        {
+            "_comment": "User table - Stores user information and authentication data",
+            "Name": "User",
+            "Columns": [
+                {  "_comment": "User's last name - Required field", "Name" : "Name" ,"Type" : "string", "Json" : "n", "Length" : 30, "NotNull" : true }, 
+                {  "_comment": "User's first name", "Name" : "FirstName", "Type" : "string", "Json" : "f", "Length" : 30 },
+                {  "_comment": "User's group - Required field", "Name" : "Group", "Type" : "string", "Json" : "g", "Length" : 30, "NotNull" : true }, 
+                {  "_comment": "User's email - Required field and primary key", "Name" : "Email", "Type" : "string", "Json" : "e", "Length" : 60, "NotNull" : true }, 
+                {  "_comment": "User's password - Stored in encrypted format", "Name" : "PassWord", "Type" : "string", "Json" : "p", "Length" : 60 },
+                {  "_comment": "Email verified via registration code", "Name" : "EmailVerified", "Type" : "boolean", "Json" : "ev", "NotNull" : false },
+                {  "_comment": "User's creation date", "Name" : "Date",  "Type" : "date", "Json" : "d", "NotNull" : false },
+                {  "_comment": "MongoDB document ID", "Name" : "_id", "Type" : "id", "Json" : "_id","NotNull" : false,"_id" : true }
+            ],
+            "Key": {
+                "_comment": "Primary key is Email, Foreign key links to Group table",
+                "Primary": [ "Email" ],
+                "Foreign": [ 
+                    { "Constraint": "Link-to-group", "Key": [ "Group"], "Table": "Group", "Reference": ["Code"] } 
+                ]   
+            }
+        },
+        {
+            "_comment": "Group table - Defines user groups",
+            "Name": "Group",
+            "Columns": [
+                {  "_comment": "Group code - Primary key", "Name": "Code", "Type": "string", "Json": "c", "Length": 30, "NotNull": true }, 
+                {  "_comment": "Group display name", "Name": "Label", "Type": "string", "Json": "l", "Length": 30 },
+                {  "_comment": "MongoDB document ID", "Name": "_id", "Type": "id", "Json": "_id", "_id": false }
+            ],
+            "Key": {
+                "_comment": "Primary key is Code",
+                "Primary": [ "Code" ]
+            }
+        },
+        {
+            "_comment": "RelationshipType catalog - Defines allowed graph edge types",
+            "Name": "RelationshipType",
+            "Columns": [
+                { "_comment": "Relationship type code - Primary key", "Name": "Code", "Type": "string", "Json": "c", "Length": 60, "NotNull": true },
+                { "_comment": "Display label", "Name": "Label", "Type": "string", "Json": "l", "Length": 60 },
+                { "_comment": "Allowed from entity types (comma-separated table names, or *)", "Name": "FromTypes", "Type": "string", "Json": "f", "Length": 200, "NotNull": true },
+                { "_comment": "Allowed to entity types (comma-separated table names, or *)", "Name": "ToTypes", "Type": "string", "Json": "t", "Length": 200, "NotNull": true },
+                { "_comment": "MongoDB document ID", "Name": "_id", "Type": "id", "Json": "_id", "_id": false }
+            ],
+            "Key": {
+                "_comment": "Primary key is Code",
+                "Primary": [ "Code" ]
+            }
+        },
+        {
+            "_comment": "Relationship - Directed link between two entities",
+            "Name": "Relationship",
+            "Columns": [
+                { "_comment": "Unique relationship instance code - Primary key", "Name": "Code", "Type": "string", "Json": "c", "Length": 60, "NotNull": true },
+                { "_comment": "Source entity table name", "Name": "FromType", "Type": "string", "Json": "ft", "Length": 30, "NotNull": true },
+                { "_comment": "Source entity id (primary key value of FromType table)", "Name": "FromId", "Type": "string", "Json": "fi", "Length": 120, "NotNull": true },
+                { "_comment": "Target entity table name", "Name": "ToType", "Type": "string", "Json": "tt", "Length": 30, "NotNull": true },
+                { "_comment": "Target entity id (primary key value of ToType table)", "Name": "ToId", "Type": "string", "Json": "ti", "Length": 120, "NotNull": true },
+                { "_comment": "Relationship type code", "Name": "RelationshipType", "Type": "string", "Json": "rt", "Length": 60, "NotNull": true },
+                { "_comment": "Relationship effective date (timestamp)", "Name": "Date", "Type": "date", "Json": "d", "NotNull": true },
+                { "_comment": "Optional JSON metadata", "Name": "Props", "Type": "string", "Json": "p", "Length": 500 },
+                { "_comment": "MongoDB document ID", "Name": "_id", "Type": "id", "Json": "_id", "NotNull": false, "_id": true }
+            ],
+            "Key": {
+                "_comment": "Primary key is Code, RelationshipType links to RelationshipType table",
+                "Primary": [ "Code" ],
+                "Foreign": [
+                    { "Constraint": "Link-to-relationship-type", "Key": [ "RelationshipType" ], "Table": "RelationshipType", "Reference": [ "Code" ] }
+                ]
+            }
+        }
+    ],
+    "_comment_widgets": "UI components definition for forms, cards and grids",
+    "Widgets": [
+        {
+            "_comment": "User form widget - For user creation and editing",
+            "Name": "User",
+            "Label": "User form",
+            "TableName": "User",
+            "Style": "SkForm",
+            "Direction": "row",
+            "WidgetType": "form",
+            "Groups": [
+                { "_comment": "Basic user information group", "Name": "Code", "Style": "SkGroup", "Label": "Code",
+                    "Fields": [
+                        { "Name": "Name", "Label": "Name", "Type": "string", "Width": "100px" },
+                        { "Name": "FirstName", "Label": "FirstName", "Type": "string", "Width": "100px" },
+                        { "Name": "Date", "Label": "Date", "Type": "date", "Width": "150px" },
+                        { "Name": "Group", "Label": "Group", "Type": "string", "Width": "100px" },
+                        { "Name": "Email", "Label": "Email adress", "Style": "", "Type": "email", "Width": "200px" } 
+                    ]
+                },
+                { "_comment": "Password management group", "Name": "PassWord", "Style": "SkGroup", "Label": "password",
+                    "Fields": [
+                        { "Name": "PassWord", "Label": "Password", "Type": "password", "Width": "200px" },
+                        { "Name": "PassWordVerif", "Label": "Verification", "Type": "password", "Db": false, "Width": "200px" }
+                    ]
+                }   
+            ]
+        },
+        {
+            "_comment": "User card widget - For displaying user information in card format",
+            "Name": "User_Card",
+            "Label": "Card",
+            "TableName": "User",
+            "Style": "SkCards",
+            "StyleWidget": "SkCard",
+            "Direction": "row",
+            "WidgetType": "card",
+            "Groups": [
+                { "_comment": "Basic user information display", "Name": "Name", "Style": "SkGroup", "Label": "Name",
+                    "Fields": [
+                        { "Name": "Name", "Label": "Name", "Type": "string" },
+                        { "Name": "FirstName", "Label": "FirstName", "Type": "string" }
+                    ]
+                }
+            ]
+        },
+        {
+            "_comment": "User grid widget - For displaying users in a table format",
+            "Name": "User_Grid",
+            "Label": "User Grid",
+            "TableName": "User",
+            "Style": "SkGrid",
+            "WidgetType": "grid",
+            "Groups": [
+                { "_comment": "Basic user information display", "Name": "Name", "Style": "SkGroup", "Label": "Name",
+                    "Fields": [
+                        { "Name": "Name", "Label": "Name", "Type": "string", "Width": "100px" },
+                        { "Name": "FirstName", "Label": "FirstName", "Type": "string", "Width": "100px" },
+                        { "Name": "Date", "Label": "Date", "Type": "date", "Width": "150px" },
+                        { "Name": "Group", "Label": "Group", "Type": "string", "Width": "100px" },
+                        { "Name": "Email", "Label": "Email adress", "Type": "email", "Width": "200px" } 
+                    ]
+                }
+            ]
+        },
+        {
+            "_comment": "Group form widget - For group creation and editing",
+            "Name": "Group",
+            "Label": "Group form",
+            "TableName": "Group",
+            "Style": "SkForm",
+            "Direction": "row",
+            "WidgetType": "form",
+            "Groups": [
+                { "_comment": "Group information", "Name": "Code", "Style": "SkGroup", "Label": "Code",
+                    "Fields": [
+                        { "Name": "Code", "Label": "Code", "Type": "string", "Width": "100px" },
+                        { "Name": "Label", "Label": "Label", "Type": "string", "Width": "100px" }
+                    ]
+                }  
+            ]         
+        },
+        {
+            "_comment": "Group card widget - For displaying group information in card format",
+            "Name": "Group_Card",
+            "Label": "Card",
+            "TableName": "Group",
+            "Style": "SkCards",
+            "StyleWidget": "SkCard",
+            "Direction": "row",
+            "WidgetType": "card",
+            "Groups": [
+                { "_comment": "Basic group information display", "Name": "Code", "Style": "SkGroup", "Label": "Code",
+                    "Fields": [
+                        { "Name": "Code", "Label": "Code", "Styles": "'margin':'2px', 'padding':'2px', 'background-color':'white', 'color':'black'", "Style": "SkInline", "Type": "string", "Width": "150px" },
+                        { "Name": "Label", "Label": "Label", "Styles": "'margin':'2px', 'padding':'2px', 'background-color':'white', 'color':'black'", "Style": "SkInline", "Type": "string", "Width": "200px" }  
+                    ]
+                }   
+            ]
+        }, {
+            "_comment": "Group grid widget - For displaying groups in a table format",
+            "Name": "Group_Grid",
+            "Label": "Group Grid",
+            "TableName": "Group",
+            "Style": "SkGrid",
+            "WidgetType": "grid",
+            "Groups": [
+                { "_comment": "Basic user information display", "Name": "Name", "Style": "SkGroup", "Label": "Name",
+                    "Fields": [
+                        { "Name": "Code", "Label": "Code", "Type": "string", "Width": "100px" },
+                        { "Name": "Label", "Label": "Label", "Type": "string", "Width": "100px" }
+                    ]
+                }
+            ]
+        },
+        {
+            "_comment": "RelationshipType form widget",
+            "Name": "RelationshipType",
+            "Label": "Relationship type",
+            "TableName": "RelationshipType",
+            "Style": "SkForm",
+            "Direction": "row",
+            "WidgetType": "form",
+            "Groups": [
+                { "Name": "Code", "Style": "SkGroup", "Label": "Type",
+                    "Fields": [
+                        { "Name": "Code", "Label": "Code", "Type": "string", "Width": "150px" },
+                        { "Name": "Label", "Label": "Label", "Type": "string", "Width": "200px" },
+                        { "Name": "FromTypes", "Label": "From types", "Type": "string", "Width": "200px" },
+                        { "Name": "ToTypes", "Label": "To types", "Type": "string", "Width": "200px" }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "RelationshipType_Grid",
+            "Label": "Relationship types",
+            "TableName": "RelationshipType",
+            "Style": "SkGrid",
+            "WidgetType": "grid",
+            "Groups": [
+                { "Name": "Code", "Style": "SkGroup", "Label": "Types",
+                    "Fields": [
+                        { "Name": "Code", "Label": "Code", "Type": "string", "Width": "120px" },
+                        { "Name": "Label", "Label": "Label", "Type": "string", "Width": "150px" },
+                        { "Name": "FromTypes", "Label": "From", "Type": "string", "Width": "150px" },
+                        { "Name": "ToTypes", "Label": "To", "Type": "string", "Width": "150px" }
+                    ]
+                }
+            ]
+        },
+        {
+            "_comment": "Relationship form widget",
+            "Name": "Relationship",
+            "Label": "Relationship",
+            "TableName": "Relationship",
+            "Style": "SkForm",
+            "Direction": "row",
+            "WidgetType": "form",
+            "Groups": [
+                { "Name": "Link", "Style": "SkGroup", "Label": "Link",
+                    "Fields": [
+                        { "Name": "Code", "Label": "Code", "Type": "string", "Width": "280px" },
+                        { "Name": "RelationshipType", "Label": "Type", "Type": "string", "Width": "120px" },
+                        { "Name": "FromType", "Label": "From type", "Type": "string", "Width": "100px" },
+                        { "Name": "FromId", "Label": "From id", "Type": "string", "Width": "180px" },
+                        { "Name": "ToType", "Label": "To type", "Type": "string", "Width": "100px" },
+                        { "Name": "ToId", "Label": "To id", "Type": "string", "Width": "180px" },
+                        { "Name": "Date", "Label": "Date", "Type": "date", "Width": "150px" },
+                        { "Name": "Props", "Label": "Props (JSON)", "Type": "string", "Width": "300px" }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "Relationship_Grid",
+            "Label": "Relationships",
+            "TableName": "Relationship",
+            "Style": "SkGrid",
+            "WidgetType": "grid",
+            "Groups": [
+                { "Name": "Link", "Style": "SkGroup", "Label": "Links",
+                    "Fields": [
+                        { "Name": "RelationshipType", "Label": "Type", "Type": "string", "Width": "100px" },
+                        { "Name": "FromType", "Label": "From type", "Type": "string", "Width": "90px" },
+                        { "Name": "FromId", "Label": "From id", "Type": "string", "Width": "160px" },
+                        { "Name": "ToType", "Label": "To type", "Type": "string", "Width": "90px" },
+                        { "Name": "ToId", "Label": "To id", "Type": "string", "Width": "160px" },
+                        { "Name": "Date", "Label": "Date", "Type": "date", "Width": "130px" }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- User icon - modern design -->
+  <!-- Head circle -->
+  <circle cx="24" cy="15" r="7.5" fill="currentColor"/>
+  
+  <!-- Body shape -->
+  <path d="M24 24C18 24 12 28.125 12 33.75V40.5C12 41.325 12.675 42 13.5 42H34.5C35.325 42 36 41.325 36 40.5V33.75C36 28.125 30 24 24 24Z" fill="currentColor"/>
+</svg>
+

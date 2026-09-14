@@ -1,0 +1,92 @@
+erDiagram
+    Group ||--o{ User : "FK Group.Code"
+    RelationshipType ||--o{ Relationship : "FK RelationshipType.Code"
+    User ||--o{ Relationship : "graphe FromId / ToId"
+    Group ||--o{ Relationship : "graphe FromId / ToId"
+    User ||--o{ Directory : "owner (email)"
+    Group ||--o{ Directory : "group (code)"
+    Directory ||--o| Spreadsheet : "record (_id)"
+    Directory ||--o{ Directory : "parentId"
+    Spreadsheet ||--o{ SpreadsheetHistory : "recordId"
+    Directory ||--o{ SpreadsheetHistory : "path"
+
+    Group {
+        string Code PK
+        string Label
+        string Rules
+        ObjectId _id
+    }
+
+    User {
+        string Email PK
+        string Name
+        string FirstName
+        string Group FK
+        string Password
+        string PassWord
+        date Date
+        ObjectId _id
+    }
+
+    RelationshipType {
+        string Code PK
+        string Label
+        string FromTypes
+        string ToTypes
+        ObjectId _id
+    }
+
+    Relationship {
+        string Code PK
+        string FromType
+        string FromId
+        string ToType
+        string ToId
+        string RelationshipType FK
+        date Date
+        string Props
+        ObjectId _id
+    }
+
+    Directory {
+        ObjectId _id PK
+        string name
+        string path
+        string content
+        ObjectId gridfsId
+        number size
+        string owner
+        string group
+        boolean isDirectory
+        ObjectId parentId
+        ObjectId record
+        object info
+        number permissions
+        date createdAt
+        date updatedAt
+    }
+
+    Spreadsheet {
+        ObjectId _id PK
+        string dataJson
+        ObjectId gridfsId
+        number size
+        date createdAt
+        date updatedAt
+    }
+
+    SpreadsheetHistory {
+        ObjectId _id PK
+        string path
+        ObjectId recordId
+        number revision
+        string label
+        string comment
+        object data
+        number size
+        string author
+        string email
+        string source
+        string contentHash
+        date createdAt
+    }

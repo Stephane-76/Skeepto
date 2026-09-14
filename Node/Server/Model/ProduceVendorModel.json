@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "1.0",
+  "description": "Produce vendor catalog: fruits and vegetables with short symbols and sale units.",
+
+  "categories": [
+    { "id": "vegetable", "label": "Vegetable", "symbol": "🥬" },
+    { "id": "fruit", "label": "Fruit", "symbol": "🍎" }
+  ],
+
+  "produce": [
+    { "id": "tomato", "label": "Tomato", "symbol": "🍅", "shortCode": "TMT", "categoryId": "vegetable" },
+    { "id": "cherry_tomato", "label": "Cherry tomato", "symbol": "🍅", "shortCode": "TMC", "categoryId": "vegetable" },
+    { "id": "carrot", "label": "Carrot", "symbol": "🥕", "shortCode": "CRT", "categoryId": "vegetable" },
+    { "id": "lettuce", "label": "Lettuce", "symbol": "🥗", "shortCode": "SLD", "categoryId": "vegetable" },
+    { "id": "zucchini", "label": "Zucchini", "symbol": "🥒", "shortCode": "CRG", "categoryId": "vegetable" },
+    { "id": "bell_pepper", "label": "Bell pepper", "symbol": "🫑", "shortCode": "PPV", "categoryId": "vegetable" },
+    { "id": "potato", "label": "Potato", "symbol": "🥔", "shortCode": "PDT", "categoryId": "vegetable" },
+    { "id": "onion", "label": "Onion", "symbol": "🧅", "shortCode": "OGN", "categoryId": "vegetable" },
+    { "id": "garlic", "label": "Garlic", "symbol": "🧄", "shortCode": "AIL", "categoryId": "vegetable" },
+    { "id": "mushroom", "label": "Mushroom", "symbol": "🍄", "shortCode": "CHP", "categoryId": "vegetable" },
+
+    { "id": "apple", "label": "Apple", "symbol": "🍎", "shortCode": "POM", "categoryId": "fruit" },
+    { "id": "pear", "label": "Pear", "symbol": "🍐", "shortCode": "POI", "categoryId": "fruit" },
+    { "id": "banana", "label": "Banana", "symbol": "🍌", "shortCode": "BAN", "categoryId": "fruit" },
+    { "id": "orange", "label": "Orange", "symbol": "🍊", "shortCode": "ORG", "categoryId": "fruit" },
+    { "id": "lemon", "label": "Lemon", "symbol": "🍋", "shortCode": "CTR", "categoryId": "fruit" },
+    { "id": "strawberry", "label": "Strawberry", "symbol": "🍓", "shortCode": "FRS", "categoryId": "fruit" },
+    { "id": "cherry", "label": "Cherry", "symbol": "🍒", "shortCode": "CER", "categoryId": "fruit" },
+    { "id": "grape", "label": "Grape", "symbol": "🍇", "shortCode": "RSN", "categoryId": "fruit" },
+    { "id": "melon", "label": "Melon", "symbol": "🍈", "shortCode": "MLN", "categoryId": "fruit" },
+    { "id": "watermelon", "label": "Watermelon", "symbol": "🍉", "shortCode": "PSQ", "categoryId": "fruit" },
+    { "id": "kiwi", "label": "Kiwi", "symbol": "🥝", "shortCode": "KIW", "categoryId": "fruit" },
+    { "id": "avocado", "label": "Avocado", "symbol": "🥑", "shortCode": "AVO", "categoryId": "fruit" }
+  ],
+
+  "saleUnits": [
+    { "id": "kg", "label": "Kilogram", "symbol": "kg", "emoji": "⚖️", "kind": "mass", "factorToKg": 1 },
+    { "id": "g", "label": "Gram", "symbol": "g", "emoji": "🔹", "kind": "mass", "factorToKg": 0.001 },
+    { "id": "piece", "label": "Piece", "symbol": "pc", "emoji": "🔢", "kind": "count", "factorToKg": null },
+    { "id": "bunch", "label": "Bunch", "symbol": "bun", "emoji": "🌿", "kind": "bundle", "factorToKg": null },
+    { "id": "punnet", "label": "Punnet", "symbol": "pun.", "emoji": "🧺", "kind": "pack", "factorToKg": null },
+    { "id": "net_bag", "label": "Net bag", "symbol": "net", "emoji": "🛍️", "kind": "pack", "factorToKg": null },
+    { "id": "crate", "label": "Crate", "symbol": "crt", "emoji": "📦", "kind": "crate", "factorToKg": null },
+    { "id": "case", "label": "Case", "symbol": "case", "emoji": "🗃️", "kind": "crate", "factorToKg": null },
+    { "id": "tray", "label": "Tray", "symbol": "tray", "emoji": "🍽️", "kind": "tray", "factorToKg": null },
+    { "id": "liter", "label": "Liter", "symbol": "L", "emoji": "🧴", "kind": "volume", "factorToKg": null },
+    { "id": "half_liter", "label": "Half-liter", "symbol": "½ L", "emoji": "🥤", "kind": "volume", "factorToKg": null }
+  ],
+
+  "defaultSaleUnitsByProduce": [
+    { "produceId": "tomato", "preferredUnitIds": ["kg", "punnet", "piece"] },
+    { "produceId": "cherry_tomato", "preferredUnitIds": ["punnet", "piece"] },
+    { "produceId": "carrot", "preferredUnitIds": ["kg", "bunch", "piece"] },
+    { "produceId": "lettuce", "preferredUnitIds": ["piece", "bunch"] },
+    { "produceId": "apple", "preferredUnitIds": ["kg", "piece", "tray"] },
+    { "produceId": "banana", "preferredUnitIds": ["kg", "piece"] },
+    { "produceId": "strawberry", "preferredUnitIds": ["punnet", "kg"] },
+    { "produceId": "grape", "preferredUnitIds": ["kg", "punnet"] },
+    { "produceId": "watermelon", "preferredUnitIds": ["piece", "kg"] },
+    { "produceId": "lemon", "preferredUnitIds": ["piece", "kg"] }
+  ],
+
+  "skuNamingHint": "{shortCode}-{saleUnitId} example TMT-kg, POM-punnet"
+}
