@@ -30,15 +30,15 @@ The rest of the document develops this fundamental difference and its consequenc
 ### Architecture
 
 ```
-Browser (thin client)                        Server (Office Online Server)
-┌─────────────────────────────┐              ┌──────────────────────────────┐
-│  iframe internal.aspx        │              │  Excel calculation engine     │
-│   - grid canvas              │ ── HTTP ──▶  │  FULL workbook model          │
-│   - ONLY the visible window  │  viewport    │  Formula recalculation        │
-│  iframe shared.aspx (UI)     │ ◀── JSON ──  │  Storage (WOPI: OneDrive,     │
-│  WopiAuth.aspx (storage)     │              │           SharePoint)         │
-│  Web Workers (GridWorker…)   │              │                               │
-└─────────────────────────────┘              └──────────────────────────────┘
+Browser (thin client)                            Server (Office Online Server)   
++-----------------------------+                  +------------------------------+
+| iframe internal.aspx        |                  | Excel calculation engine     |
+| - grid canvas               |   -- HTTP -->    | FULL workbook model          |
+| - ONLY the visible window   |     viewport     | Formula recalculation        |
+| iframe shared.aspx (UI)     |   <-- JSON --    | Storage (WOPI: OneDrive,     |
+| WopiAuth.aspx (storage)     |                  | SharePoint)                  |
+| Web Workers (GridWorker)    |                  |                              |
++-----------------------------+                  +------------------------------+
 ```
 
 - The **engine and the model** live on the server. The browser only receives what
@@ -70,15 +70,15 @@ Browser (thin client)                        Server (Office Online Server)
 ### Architecture
 
 ```
-Browser (heavy client)                       Server (Google)
-┌─────────────────────────────┐              ┌──────────────────────────────┐
-│  Massive JS application      │              │  Authoritative model          │
-│  (Closure Compiler, ~60 MB   │  mutations   │  Conflict resolution          │
-│   of compiled code)          │ ── OT ──▶    │  Persistence                  │
-│  Calculation engine IN JS    │ ◀── OT ──    │  Broadcast to other clients   │
-│  Client working model        │              │                               │
-│  Canvas + tiling             │              │                               │
-└─────────────────────────────┘              └──────────────────────────────┘
+Browser (heavy client)                           Server (Google)                 
++-----------------------------+                  +------------------------------+
+| Massive JS application      |                  | Authoritative model          |
+| (Closure Compiler, ~60 MB   |    mutations     | Conflict resolution          |
+| of compiled code)           |    -- OT -->     | Persistence                  |
+| Calculation engine IN JS    |    <-- OT --     | Broadcast to other clients   |
+| Client working model        |                  |                              |
+| Canvas + tiling             |                  |                              |
++-----------------------------+                  +------------------------------+
 ```
 
 - The **calculation engine runs in the browser**, in JavaScript. Hence a memory
@@ -110,19 +110,19 @@ Browser (heavy client)                       Server (Google)
 ### Architecture
 
 ```
-Browser (client)                             Server (Node.js)
-┌─────────────────────────────┐              ┌──────────────────────────────┐
-│  React + Canvas             │              │  WASM instance pool          │
-│  ┌───────────────────────┐  │  PostMessage │  (SAME C++ engine)           │
-│  │  C++ ENGINE → WASM    │  │ ── / WS ──▶  │  - headless calculation      │
-│  │  FULL workbook in     │  │              │  - XLSX / PDF conversion     │
-│  │  linear memory        │  │ ◀── JSON ──  │  - AI / MCP                  │
-│  │  JsonView(viewport)   │  │  GetMessage  │  - persistence               │
-│  └───────────────────────┘  │              │        │                     │
-│  Canvas paints the viewport │              │        ▼                     │
-└─────────────────────────────┘              │  MongoDB + GridFS            │
-                                             │  (Directory + Spreadsheet)   │
-                                             └──────────────────────────────┘
+Browser (client)                                 Server (Node.js)                
++-----------------------------+                  +------------------------------+
+| React + Canvas              |                  | WASM instance pool           |
+| +-----------------------+   |   PostMessage    | (SAME C++ engine)            |
+| | C++ ENGINE -> WASM    |   |   -- / WS -->    | - headless calculation       |
+| | FULL workbook in      |   |                  | - XLSX / PDF conversion      |
+| | linear memory         |   |   <-- JSON --    | - AI / MCP                   |
+| | JsonView(viewport)    |   |    GetMessage    | - persistence                |
+| +-----------------------+   |                  | |                            |
+| Canvas paints the viewport  |                  | v                            |
++-----------------------------+                  | MongoDB + GridFS             |
+                                                 | (Directory + Spreadsheet)    |
+                                                 +------------------------------+
 ```
 
 ### The WASM specificity

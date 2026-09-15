@@ -48,8 +48,8 @@ Before you begin, make sure you have installed:
 
 > **Note:** The prebuilt WebAssembly engine (`SkReactSpreadSheet.wasm`, `.mjs`)
 > is already under `public/`, so you do **not** need a C++ / Emscripten
-> toolchain to run the app. You only need to rebuild the WASM if you modify the
-> C++ engine.
+> toolchain to run the app. The **C++ source will be published soon**; a **Rust**
+> port of the engine is also in progress (see [Engine source](#engine-source)).
 
 ### Installing MongoDB
 
@@ -266,6 +266,18 @@ Skeepto uses:
 - **MongoDB** — persistence (`Directory`, `Spreadsheet`, GridFS for large files)
 - **WebSocket** — real-time collaboration
 
+### Engine source
+
+This repository currently ships the engine as a **prebuilt WebAssembly binary**
+(`public/SkReactSpreadSheet.{mjs,wasm,wasm.map}`). The **C++ source will be
+published soon** so the calculation core can be built and audited like the rest
+of the stack.
+
+A **Rust rewrite** of the same engine is also underway, developed with
+**Claude**. The goal is a second implementation of the spreadsheet core, still
+compiled to WebAssembly, without changing the React UI or the Node.js server
+contract.
+
 See [`Node/Server/Model/DATABASE_SCHEMA.md`](./Node/Server/Model/DATABASE_SCHEMA.md)
 for the MongoDB schema, and [`docs/Import-Excel.md`](./docs/Import-Excel.md) to
 import `.xlsx` files.
@@ -312,7 +324,19 @@ The server uses a pool of WebAssembly instances for:
 Contributions are welcome. Please follow the existing code conventions and test
 your changes before submitting a pull request. Most of the app (UI,
 rendering, server, AI integration) is JavaScript and hackable without touching
-the C++ engine.
+the engine.
+
+The C++ core is not in this repo yet (it will be). The Rust port is experimental
+and not required to run or contribute to the application.
+
+## Discussions
+
+Please use the project's
+[GitHub Discussions](https://github.com/Stephane-76/Skeepto/discussions)
+for questions, ideas, and feedback. Do not hesitate to post there — it keeps
+the conversation public and useful for everyone.
+
+Bugs and pull requests still go through GitHub Issues and PRs.
 
 ## License
 
