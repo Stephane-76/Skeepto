@@ -5,7 +5,7 @@
 // process (contextIsolation on, nodeIntegration off).
 // =============================================================================
 
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 contextBridge.exposeInMainWorld('skerDesktop', {
   // Native File-menu actions pushed from the main process.
@@ -26,9 +26,19 @@ contextBridge.exposeInMainWorld('skerDesktop', {
     return ipcRenderer.invoke('sker:write-file', { path: filePath, contents });
   },
 
-  // Native open dialog. kind: 'sker' | 'xlsx'. Resolves to a path or null.
+  // Native open dialog. kind: 'sker' | 'xlsx' | 'open' (sker + xlsx).
+  // Resolves to a path or null.
   chooseOpenPath(kind = 'sker') {
     return ipcRenderer.invoke('sker:open-dialog', kind);
+  },
+
+  // Absolute path of a File dropped onto the window (Electron 32+).
+  pathForFile(file) {
+    try {
+      return webUtils.getPathForFile(file);
+    } catch {
+      return file && file.path ? file.path : '';
+    }
   },
 
   // Native save dialog. Resolves to a path or null.

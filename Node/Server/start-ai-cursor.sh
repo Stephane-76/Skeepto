@@ -16,7 +16,7 @@
 #   CLOUDFLARED_LOG=/tmp/sker-cloudflared.log
 #   SKER_ENV_FILE       — override .env path
 #
-# Browser: Actualiser (AI panel) + Cmd+Shift+R (serve from build/).
+# Browser: Refresh (AI panel) + Cmd+Shift+R (serve from build/).
 
 set -euo pipefail
 
@@ -95,7 +95,7 @@ wait_for_tunnel_probe() {
       return 0
     fi
     if [[ "${i}" -lt "${tries}" ]]; then
-      echo "  … probe tunnel ${i}/${tries} (DNS / propagation trycloudflare)…"
+      echo "  … tunnel probe ${i}/${tries} (DNS / trycloudflare propagation)…"
       sleep 5
     fi
   done
@@ -140,12 +140,12 @@ start_cloudflared_background() {
 
 print_tunnel_manual_steps() {
   echo ""
-  echo "Procédure manuelle :"
-  echo "  1. Terminal 1 : bash ${IA_DIR}/start-tunnel.sh"
-  echo "  2. Terminal 2 : bash ${PATCH_TUNNEL}              # « Tunnel OK »"
-  echo "  3. Terminal 2 : bash ${SCRIPT_DIR}/start-ai-cursor.sh"
-  echo "  4. Navigateur   : Actualiser + Cmd+Shift+R"
-  echo "  Smoke test      : bash ${IA_DIR}/Test.sh"
+  echo "Manual steps:"
+  echo "  1. Terminal 1: bash ${IA_DIR}/start-tunnel.sh"
+  echo "  2. Terminal 2: bash ${PATCH_TUNNEL}              # \"Tunnel OK\""
+  echo "  3. Terminal 2: bash ${SCRIPT_DIR}/start-ai-cursor.sh"
+  echo "  4. Browser:     Refresh + Cmd+Shift+R"
+  echo "  Smoke test:     bash ${IA_DIR}/Test.sh"
   echo ""
 }
 
@@ -157,15 +157,15 @@ ensure_cloudflared_url() {
 
   log_url="$(cloudflared_find_https_url)"
   if cloudflared_process_running && [[ -n "${log_url}" ]] && probe_tunnel_url "${log_url}"; then
-    echo "  cloudflared actif : ${log_url}"
+    echo "  cloudflared running: ${log_url}"
     return 0
   fi
 
   if cloudflared_process_running; then
     if [[ -n "${log_url}" ]]; then
-      echo "  cloudflared mort / URL expirée (${log_url}) — relance…"
+      echo "  cloudflared dead / URL expired (${log_url}) — restarting…"
     else
-      echo "  cloudflared sans URL — relance…"
+      echo "  cloudflared has no URL — restarting…"
     fi
     pkill -f 'cloudflared tunnel' 2>/dev/null || true
     sleep 1
@@ -175,14 +175,14 @@ ensure_cloudflared_url() {
     : >"${CLOUDFLARED_LOG}"
     start_cloudflared_background
     log_url="$(wait_for_cloudflared_url 60)" && {
-      echo "  URL cloudflared : ${log_url}"
+      echo "  cloudflared URL: ${log_url}"
       return 0
     }
-    echo "  ✗ tentative ${attempt}/3 — quick tunnel refusé (DNS / api.trycloudflare)…"
+    echo "  ✗ attempt ${attempt}/3 — quick tunnel refused (DNS / api.trycloudflare)…"
     pkill -f 'cloudflared tunnel' 2>/dev/null || true
     sleep 2
   done
-  echo "  ✗ URL cloudflared introuvable — tail ${CLOUDFLARED_LOG}"
+  echo "  ✗ cloudflared URL not found — tail ${CLOUDFLARED_LOG}"
   return 1
 }
 
@@ -231,7 +231,7 @@ echo "════════════════════════�
 echo " SkServer — Cursor Cloud + MCP sker"
 echo "════════════════════════════════════════════════════════════"
 echo ""
-echo "  .env : ${SERVER_ENV}"
+echo "  .env: ${SERVER_ENV}"
 echo ""
 
 if [[ -z "$(env_var_from_file CURSOR_API_KEY "${SERVER_ENV}" || true)" ]]; then
@@ -244,33 +244,33 @@ NEED_TUNNEL_PATCH=0
 wMcpUrl="$(env_var_from_file SK_MCP_PUBLIC_URL "${SERVER_ENV}" || true)"
 
 if [[ -n "${wMcpUrl}" ]] && probe_tunnel_url "${wMcpUrl}"; then
-  echo "  ✓ Tunnel OK : ${wMcpUrl}"
+  echo "  ✓ Tunnel OK: ${wMcpUrl}"
 else
   if [[ -n "${wMcpUrl}" ]]; then
-    echo "  ⚠ Tunnel injoignable : ${wMcpUrl}"
+    echo "  ⚠ Tunnel unreachable: ${wMcpUrl}"
   else
-    echo "  ✗ SK_MCP_PUBLIC_URL absent"
+    echo "  ✗ SK_MCP_PUBLIC_URL missing"
   fi
 
   if [[ "${SK_TUNNEL_AUTO}" != "1" ]]; then
     print_tunnel_manual_steps
-    echo "  (SK_TUNNEL_AUTO=0 — SkServer démarre sans corriger le tunnel)"
+    echo "  (SK_TUNNEL_AUTO=0 — starting SkServer without fixing the tunnel)"
   else
     if ! cloudflared_installed; then
-      echo "  ✗ Installez cloudflared : brew install cloudflared"
+      echo "  ✗ Install cloudflared: brew install cloudflared"
       print_tunnel_manual_steps
       exit 1
     fi
     NEED_TUNNEL_PATCH=1
-    echo "  → cloudflared + probe après démarrage SkServer (port ${PORT} doit répondre)"
+    echo "  → cloudflared + probe after SkServer starts (port ${PORT} must respond)"
   fi
 fi
 
 echo ""
 if [[ -n "${wMcpUrl}" ]]; then
-  echo "  MCP endpoint : ${wMcpUrl}/mcp"
+  echo "  MCP endpoint: ${wMcpUrl}/mcp"
 else
-  echo "  MCP endpoint : ${wMcpUrl:-$(env_var_from_file SK_MCP_PUBLIC_URL "${SERVER_ENV}" || echo '<pending>')}/mcp"
+  echo "  MCP endpoint: ${wMcpUrl:-$(env_var_from_file SK_MCP_PUBLIC_URL "${SERVER_ENV}" || echo '<pending>')}/mcp"
 fi
 echo ""
 
@@ -278,24 +278,24 @@ echo ""
 
 trap cleanup EXIT INT TERM
 
-echo "Démarrage SkServer…"
+echo "Starting SkServer…"
 node run-with-env.mjs &
 SERVER_PID=$!
 
-echo "Attente http://127.0.0.1:${PORT}/ …"
+echo "Waiting for http://127.0.0.1:${PORT}/ …"
 if ! wait_for_local_server 60; then
-  echo "  ✗ SkServer ne répond pas sur le port ${PORT}"
+  echo "  ✗ SkServer is not responding on port ${PORT}"
   exit 1
 fi
-echo "  ✓ SkServer prêt"
+echo "  ✓ SkServer ready"
 
 if [[ "${NEED_TUNNEL_PATCH}" == "1" ]]; then
-  echo "Démarrage cloudflared (SkServer actif sur :${PORT})…"
+  echo "Starting cloudflared (SkServer listening on :${PORT})…"
   if ! ensure_cloudflared_url; then
-    echo "  ✗ cloudflared indisponible — tail ${CLOUDFLARED_LOG}"
+    echo "  ✗ cloudflared unavailable — tail ${CLOUDFLARED_LOG}"
     print_tunnel_manual_steps
     echo ""
-    echo "SkServer reste actif (pid ${SERVER_PID}) — corrigez le tunnel puis patch-tunnel-env.sh"
+    echo "SkServer stays up (pid ${SERVER_PID}) — fix the tunnel, then run patch-tunnel-env.sh"
     trap - EXIT INT TERM
     wait "${SERVER_PID}"
     exit 0
@@ -306,14 +306,14 @@ if [[ "${NEED_TUNNEL_PATCH}" == "1" ]]; then
     wMcpUrl="${wLogUrl}"
     echo "  SK_MCP_PUBLIC_URL → ${wMcpUrl}"
   fi
-  echo "Vérification tunnel public (probe, retries DNS)…"
+  echo "Checking public tunnel (probe, DNS retries)…"
   if wait_for_tunnel_probe "${wMcpUrl}" 24; then
     if [[ -f "${PATCH_TUNNEL}" ]]; then
       SKER_ENV_FILE="${SERVER_ENV}" SK_SKIP_RESTART_HINT=1 bash "${PATCH_TUNNEL}" "${wMcpUrl}" || true
     fi
-    echo "  ✓ Tunnel OK : ${wMcpUrl}"
+    echo "  ✓ Tunnel OK: ${wMcpUrl}"
     # SkServer was started before .env was patched — reload process.env
-    echo "Relance SkServer pour charger SK_MCP_PUBLIC_URL…"
+    echo "Restarting SkServer to load SK_MCP_PUBLIC_URL…"
     if [[ -n "${SERVER_PID}" ]] && kill -0 "${SERVER_PID}" 2>/dev/null; then
       kill "${SERVER_PID}" 2>/dev/null || true
       wait "${SERVER_PID}" 2>/dev/null || true
@@ -321,17 +321,17 @@ if [[ "${NEED_TUNNEL_PATCH}" == "1" ]]; then
     node run-with-env.mjs &
     SERVER_PID=$!
     if ! wait_for_local_server 60; then
-      echo "  ✗ SkServer ne répond pas après relance (port ${PORT})"
+      echo "  ✗ SkServer is not responding after restart (port ${PORT})"
       exit 1
     fi
-    echo "  ✓ SkServer relancé (pid ${SERVER_PID}) avec ${wMcpUrl}"
+    echo "  ✓ SkServer restarted (pid ${SERVER_PID}) with ${wMcpUrl}"
   else
-    echo "  ✗ Tunnel public injoignable après démarrage SkServer"
+    echo "  ✗ Public tunnel unreachable after SkServer start"
     print_tunnel_manual_steps
     echo ""
-    echo "SkServer reste actif (pid ${SERVER_PID}). Dans un autre terminal :"
+    echo "SkServer stays up (pid ${SERVER_PID}). In another terminal:"
     echo "  bash ${PATCH_TUNNEL}"
-    echo "  puis Actualiser le panneau IA + Cmd+Shift+R"
+    echo "  then refresh the AI panel + Cmd+Shift+R"
     trap - EXIT INT TERM
     wait "${SERVER_PID}"
     exit 0
@@ -339,11 +339,11 @@ if [[ "${NEED_TUNNEL_PATCH}" == "1" ]]; then
 fi
 
 echo ""
-echo "SkServer actif (pid ${SERVER_PID})."
-echo "  Navigateur : Actualiser (panneau IA) + Cmd+Shift+R"
-echo "  MCP endpoint : ${wMcpUrl:-$(env_var_from_file SK_MCP_PUBLIC_URL "${SERVER_ENV}" || echo '?')}/mcp"
-echo "  cloudflared  : ne pas arrêter (logs ${CLOUDFLARED_LOG})"
-echo "  Test         : bash ${IA_DIR}/Test.sh"
+echo "SkServer running (pid ${SERVER_PID})."
+echo "  Browser:      Refresh (AI panel) + Cmd+Shift+R"
+echo "  MCP endpoint: ${wMcpUrl:-$(env_var_from_file SK_MCP_PUBLIC_URL "${SERVER_ENV}" || echo '?')}/mcp"
+echo "  cloudflared:  do not stop (logs ${CLOUDFLARED_LOG})"
+echo "  Test:         bash ${IA_DIR}/Test.sh"
 echo ""
 
 trap - EXIT INT TERM

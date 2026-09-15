@@ -42,7 +42,13 @@ That is the file you edit, save, and collaborate on. You do not need to convert 
 
 ## Desktop app (Electron)
 
-Offline mode has no virtual disk. Use the native **File** menu to import an `.xlsx`; Skeepto converts it to a temporary `.sker` and opens it. Save as `.sker` if you want to keep the result.
+Offline mode has no virtual disk. Open an `.xlsx` the same way as a `.sker`:
+
+- **File → Open…** (both extensions)
+- **File → Import Excel…** (Excel files only)
+- Drag and drop a `.xlsx` or `.sker` onto the window
+
+Skeepto converts the `.xlsx` to a temporary `.sker` and opens it. Save as `.sker` if you want to keep the result.
 
 ## Limits
 

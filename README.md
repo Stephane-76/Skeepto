@@ -90,10 +90,10 @@ mongosh --version
 ## Installation & Startup
 
 Copy `.env.example` to `.env` at the project root (or `Node/Server/.env`) and
-adjust values if needed.
+adjust values if needed. Full reference: [`docs/Env.md`](./docs/Env.md).
 
 ```bash
-cp .env.example .env
+cp .env.example Node/Server/.env
 ```
 
 ### 1. Install dependencies
@@ -218,29 +218,22 @@ By default the application connects to MongoDB on `localhost:27017`, database
 
 ### Environment variables
 
-Create a `.env` file at the project root or in `Node/Server/`. All variables
-are optional and fall back to sensible defaults.
+Create a `.env` file at the project root or in `Node/Server/`. It is
+**gitignored** (never pushed to GitHub). Copy [`.env.example`](./.env.example)
+and see **[`docs/Env.md`](./docs/Env.md)** for every variable (mail, auth, AI,
+Excel pool).
+
+Minimal local file:
 
 ```env
-# Server
-PORT=8000                 # HTTP port (default: 8000)
-BIND_HOST=127.0.0.1       # Bind address (default: 127.0.0.1)
-
-# MongoDB — either provide a full URL...
+PORT=8000
+BIND_HOST=127.0.0.1
 MONGO_URL=mongodb://localhost:27017/skeepto
-
-# ...or the individual parts:
-MONGO_HOST=localhost      # default: localhost
-MONGO_PORT=27017          # default: 27017
-MONGO_DB=skeepto          # default: skeepto
-MONGO_NO_AUTH=1           # set to 1/true for a local instance without auth
-# MONGO_USER=...          # when authentication is enabled
-# MONGO_PASSWORD=...
-# MONGO_AUTH_SOURCE=admin # default: admin
+MONGO_NO_AUTH=1
 ```
 
-> If `MONGO_URL` is set, it takes precedence over the individual `MONGO_*`
-> variables.
+Restart the server after editing `.env`. On macOS, set `SMTP_*` to send
+registration verification emails.
 
 ## Development
 

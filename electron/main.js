@@ -211,9 +211,10 @@ function openRecentEntry(entry) {
 }
 
 // --- Last-used directory ----------------------------------------------------
-// Remember, per file kind, the folder of the last Open/Save so the native
-// dialog reopens there instead of the OS default. Persisted in userData.
-let lastDirs = { sker: '', xlsx: '' };
+// Remember the folder of the last Open/Save so the native dialog reopens there.
+// `any` is shared by File > Open (mixed .sker / .xlsx). `lastFile` is passed as
+// defaultPath on macOS, which ignores a bare directory more often than a file.
+let lastDirs = { sker: '', xlsx: '', any: '', lastFile: '' };
 
 function lastDirsStorePath() {
   return path.join(app.getPath('userData'), 'dialog-dirs.json');
@@ -222,19 +223,20 @@ function lastDirsStorePath() {
 function loadLastDirs() {
   try {
     const parsed = JSON.parse(fs.readFileSync(lastDirsStorePath(), 'utf-8'));
+    const sker = typeof parsed?.sker === 'string' ? parsed.sker : '';
+    const xlsx = typeof parsed?.xlsx === 'string' ? parsed.xlsx : '';
     lastDirs = {
-      sker: typeof parsed?.sker === 'string' ? parsed.sker : '',
-      xlsx: typeof parsed?.xlsx === 'string' ? parsed.xlsx : '',
+      sker,
+      xlsx,
+      any: typeof parsed?.any === 'string' ? parsed.any : sker || xlsx,
+      lastFile: typeof parsed?.lastFile === 'string' ? parsed.lastFile : '',
     };
   } catch {
-    lastDirs = { sker: '', xlsx: '' };
+    lastDirs = { sker: '', xlsx: '', any: '', lastFile: '' };
   }
 }
 
-function rememberDir(kind, filePath) {
-  if (!filePath) return;
-  const wKind = kind === 'xlsx' ? 'xlsx' : 'sker';
-  lastDirs[wKind] = path.dirname(filePath);
+function persistLastDirs() {
   try {
     fs.writeFileSync(lastDirsStorePath(), JSON.stringify(lastDirs, null, 2), 'utf-8');
   } catch (e) {
@@ -242,11 +244,37 @@ function rememberDir(kind, filePath) {
   }
 }
 
-// Last folder for this kind, only if it still exists (else undefined → OS default).
-function dialogDirFor(kind) {
+function rememberDir(kind, filePath) {
+  if (!filePath) return;
   const wKind = kind === 'xlsx' ? 'xlsx' : 'sker';
-  const wDir = lastDirs[wKind];
-  return wDir && fs.existsSync(wDir) ? wDir : undefined;
+  const wDir = path.dirname(filePath);
+  lastDirs[wKind] = wDir;
+  lastDirs.any = wDir;
+  lastDirs.lastFile = filePath;
+  persistLastDirs();
+}
+
+function existingDir(dirPath) {
+  return dirPath && fs.existsSync(dirPath) ? dirPath : '';
+}
+
+// Directory for this dialog kind, falling back to the last folder of any kind.
+function dialogDirFor(kind) {
+  const wKind = kind === 'xlsx' ? 'xlsx' : kind === 'open' ? 'any' : 'sker';
+  return existingDir(lastDirs[wKind]) || existingDir(lastDirs.any) || undefined;
+}
+
+// Full defaultPath for native dialogs. Prefer the last file when it still
+// exists (macOS NSOpenPanel follows a file more reliably than a folder).
+function dialogDefaultPath(kind, fileName) {
+  const wDir = dialogDirFor(kind);
+  if (fileName && wDir) return path.join(wDir, fileName);
+  const wLast = lastDirs.lastFile;
+  if (wLast && fs.existsSync(wLast)) {
+    const wLastDir = path.dirname(wLast);
+    if (!wDir || wLastDir === wDir) return wLast;
+  }
+  return wDir ? wDir + path.sep : undefined;
 }
 
 // --- Memory diagnostics ------------------------------------------------------
@@ -505,6 +533,13 @@ async function createWindow() {
   // 8 GiB wasm ceiling) during heavy operations, and correlate a freeze with OOM.
   startMemorySampler();
 
+  // Dropping a file on the window must not navigate to file://.
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (url !== mainWindow.webContents.getURL()) {
+      event.preventDefault();
+    }
+  });
+
   const devUrl = process.env.ELECTRON_START_URL;
   if (devUrl) {
     await mainWindow.loadURL(devUrl);
@@ -526,6 +561,15 @@ async function createWindow() {
 // -----------------------------------------------------------------------------
 const SKER_FILTERS = [{ name: 'Skeepto Workbook', extensions: ['sker'] }];
 const XLSX_FILTERS = [{ name: 'Excel Workbook', extensions: ['xlsx'] }];
+const OPEN_FILTERS = [
+  { name: 'Spreadsheets', extensions: ['sker', 'xlsx'] },
+  { name: 'Skeepto Workbook', extensions: ['sker'] },
+  { name: 'Excel Workbook', extensions: ['xlsx'] },
+];
+
+function pathKind(filePath) {
+  return /\.xlsx$/i.test(String(filePath || '')) ? 'xlsx' : 'sker';
+}
 
 ipcMain.handle('sker:read-file', async (_evt, filePath) => {
   return fs.promises.readFile(filePath, 'utf-8');
@@ -537,26 +581,22 @@ ipcMain.handle('sker:write-file', async (_evt, { path: filePath, contents }) => 
 });
 
 ipcMain.handle('sker:open-dialog', async (_evt, kind) => {
-  const filters = kind === 'xlsx' ? XLSX_FILTERS : SKER_FILTERS;
-  const wDir = dialogDirFor(kind);
+  const filters =
+    kind === 'xlsx' ? XLSX_FILTERS : kind === 'open' ? OPEN_FILTERS : SKER_FILTERS;
+  const wDefaultPath = dialogDefaultPath(kind === 'sker' ? 'open' : kind);
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openFile'],
-    ...(wDir ? { defaultPath: wDir } : {}),
+    ...(wDefaultPath ? { defaultPath: wDefaultPath } : {}),
     filters,
   });
   if (result.canceled || result.filePaths.length === 0) return null;
-  rememberDir(kind, result.filePaths[0]);
+  rememberDir(pathKind(result.filePaths[0]), result.filePaths[0]);
   return result.filePaths[0];
 });
 
 ipcMain.handle('sker:save-dialog', async (_evt, { kind, defaultName }) => {
   const filters = kind === 'xlsx' ? XLSX_FILTERS : SKER_FILTERS;
-  const wDir = dialogDirFor(kind);
-  // Seed both the folder (last used) and the file name so the dialog lands in
-  // the right place with a sensible suggested name.
-  const wDefaultPath = wDir
-    ? path.join(wDir, defaultName || '')
-    : defaultName || undefined;
+  const wDefaultPath = dialogDefaultPath(kind, defaultName || '');
   const result = await dialog.showSaveDialog(mainWindow, {
     ...(wDefaultPath ? { defaultPath: wDefaultPath } : {}),
     filters,
@@ -589,6 +629,9 @@ ipcMain.on('sker:renderer-ready', () => {
 // File > Open Recent. entry: { path, name, kind: 'sker' | 'xlsx' }.
 ipcMain.on('sker:add-recent', (_evt, entry) => {
   addRecentFile(entry);
+  if (entry?.path) {
+    rememberDir(entry.kind === 'xlsx' ? 'xlsx' : 'sker', entry.path);
+  }
 });
 
 // Update the native window title to reflect the active workbook. The renderer

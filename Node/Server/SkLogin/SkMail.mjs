@@ -49,6 +49,13 @@ async function sendViaSmtp({ from, to, subject, text }) {
   })
 }
 
+function smtpNotConfiguredError() {
+  return new Error(
+    'Mail is not configured. Set SMTP_HOST (and SMTP_USER / SMTP_PASS) in Node/Server/.env, then restart the server. ' +
+      'msmtp is only used on Linux when SMTP_HOST is unset.',
+  )
+}
+
 function sendViaMsmtp({ from, to, subject, text }) {
   const raw = buildRawMessage({ from, to, subject, text })
   return new Promise((resolve, reject) => {
@@ -58,6 +65,10 @@ function sendViaMsmtp({ from, to, subject, text }) {
       stderr += String(chunk)
     })
     child.on('error', (error) => {
+      if (error && error.code === 'ENOENT') {
+        reject(smtpNotConfiguredError())
+        return
+      }
       reject(error)
     })
     child.on('close', (code) => {
@@ -75,7 +86,7 @@ function sendViaMsmtp({ from, to, subject, text }) {
 /**
  * Send a plain-text email.
  * Uses SMTP_* env when SMTP_HOST is set, otherwise the system msmtp config
- * (Linux VPS relay to mail.skeepto.app).
+ * (Linux VPS). macOS/Windows have no msmtp by default — SMTP_HOST is required.
  */
 export async function sendMail({ to, subject, text, from }) {
   const recipient = String(to || '').trim()
@@ -92,6 +103,9 @@ export async function sendMail({ to, subject, text, from }) {
   if (process.env.SMTP_HOST?.trim()) {
     await sendViaSmtp(payload)
     return
+  }
+  if (process.platform !== 'linux') {
+    throw smtpNotConfiguredError()
   }
   await sendViaMsmtp(payload)
 }

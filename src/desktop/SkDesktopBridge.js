@@ -147,13 +147,33 @@ export function newWorkbook() {
   requestSessionLoad();
 }
 
-/** Open a .sker via the native dialog. */
-async function openSkerViaDialog() {
+function isXlsxPath(filePath) {
+  return /\.xlsx$/i.test(String(filePath || ''));
+}
+
+function isSkerPath(filePath) {
+  return /\.sker$/i.test(String(filePath || ''));
+}
+
+/** Open a .sker or import a .xlsx from a disk path. */
+async function openWorkbookFromPath(filePath) {
+  if (!filePath) return;
+  if (isXlsxPath(filePath)) {
+    await importXlsxFromPath(filePath);
+    return;
+  }
+  if (isSkerPath(filePath)) {
+    openSkerFromDisk(filePath);
+  }
+}
+
+/** Open a .sker or .xlsx via the native dialog. */
+async function openWorkbookViaDialog() {
   const bridge = getDesktopBridge();
   if (!bridge) return;
-  const filePath = await bridge.chooseOpenPath('sker');
+  const filePath = await bridge.chooseOpenPath('open');
   if (!filePath) return;
-  openSkerFromDisk(filePath);
+  await openWorkbookFromPath(filePath);
 }
 
 /** Point the session at a local .sker file and trigger the load. */
@@ -302,7 +322,7 @@ async function handleMenuAction(payload) {
         newWorkbook();
         break;
       case 'open':
-        await openSkerViaDialog();
+        await openWorkbookViaDialog();
         break;
       case 'save':
         await saveActiveWorkbook({ saveAs: false });
@@ -314,7 +334,7 @@ async function handleMenuAction(payload) {
         await importXlsxViaDialog();
         break;
       case 'open-recent':
-        if (payload.kind === 'xlsx') {
+        if (payload.kind === 'xlsx' || isXlsxPath(payload.path)) {
           await importXlsxFromPath(payload.path);
         } else {
           openSkerFromDisk(payload.path);
@@ -353,6 +373,27 @@ export function initDesktopBridge() {
   if (typeof bridge.rendererReady === 'function') {
     bridge.rendererReady();
   }
+
+  // File > Open and OS drag-and-drop share the same .sker / .xlsx routing.
+  const onDragOver = (event) => {
+    if (!event.dataTransfer?.types?.includes('Files')) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+  };
+  const onDrop = (event) => {
+    const file = event.dataTransfer?.files?.[0];
+    if (!file) return;
+    const filePath =
+      typeof bridge.pathForFile === 'function' ? bridge.pathForFile(file) : file.path;
+    if (!filePath || (!isXlsxPath(filePath) && !isSkerPath(filePath))) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openWorkbookFromPath(filePath).catch((err) => {
+      console.error('[SkDesktopBridge] drop open failed:', err);
+    });
+  };
+  window.addEventListener('dragover', onDragOver);
+  window.addEventListener('drop', onDrop, true);
 
   // Keep the native window title in sync with the active workbook (the top bar
   // that used to show the file path is hidden on desktop — see SkTopPanel).
