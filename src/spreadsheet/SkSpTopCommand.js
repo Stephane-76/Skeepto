@@ -73,6 +73,7 @@ import { ReactComponent as SvgDecimalDecrease } from "../svg/decimal-decrease.sv
 import { alignPopupWithinViewport } from "../utility/SkUtility.js";
 import { ImageToolbarIcon, openImageFilePicker } from "./SkSpInsertImage.js";
 import SkThemeFlipToggle from "../component/SkThemeFlipToggle.js";
+import SkToolbarHint from "../component/SkToolbarHint.js";
 import { isDesktop } from "../desktop/SkDesktopMode.js";
 
 class SkSpTopCommand extends SkComponent {
@@ -764,6 +765,7 @@ class SkSpTopCommand extends SkComponent {
   render() {
     return (
       <div ref={this.m_Ref} className="SkSpTopCommand">
+        <SkToolbarHint />
         {/* Undo/Redo Group */}
         <div className="SkSpTopTool">
           <div title="Redo last action" onClick={this.redo}><SvgRedo className="SkSvg"/></div>

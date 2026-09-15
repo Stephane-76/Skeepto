@@ -11,6 +11,7 @@ import { TableCell, Table, TableKit } from '@tiptap/extension-table';
 import SkComponent from './component/SkComponent.js';
 import SkFontSelector from './component/SkFontSelector.js';
 import SkColor from './component/SkColor.js';
+import SkToolbarHint from './component/SkToolbarHint.js';
 import SkLoadingSpinner from './component/SkLoadingSpinner.js';
 import { SkVirtualDiskClient } from './SkVirtualDiskClient.js';
 import {
@@ -2074,6 +2075,7 @@ class SkTextEditor extends SkComponent {
 
     return (
       <div className="SkSpTopCommand SkTextEditor-toolbar">
+        <SkToolbarHint />
         <div className="SkSpTopTool">
           {this.renderToolbarItem(
             'Redo',

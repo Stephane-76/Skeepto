@@ -4,7 +4,7 @@ const STORAGE_KEY = 'sk-theme-preference';
 /** @typedef {'light' | 'dark'} ResolvedTheme */
 
 /**
- * Read stored theme preference (defaults to system).
+ * Read stored theme preference (defaults to light).
  * @returns {ThemePreference}
  */
 export function getThemePreference() {
@@ -16,7 +16,7 @@ export function getThemePreference() {
   } catch (e) {
     /* localStorage may be unavailable */
   }
-  return 'system';
+  return 'light';
 }
 
 /**
@@ -31,7 +31,7 @@ export function resolveTheme(preference) {
   if (typeof window !== 'undefined' && window.matchMedia) {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
-  return 'dark';
+  return 'light';
 }
 
 /** Document root used for theme CSS custom properties. */

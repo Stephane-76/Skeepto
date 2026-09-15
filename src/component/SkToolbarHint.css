@@ -1,0 +1,20 @@
+.SkToolbarHint-marker {
+  display: none;
+}
+
+.SkToolbarHint {
+  position: fixed;
+  z-index: 200000;
+  transform: translateX(-50%);
+  pointer-events: none;
+  max-width: min(280px, calc(100vw - 16px));
+  padding: 5px 8px;
+  border-radius: 4px;
+  font: 12px/1.35 var(--sk-font-family, Roboto, sans-serif);
+  color: #ffffff;
+  background: #323130;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

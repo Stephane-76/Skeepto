@@ -199,7 +199,7 @@ class SkSpInterface {
       // Default grid color. Overridden by the --sk-color-grid CSS variable
       // as soon as the DOM is available (see refreshThemeColors()), so the
       // spreadsheet always paints its grid with the current theme color.
-      this.m_GridColor="#3e3e42";
+      this.m_GridColor="#d4d4d4";
       this.m_GridVisible=false;
       this.refreshThemeColors();
 

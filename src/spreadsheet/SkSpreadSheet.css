@@ -43,7 +43,7 @@
   /* Canvas / cells — keep white sheet area like Excel dark UI */
   --sk-color-cell-text : #000000;
   --sk-color-cell-background : #ffffff;
-  --sk-color-grid : #3e3e42;
+  --sk-color-grid : #d4d4d4;
 
   /* Column/row header band (A,B,C / 1,2,3) */
   --sk-color-header-background : #252526;
