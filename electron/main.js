@@ -45,12 +45,39 @@ const MIME_TYPES = {
   '.txt': 'text/plain; charset=utf-8',
 };
 
+// CRA uses package.json "homepage" as PUBLIC_URL. A GitHub repo URL bakes a
+// prefix like /Stephane-76/Skeepto into asset hrefs, which 404 on this server
+// (files live at build/static/..., not build/Stephane-76/Skeepto/static/...).
+function detectCraPublicPath(rootDir) {
+  try {
+    const html = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8');
+    const match = html.match(
+      /<(?:script|link)[^>]+(?:src|href)="(\/[^"]*)\/static\/(?:js|css)\//,
+    );
+    if (match && match[1] && match[1] !== '/') return match[1];
+  } catch {
+    // index.html missing — createWindow will fail to load anyway.
+  }
+  return '';
+}
+
 function startStaticServer(rootDir) {
+  const assetPrefix = detectCraPublicPath(rootDir);
+  if (assetPrefix) {
+    console.warn(
+      `[electron] CRA public path "${assetPrefix}" rewritten to build/ root. ` +
+        'Rebuild with PUBLIC_URL=. (npm run build) so asset URLs are relative.',
+    );
+  }
+
   return new Promise((resolve, reject) => {
     const server = http.createServer((req, res) => {
       try {
         const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
         let relPath = urlPath === '/' ? '/index.html' : urlPath;
+        if (assetPrefix && (relPath === assetPrefix || relPath.startsWith(`${assetPrefix}/`))) {
+          relPath = relPath.slice(assetPrefix.length) || '/index.html';
+        }
 
         // Resolve inside rootDir and prevent path traversal.
         const absPath = path.normalize(path.join(rootDir, relPath));
