@@ -38,18 +38,63 @@ What makes it different from Excel Online and Google Sheets:
   with full data sovereignty.
 - **A real spreadsheet engine**, not a grid widget or a JavaScript clone.
 
-## Prerequisites
+## Get started: desktop app (Electron)
 
-Before you begin, make sure you have installed:
+The simplest way to try Skeepto is the **standalone Electron app**. It runs
+entirely offline: a native window, **no MongoDB, no server, no login**, and
+local `.sker` / `.xlsx` files via the File menu.
+
+You only need **Node.js 18+** and **npm**. The prebuilt WebAssembly engine
+(`SkReactSpreadSheet.wasm`, `.mjs`) is already under `public/`, so you do
+**not** need a C++ / Emscripten toolchain.
+
+> Electron always loads the compiled front-end from `build/`, so run
+> `npm run build` first (except in hot-reload mode below).
+
+```bash
+npm install
+npm run build        # required: Electron loads the build/ output
+npm run electron     # launch the desktop window
+```
+
+### Development (hot reload)
+
+Runs the CRA dev server and Electron together (loads `http://localhost:3000`):
+
+```bash
+npm run electron:dev
+```
+
+### Package installers
+
+Uses `electron-builder`; artifacts are written to `dist-electron/`.
+
+```bash
+npm run pack             # unpacked build (quick local test)
+npm run dist             # packaged installer for the current platform
+npm run dist:mac         # macOS .dmg / .zip
+npm run dist:mac:universal   # macOS universal (Intel + Apple Silicon)
+```
+
+> The engine runs in the renderer process; WebAssembly Memory64 is enabled by
+> default (Chromium ≥ 133), so no extra V8 flag is required.
+
+Want login, virtual disk, and real-time collaboration? Follow the web setup
+below.
+
+## Collaborative web app
+
+This mode needs MongoDB and the Node.js server. Use it when you want accounts,
+the virtual disk, and multi-user editing.
+
+### Prerequisites
 
 - **Node.js** (version 18 or higher)
 - **npm** (usually bundled with Node.js)
 - **MongoDB** (version 5.0 or higher)
 
-> **Note:** The prebuilt WebAssembly engine (`SkReactSpreadSheet.wasm`, `.mjs`)
-> is already under `public/`, so you do **not** need a C++ / Emscripten
-> toolchain to run the app. The **C++ source will be published soon**; a **Rust**
-> port of the engine is also in progress (see [Engine source](#engine-source)).
+> The **C++ source will be published soon**; a **Rust** port of the engine is
+> also in progress (see [Engine source](#engine-source)).
 
 ### Installing MongoDB
 
@@ -87,7 +132,7 @@ Verify that MongoDB is running:
 mongosh --version
 ```
 
-## Installation & Startup
+### Installation & startup
 
 Copy `.env.example` to `.env` at the project root (or `Node/Server/.env`) and
 adjust values if needed. Full reference: [`docs/Env.md`](./docs/Env.md).
@@ -96,7 +141,7 @@ adjust values if needed. Full reference: [`docs/Env.md`](./docs/Env.md).
 cp .env.example Node/Server/.env
 ```
 
-### 1. Install dependencies
+#### 1. Install dependencies
 
 ```bash
 npm install
@@ -105,7 +150,7 @@ cd ../Client && npm install
 cd ../..
 ```
 
-### 2. Build the application
+#### 2. Build the application
 
 **Do not use `npm start` at the project root.** Build with:
 
@@ -116,7 +161,7 @@ npm run build
 This compiles the React application in production mode into `build/` (the
 server serves the app from there).
 
-### 3. Start the server
+#### 3. Start the server
 
 In a first terminal:
 
@@ -127,7 +172,7 @@ npm start
 
 The server listens on port **8000** by default.
 
-### 4. Initialize users
+#### 4. Initialize users
 
 In a second terminal:
 
@@ -144,7 +189,7 @@ After initialization you can sign in with:
 |-------|----------|
 | `sallez@toto.fr` | `sallez` |
 
-### 5. Open the application
+#### 5. Open the application
 
 ```
 http://localhost:8000
@@ -153,46 +198,6 @@ http://localhost:8000
 Hard-refresh the browser (**Cmd+Shift+R**) so the WASM module is reloaded.
 
 To bring an Excel workbook into Skeepto, upload a `.xlsx` on the virtual disk, run **Convert Excel**, then open the new `.sker`. See [`docs/Import-Excel.md`](./docs/Import-Excel.md).
-
-## Desktop app (Electron)
-
-Skeepto also ships as a **standalone desktop application** built with Electron.
-In this mode the app runs entirely offline: it loads the web build in a native
-window **without any server, login or collaboration**, and reads/writes local
-`.sker` (and `.xlsx`) files through a native File menu and OS dialogs.
-
-> The Electron mode always loads the compiled front-end from `build/`, so you
-> must run `npm run build` first. It does **not** need MongoDB or the Node.js
-> server — those are only for the collaborative web mode.
-
-### Run the desktop app
-
-```bash
-npm run build        # required first: Electron loads the build/ output
-npm run electron     # launch the desktop window
-```
-
-### Development (hot reload)
-
-Runs the CRA dev server and Electron together (loads `http://localhost:3000`):
-
-```bash
-npm run electron:dev
-```
-
-### Package installers
-
-Uses `electron-builder`; artifacts are written to `dist-electron/`.
-
-```bash
-npm run pack             # unpacked build (quick local test)
-npm run dist             # packaged installer for the current platform
-npm run dist:mac         # macOS .dmg / .zip
-npm run dist:mac:universal   # macOS universal (Intel + Apple Silicon)
-```
-
-> The engine runs in the renderer process; WebAssembly Memory64 is enabled by
-> default (Chromium ≥ 133), so no extra V8 flag is required.
 
 ## Project structure
 
@@ -244,6 +249,13 @@ npm run build
 cd Node/Server && npm start
 ```
 
+For the desktop app, rebuild then relaunch Electron (or use `npm run electron:dev`):
+
+```bash
+npm run build
+npm run electron
+```
+
 > The C++ engine is compiled with Emscripten; the resulting artifacts are copied
 > into `public/`. After a WASM rebuild, copy
 > `public/SkReactSpreadSheet.{mjs,wasm,wasm.map}` into `build/` and
@@ -286,6 +298,12 @@ The server uses a pool of WebAssembly instances for:
 
 ## Troubleshooting
 
+### The desktop window does not open
+
+1. Make sure you ran `npm run build` at the project root (Electron loads `build/`)
+2. Run `npm install` so the `electron` package is available
+3. Check the terminal for renderer / WASM errors
+
 ### The server won't start
 
 1. Make sure MongoDB is running: `mongosh`
@@ -308,9 +326,10 @@ The server uses a pool of WebAssembly instances for:
 
 ## Important notes
 
+- **Fastest first run** — `npm install` → `npm run build` → `npm run electron`.
 - **Do not use `npm start` at the project root** — it does not serve the app.
 - **Always build before starting the web server** — `npm run build`.
-- **Startup order** — MongoDB → Build → Server → Initialization → Browser.
+- **Web startup order** — MongoDB → Build → Server → Initialization → Browser.
 
 ## Contributing
 
