@@ -6,7 +6,7 @@ export function normalizeUserEmail(email) {
   return String(email || '').trim().toLowerCase();
 }
 
-/** Per-user home on the virtual disk, e.g. /home/sallez@skeema.fr */
+/** Per-user home on the virtual disk, e.g. /home/sallez@toto.fr */
 export function userHomeDirectoryPath(email) {
   const normalized = normalizeUserEmail(email);
   return normalized ? `/home/${normalized}` : '/home';
@@ -100,13 +100,13 @@ export function setStoredVirtualDiskPath(path, email) {
         SK_VIRTUAL_DISK_PATH_KEY,
         JSON.stringify({ email: normalizedEmail, path })
       );
-    }
+    } 
   } catch {
     /* localStorage may be unavailable */
   }
 }
 
-/** Per-user documents folder, e.g. /home/sallez@skeema.fr/documents */
+/** Per-user documents folder, e.g. /home/sallez@toto.fr/documents */
 export function userDocumentsDirectoryPath(email) {
   return `${userHomeDirectoryPath(email)}/documents`;
 }

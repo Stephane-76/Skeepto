@@ -6,7 +6,7 @@
 import { JSONStorage, LocalStorage } from "node-localstorage"
 
 let wHttpAdr = "http://localhost:8000";
-let wEmail = "sallez@skeema.fr";
+let wEmail = "sallez@toto.fr";
 
 export async function SkLogin(sHttpAdr,sEmail,sPassWord) {
     let wOptions = {

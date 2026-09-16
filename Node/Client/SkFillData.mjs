@@ -75,7 +75,7 @@ async function InitializeUsers(wSkWebInterface) {
         {
             Name: 'Guest',
             FirstName: 'Guest',
-            Email: 'guest@skeema.fr',
+            Email: 'guest@toto.fr',
             Group: 'guest',
             Date: Date.now(),
             Password: 'guest'

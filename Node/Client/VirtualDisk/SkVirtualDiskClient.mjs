@@ -495,7 +495,7 @@ class SkVirtualDiskClient {
     // Load binary files with proper MIME type handling
     async loadBinaryFiles(sDirectory, sClient, sExtension) {
         try {
-            await sClient.cd('/home/sallez@skeema.fr/documents');
+            await sClient.cd('/home/sallez@toto.fr/documents');
             
             const sFileNames = await fs.readdir(sDirectory);
             const mimeType = this.getMimeType(sExtension);

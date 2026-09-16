@@ -83,7 +83,7 @@ export class SkFillVirtualDisk {
         }
     }
 
-    /** @param {string} sEmail — user email, e.g. sallez@skeema.fr → /home/sallez@skeema.fr */
+    /** @param {string} sEmail — user email, e.g. sallez@toto.fr → /home/sallez@toto.fr */
     async fillVirtualDiskForUser(sEmail) {
         const wEmail = String(sEmail || '').trim().toLowerCase();
         if (!wEmail) {

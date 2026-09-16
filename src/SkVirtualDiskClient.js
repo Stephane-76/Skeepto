@@ -962,7 +962,7 @@ export class SkVirtualDiskClient {
     // List files by type
     async listFilesByType(sType) {
         try {
-            const wResponse = await window.WebInterface.getJson(`/files/list`, encodeURIComponent('/home/sallez@skeema.fr/documents'));
+            const wResponse = await window.WebInterface.getJson(`/files/list`, encodeURIComponent('/home/sallez@toto.fr/documents'));
             const wData = JSON.parse(wResponse);
             
             if (wData && wData.contents) {
