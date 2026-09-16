@@ -7,19 +7,24 @@ alwaysApply: true
 
 The user serves/tests the app from `skeepto/build/`, not `public/` directly.
 
-After `compil2Wasm.sh` (or any WASM rebuild in `sker/`), artifacts land in `skeepto/public/`. The user serves from `build/` — **remind them** to sync; do not run sync yourself unless they ask (see `user-compiles.mdc`).
+A wasm rebuild in **skeepto-engine** (with `-DSK_SKEEPTO_DIR`) copies:
 
-Full sync:
+- browser module → `skeepto/public/` (`ENVIRONMENT=web`)
+- Node module → `skeepto/Node/Server/` (`-DSK_NODE`, `ENVIRONMENT=node`)
+
+Those two `.wasm` files are **not** interchangeable. Never copy `public/` into
+`Node/Server/` (or the other way). The user still needs `public/` → `build/`.
+
+Full sync of the served app:
 
 ```bash
 cd /Users/stephaneallez/Projects/skeepto && npm run build
 ```
 
-WASM-only:
+WASM-only (browser, after engine already filled `public/`):
 
 ```bash
 cp public/SkReactSpreadSheet.{mjs,wasm,wasm.map} build/
-cp public/SkReactSpreadSheet.{mjs,wasm,wasm.map} Node/Server/
 ```
 
 Remind hard-refresh (**Cmd+Shift+R**) so the browser reloads `.wasm`.

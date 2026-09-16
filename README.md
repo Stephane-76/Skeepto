@@ -93,8 +93,10 @@ the virtual disk, and multi-user editing.
 - **npm** (usually bundled with Node.js)
 - **MongoDB** (version 5.0 or higher)
 
-> The **C++ source will be published soon**; a **Rust** port of the engine is
-> also in progress (see [Engine source](#engine-source)).
+> The **C++ engine** source is on GitHub:
+> [Stephane-76/SkeeptoEngine](https://github.com/Stephane-76/SkeeptoEngine)
+> (CMake-only; local clone often named `skeepto-engine`).
+> A **Rust** port is also in progress (see [Engine source](#engine-source)).
 
 ### Installing MongoDB
 
@@ -256,10 +258,13 @@ npm run build
 npm run electron
 ```
 
-> The C++ engine is compiled with Emscripten; the resulting artifacts are copied
-> into `public/`. After a WASM rebuild, copy
-> `public/SkReactSpreadSheet.{mjs,wasm,wasm.map}` into `build/` and
-> `Node/Server/`, or run `npm run build` again.
+> The C++ engine is compiled with Emscripten in
+> [SkeeptoEngine](https://github.com/Stephane-76/SkeeptoEngine). A wasm
+> build copies the **browser** module into `public/` and the **Node** module
+> into `Node/Server/` (they are not interchangeable: Node is built with
+> `-DSK_NODE`). After that, copy `public/SkReactSpreadSheet.{mjs,wasm,wasm.map}`
+> into `build/` (`npm run build` or a manual copy) — do **not** overwrite
+> `Node/Server/` with the `public/` files. Hard-refresh (**Cmd+Shift+R**).
 
 ## Architecture
 
@@ -273,10 +278,19 @@ Skeepto uses:
 
 ### Engine source
 
-This repository currently ships the engine as a **prebuilt WebAssembly binary**
-(`public/SkReactSpreadSheet.{mjs,wasm,wasm.map}`). The **C++ source will be
-published soon** so the calculation core can be built and audited like the rest
-of the stack.
+This repository currently ships the engine as **prebuilt WebAssembly binaries**
+(`public/` for the browser, `Node/Server/` for Node). The **C++ source** is in
+[Stephane-76/SkeeptoEngine](https://github.com/Stephane-76/SkeeptoEngine)
+(CMake only; clone next to this repo as `skeepto-engine` if you use the default
+sibling path). From there:
+
+```bash
+cmake -B build-wasm -DSK_PLATFORM=wasm -DSK_SKEEPTO_DIR=/path/to/skeepto
+cmake --build build-wasm --parallel
+```
+
+That copies the two modules into this tree. Then sync `public/` → `build/`
+(`npm run build` or copy the three browser files).
 
 A **Rust rewrite** of the same engine is also underway, developed with
 **Claude**. The goal is a second implementation of the spreadsheet core, still
@@ -338,8 +352,10 @@ your changes before submitting a pull request. Most of the app (UI,
 rendering, server, AI integration) is JavaScript and hackable without touching
 the engine.
 
-The C++ core is not in this repo yet (it will be). The Rust port is experimental
-and not required to run or contribute to the application.
+The C++ core lives in
+[SkeeptoEngine](https://github.com/Stephane-76/SkeeptoEngine); this repo keeps
+the prebuilt WASM binary so the app runs without a C++ toolchain. The Rust port
+is experimental and not required to run or contribute to the application.
 
 ## Discussions
 

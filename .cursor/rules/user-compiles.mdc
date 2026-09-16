@@ -20,7 +20,9 @@ After C++/WASM or frontend changes that require a rebuild, **tell the user** wha
 Example reminder (WASM + skeepto):
 
 ```bash
-cd /Users/stephaneallez/Projects/sker/SkReactSpreadSheet && ./compil2Wasm.sh
+cd /Users/stephaneallez/Projects/skeepto-engine
+cmake -B build-wasm -DSK_PLATFORM=wasm -DSK_SKEEPTO_DIR=/Users/stephaneallez/Projects/skeepto
+cmake --build build-wasm --parallel
 cd /Users/stephaneallez/Projects/skeepto && npm run build
 ```
 
