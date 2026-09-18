@@ -298,8 +298,10 @@ compiled to WebAssembly, without changing the React UI or the Node.js server
 contract.
 
 See [`Node/Server/Model/DATABASE_SCHEMA.md`](./Node/Server/Model/DATABASE_SCHEMA.md)
-for the MongoDB schema, and [`docs/Import-Excel.md`](./docs/Import-Excel.md) to
-import `.xlsx` files.
+for the MongoDB schema, [`docs/Import-Excel.md`](./docs/Import-Excel.md) to
+import `.xlsx` files, and
+[`docs/Spreadsheet-React-Classes.md`](./docs/Spreadsheet-React-Classes.md) for
+the React spreadsheet classes and the engine Unit classes.
 
 ### WebAssembly instance pool
 
