@@ -236,6 +236,13 @@ Charts are not a separate data pipeline. `SkCellClassLineChart` /
 properties, then the React widget **reads those attributes** to know what to
 plot.
 
+![Expense report — pie, line, bar and gauge driven by the Attribute panel](./Graphics.png)
+
+The Attribute tab on the selected chart (`Graphics.sker`) binds `Title`,
+label range `B5:B10`, value range `C5:E10`, and series labels `C4:E4` to the
+table on the left. Gauge, pie, line, and bar widgets all consume the same
+kind of properties.
+
 Typical LineChart model (`registerClassAttribute`):
 
 | Property | Kind | Role |
@@ -250,9 +257,10 @@ Typical LineChart model (`registerClassAttribute`):
 So if the chart class sits on A1 (or as a floating object anchored on `_$$A`):
 
 ```text
-A1.chartData   = B2:B20
-A1.DataRange   = C2:C20
-A1.Title       = "Sales"
+A1.Title          = Expense report
+A1.chartData      = B5:B10
+A1.DataRange      = C5:E10
+A1.seriesLabels   = C4:E4
 ```
 
 The widget calls `resolvePropertyRangeRef(cell, "chartData")` (and
