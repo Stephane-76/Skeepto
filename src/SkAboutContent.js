@@ -364,7 +364,7 @@ window.SkUISpreadSheet.format(
         </p>
       </section>
 
-      <p className="SkAbout-copyright">Copyright Stéphane ALLEZ 2026 — MIT licence</p>
+      <p className="SkAbout-copyright">Copyright Stéphane ALLEZ 2026 — MIT license</p>
     </article>
   );
 }

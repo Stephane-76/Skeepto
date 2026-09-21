@@ -216,7 +216,7 @@ class SkSpreadSheet extends SkComponent {
           this.openRightPanelTab('Chat');
           break;
         case 'tools-ai-assistant':
-          this.openRightPanelTab('Assistant IA');
+          this.openRightPanelTab('AI Assistant');
           break;
         case 'tools-debug':
           this.openRightPanelTab('Debug');
@@ -575,14 +575,14 @@ class SkSpreadSheet extends SkComponent {
         // Private mode: still show the dialog once for this component instance.
       }
       const wReload = await showConfirm({
-        title: 'Mise à jour requise',
+        title: 'Update required',
         message:
-          "Une nouvelle version du tableur est disponible sur le serveur. "
-          + "Veuillez recharger la page pour éviter des erreurs de synchronisation.",
-        detail: 'Recharger maintenant ?',
+          "A new version of the spreadsheet is available on the server. "
+          + "Please reload the page to avoid synchronization errors.",
+        detail: 'Reload now?',
         variant: 'warning',
-        confirmLabel: 'Recharger',
-        cancelLabel: 'Plus tard',
+        confirmLabel: 'Reload',
+        cancelLabel: 'Later',
       });
       if (wReload) {
         try {

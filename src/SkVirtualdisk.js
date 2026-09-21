@@ -1734,10 +1734,10 @@ export class SkVirtualDisk extends React.Component {
 
             if (!fileData.canWrite) {
                 await showAlert({
-                    title: 'Lecture seule',
+                    title: 'Read-only',
                     message:
-                        `Le fichier « ${row.name} » est ouvert en lecture seule. ` +
-                        'Vous pouvez le consulter, mais pas enregistrer de modifications.',
+                        `The file “${row.name}” is opened as read-only. ` +
+                        'You can view it, but you cannot save changes.',
                 });
             }
 
@@ -1771,8 +1771,8 @@ export class SkVirtualDisk extends React.Component {
 
             if (!hasSession) {
                 await showAlert({
-                    title: 'Connexion requise',
-                    message: 'Connectez-vous pour télécharger et ouvrir ce classeur Excel.',
+                    title: 'Sign in required',
+                    message: 'Sign in to download and open this Excel workbook.',
                 });
                 return false;
             }
@@ -1894,10 +1894,10 @@ export class SkVirtualDisk extends React.Component {
             //console.log('File access granted for document:', fileData);
             if (!canWrite) {
                 await showAlert({
-                    title: 'Lecture seule',
+                    title: 'Read-only',
                     message:
-                        `Le document « ${row.name} » est ouvert en lecture seule. ` +
-                        'Vous pouvez le consulter, mais pas enregistrer de modifications.',
+                        `The document “${row.name}” is opened as read-only. ` +
+                        'You can view it, but you cannot save changes.',
                 });
             }
             this.openTextEditorForDocument(fileData);
@@ -1946,8 +1946,7 @@ export class SkVirtualDisk extends React.Component {
         } else {
             // Load the file for other file types
             try {
-                let wFile = await this.client.loadFile(row.path);
-                //console.log('File loaded:', wFile);
+                await this.client.loadFile(row.path);
             } catch (error) {
                 console.error('Error loading file:', error);
                 await showError('Error loading file');
@@ -2205,7 +2204,7 @@ export class SkVirtualDisk extends React.Component {
                 </SkModal>
                 <SkModal
                     show={this.state.documentLockNoticeOpen}
-                    title="Document verrouillé"
+                    title="Document locked"
                     width={460}
                     height={280}
                     closeButton={false}
@@ -2215,24 +2214,24 @@ export class SkVirtualDisk extends React.Component {
                             className="SkModal-toolbarBtn SkModal-toolbarBtn--primary"
                             onClick={this.confirmDocumentLockNotice}
                         >
-                            Ouvrir en lecture seule
+                            Open as read-only
                         </button>
                     }
                 >
                     <div className="SkVirtualDisk-lockNotice">
                         <p className="SkVirtualDisk-lockNotice-lead">
-                            Ce document est en cours d&apos;édition par un autre utilisateur.
+                            This document is being edited by another user.
                         </p>
                         <p className="SkVirtualDisk-lockNotice-detail">
-                            <span className="SkVirtualDisk-lockNotice-label">Fichier</span>
+                            <span className="SkVirtualDisk-lockNotice-label">File</span>
                             <strong>{this.state.documentLockNoticeFileName}</strong>
                         </p>
                         <p className="SkVirtualDisk-lockNotice-detail">
-                            <span className="SkVirtualDisk-lockNotice-label">Verrouillé par</span>
+                            <span className="SkVirtualDisk-lockNotice-label">Locked by</span>
                             <strong>{this.state.documentLockNoticeLockedBy}</strong>
                         </p>
                         <p className="SkVirtualDisk-lockNotice-hint">
-                            Vous pouvez consulter le contenu, mais pas le modifier tant que le verrou est actif.
+                            You can view the content, but you cannot edit it while the lock is active.
                         </p>
                     </div>
                 </SkModal>

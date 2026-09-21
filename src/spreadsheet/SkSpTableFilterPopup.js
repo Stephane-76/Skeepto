@@ -240,17 +240,17 @@ class SkSpTableFilterPopup extends SkComponent {
             className="SkTableFilterPopup-listbox"
             height={220}
             autoFocus
-            ariaLabel={`Valeurs pour ${wTitle}`}
+            ariaLabel={`Values for ${wTitle}`}
             items={wList.map((v) => ({ value: v, label: v }))}
             selected={this.state.selectedValues}
             onToggle={this.toggleValue}
             headerItem={{
               value: "__all__",
-              label: "(Tout sélectionner)",
+              label: "(Select all)",
               checked: wAllSelected && wList.length > 0,
               onToggle: this.toggleSelectAll,
             }}
-            emptyText="Aucune valeur"
+            emptyText="No values"
           />
         </div>
         <div className="SkTableFilterPopup-actions">

@@ -15,7 +15,7 @@ import { getSpreadsheetLang, spreadsheetLangLabel } from './SkeeptoLang.js';
 import './SkSpAiChat.css';
 
 const ROLE_LABELS = {
-  user: 'Vous',
+  user: 'You',
   assistant: 'Assistant',
   system: 'Info',
 };
@@ -157,7 +157,7 @@ export default class SkSpAiChat extends SkComponent {
       if (wStatus?.message === 'error') {
         this.setState({
           aiConfigured: false,
-          aiHints: [wStatus.error || 'Impossible de lire /ai/status'],
+          aiHints: [wStatus.error || 'Could not read /ai/status'],
         });
         return;
       }
@@ -302,7 +302,7 @@ export default class SkSpAiChat extends SkComponent {
     if (resetUi) {
       this.clearLoadingTimer();
       this.setState({ loading: false });
-      this.appendMessage('system', 'Requête annulée.');
+      this.appendMessage('system', 'Request canceled.');
     }
   }
 
@@ -317,7 +317,7 @@ export default class SkSpAiChat extends SkComponent {
     if (requiresMcpTunnel && this.state.aiConfigured && this.state.mcpTunnelReachable === false) {
       this.setState({
         error:
-          'Tunnel MCP injoignable. Relancez bash Node/Server/start-ai-cursor.sh (tunnel auto), puis Actualiser + Cmd+Shift+R.',
+          'MCP tunnel unreachable. Rerun bash Node/Server/start-ai-cursor.sh (auto tunnel), then Refresh + Cmd+Shift+R.',
       });
       return;
     }
@@ -327,7 +327,7 @@ export default class SkSpAiChat extends SkComponent {
     const wWorkbookPath = wCtx.workbookPath || this.state.workbookPath;
     if (spreadsheetAgent && !wWorkbookPath) {
       this.setState({
-        error: 'Aucun classeur ouvert. Ouvrez un fichier .sker avant de poser une question.',
+        error: 'No workbook is open. Open a .sker file before asking a question.',
       });
       return;
     }
@@ -340,7 +340,7 @@ export default class SkSpAiChat extends SkComponent {
     ) {
       this.setState({
         error:
-          'Aucune cellule active détectée. Cliquez une cellule dans la grille — le bandeau doit afficher « Sélection : H7 » (ou une plage) — puis renvoyez.',
+          'No active cell detected. Click a cell in the grid — the banner should show “Selection: H7” (or a range) — then send again.',
       });
       return;
     }
@@ -373,13 +373,13 @@ export default class SkSpAiChat extends SkComponent {
         const wHintText = Array.isArray(wRes.hints) && wRes.hints.length > 0
           ? `\n\n${wRes.hints.join('\n')}`
           : '';
-        throw new Error((wRes.error || 'Erreur IA') + wHintText);
+        throw new Error((wRes.error || 'AI error') + wHintText);
       }
 
       const wAnswer =
         (typeof wRes.result === 'string' && wRes.result.trim() !== '')
           ? wRes.result
-          : 'Requête terminée sans texte de réponse.';
+          : 'Request finished with no response text.';
 
       const wDuration =
         typeof wRes.durationMs === 'number' && wRes.durationMs > 0
@@ -389,15 +389,15 @@ export default class SkSpAiChat extends SkComponent {
     } catch (e) {
       if (e?.name === 'AbortError') {
         if (!this.askCancelNotified) {
-          this.appendMessage('system', 'Requête annulée.');
+          this.appendMessage('system', 'Request canceled.');
         }
         return;
       }
       let wMsg = e?.message || String(e);
       if (/^fetch failed$/i.test(wMsg.trim())) {
         wMsg =
-          'Connexion au serveur impossible (fetch failed). ' +
-          'Vérifiez que SkServer tourne et que llama-server répond sur le port 8080 (curl http://127.0.0.1:8080/health).';
+          'Could not connect to the server (fetch failed). ' +
+          'Check that SkServer is running and llama-server answers on port 8080 (curl http://127.0.0.1:8080/health).';
       }
       this.setState({ error: wMsg });
       this.appendMessage('system', wMsg);
@@ -426,7 +426,7 @@ export default class SkSpAiChat extends SkComponent {
     if (aiConfigured === null) {
       return (
         <div className="SkSpAiChat-status">
-          Vérification de la configuration IA…
+          Checking AI configuration…
         </div>
       );
     }
@@ -434,7 +434,7 @@ export default class SkSpAiChat extends SkComponent {
       if (aiConfigured && llamaReachable === true && llamaMcp) {
         return (
           <div className="SkSpAiChat-status SkSpAiChat-status--ok">
-            Agent llama local + MCP sker (sans Cursor ni tunnel).
+            Local llama agent + sker MCP (no Cursor, no tunnel).
             {llamaBaseUrl ? <> · <code>{llamaBaseUrl}</code></> : null}
           </div>
         );
@@ -442,16 +442,16 @@ export default class SkSpAiChat extends SkComponent {
       if (aiConfigured && llamaReachable === true) {
         return (
           <div className="SkSpAiChat-status SkSpAiChat-status--ok">
-            Mode llama local — texte uniquement (pas de cellules, pas de MCP).
+            Local llama mode — text only (no cells, no MCP).
             {llamaBaseUrl ? <> · <code>{llamaBaseUrl}</code></> : null}
             {' '}
-            Édition classeur : <code>start-ai-cursor.sh</code>
+            Workbook editing: <code>start-ai-cursor.sh</code>
           </div>
         );
       }
       const wHints = aiHints.length > 0
         ? aiHints.join(' ')
-        : 'Démarrez llama-server (./launch.sh) puis SkServer avec bash Node/Server/start-ai-llama.sh.';
+        : 'Start llama-server (./launch.sh) then SkServer with bash Node/Server/start-ai-llama.sh.';
       return (
         <div className="SkSpAiChat-status">
           {wHints}
@@ -461,38 +461,38 @@ export default class SkSpAiChat extends SkComponent {
     if (aiConfigured && mcpTunnelReachable === true) {
       return (
         <div className="SkSpAiChat-status SkSpAiChat-status--ok">
-          Assistant IA prêt (Cursor Cloud + MCP sker via tunnel HTTPS).
+          AI assistant ready (Cursor Cloud + sker MCP over HTTPS tunnel).
         </div>
       );
     }
     if (aiConfigured && mcpTunnelReachable === false) {
       return (
         <div className="SkSpAiChat-status">
-          <strong>Tunnel MCP injoignable</strong> — Cursor Cloud ne peut pas appeler les outils tableur.
+          <strong>MCP tunnel unreachable</strong> — Cursor Cloud cannot call spreadsheet tools.
           <ol className="SkSpAiChat-steps">
             <li>
-              Arrêter SkServer (Ctrl+C), puis relancer :{' '}
+              Stop SkServer (Ctrl+C), then restart:{' '}
               <code>bash Node/Server/start-ai-cursor.sh</code>
               <br />
               <span className="SkSpAiChat-stepNote">
-                (cloudflared + patch <code>SK_MCP_PUBLIC_URL</code> + SkServer — automatique)
+                (cloudflared + patch <code>SK_MCP_PUBLIC_URL</code> + SkServer — automatic)
               </span>
             </li>
             <li>
-              Attendre <strong>Tunnel OK</strong> dans le terminal
+              Wait for <strong>Tunnel OK</strong> in the terminal
             </li>
             <li>
-              Cliquer <strong>Actualiser</strong> ci-dessous, puis hard-refresh (Cmd+Shift+R)
+              Click <strong>Refresh</strong> below, then hard-refresh (Cmd+Shift+R)
             </li>
           </ol>
           <p className="SkSpAiChat-stepNote">
-            Manuel : <code>bash Node/IACursor/start-tunnel.sh</code> puis{' '}
-            <code>bash Node/IACursor/patch-tunnel-env.sh</code> — ou{' '}
-            <code>SK_TUNNEL_AUTO=0</code> pour désactiver l&apos;auto-tunnel.
+            Manual: <code>bash Node/IACursor/start-tunnel.sh</code> then{' '}
+            <code>bash Node/IACursor/patch-tunnel-env.sh</code> — or{' '}
+            <code>SK_TUNNEL_AUTO=0</code> to disable the auto-tunnel.
           </p>
           {mcpPublicUrl ? (
             <div className="SkSpAiChat-mcpUrl">
-              URL configurée (expirée ?) : <code>{mcpPublicUrl}</code>
+              Configured URL (expired?): <code>{mcpPublicUrl}</code>
             </div>
           ) : null}
         </div>
@@ -500,7 +500,7 @@ export default class SkSpAiChat extends SkComponent {
     }
     const wHints = aiHints.length > 0
       ? aiHints.join(' ')
-      : 'Configurez CURSOR_API_KEY et SK_MCP_PUBLIC_URL sur le serveur.';
+      : 'Set CURSOR_API_KEY and SK_MCP_PUBLIC_URL on the server.';
     return (
       <div className="SkSpAiChat-status">
         {wHints}
@@ -523,11 +523,11 @@ export default class SkSpAiChat extends SkComponent {
           <button
             type="button"
             className={`SkSpAiChat-copyBtn${wCopied ? ' SkSpAiChat-copyBtn--done' : ''}`}
-            title="Copier ce message"
-            aria-label="Copier ce message"
+            title="Copy this message"
+            aria-label="Copy this message"
             onClick={() => void this.handleCopyMessage(msg.id, msg.text)}
           >
-            {wCopied ? 'Copié' : 'Copier'}
+            {wCopied ? 'Copied' : 'Copy'}
           </button>
         </div>
         <div className="SkSpAiChat-msgBody">{msg.text}</div>
@@ -539,17 +539,17 @@ export default class SkSpAiChat extends SkComponent {
     if (this.state.textOnly) {
       return (
         <div className="SkSpAiChat-empty">
-          <p><strong>Mode texte</strong> — pas d&apos;édition du classeur.</p>
-          <p>Réponses texte sans outils MCP.</p>
-          <p>Exemples :</p>
+          <p><strong>Text mode</strong> — no workbook editing.</p>
+          <p>Text answers without MCP tools.</p>
+          <p>Examples:</p>
           <ul>
-            <li>Quelle est la liste des départements français ?</li>
-            <li>Explique la TVA déductible vs collectée</li>
-            <li>Différence entre charges et produits au PCG</li>
+            <li>What is the list of French departments?</li>
+            <li>Explain deductible vs collected VAT</li>
+            <li>Difference between expenses and income in the PCG</li>
           </ul>
           <p className="SkSpAiChat-emptyNote">
-            Pour écrire dans une cellule ou créer un tableau → mode agent tableur
-            (<code>start-ai-llama-agent.sh</code> ou <code>start-ai-cursor.sh</code>).
+            To write in a cell or create a table → spreadsheet agent mode
+            (<code>start-ai-llama-agent.sh</code> or <code>start-ai-cursor.sh</code>).
           </p>
         </div>
       );
@@ -578,28 +578,28 @@ export default class SkSpAiChat extends SkComponent {
 
         <div className="SkSpAiChat-workbook">
           {workbookPath
-            ? <>Classeur actif : <strong>{workbookPath}</strong></>
-            : 'Aucun classeur actif'}
+            ? <>Active workbook: <strong>{workbookPath}</strong></>
+            : 'No active workbook'}
           {activeSheet ? (
             <>
               {' · '}
-              Feuille : <strong>{activeSheet}</strong>
+              Sheet: <strong>{activeSheet}</strong>
             </>
           ) : null}
           {selection ? (
             <>
               {' · '}
-              Sélection : <strong>{selection}</strong>
+              Selection: <strong>{selection}</strong>
             </>
           ) : (
             <>
               {' · '}
-              <span className="SkSpAiChat-stepNote">Sélection : aucune — cliquez une cellule</span>
+              <span className="SkSpAiChat-stepNote">Selection: none — click a cell</span>
             </>
           )}
           {' · '}
-          Affichage : <strong>{spreadsheetLangLabel(getSpreadsheetLang())}</strong>
-          {' · fil '}
+          Display: <strong>{spreadsheetLangLabel(getSpreadsheetLang())}</strong>
+          {' · file '}
           <strong>US</strong>
         </div>
 
@@ -617,11 +617,11 @@ export default class SkSpAiChat extends SkComponent {
               <button
                 type="button"
                 className={`SkSpAiChat-copyBtn SkSpAiChat-copyBtn--all${copiedAll ? ' SkSpAiChat-copyBtn--done' : ''}`}
-                title="Copier toute la conversation"
+                title="Copy the whole conversation"
                 onClick={() => void this.handleCopyAllMessages()}
                 disabled={loading}
               >
-                {copiedAll ? 'Conversation copiée' : 'Copier la conversation'}
+                {copiedAll ? 'Conversation copied' : 'Copy conversation'}
               </button>
             </div>
           ) : null}
@@ -643,22 +643,22 @@ export default class SkSpAiChat extends SkComponent {
           />
           <div className="SkSpAiChat-actions">
             <SkButton onClick={this.handleRefreshStatus} disabled={loading}>
-              Actualiser
+              Refresh
             </SkButton>
             {loading ? (
               <SkButton onClick={() => this.handleCancelAsk({ resetUi: true })}>
-                Arrêter
+                Stop
               </SkButton>
             ) : null}
             <SkButton onClick={this.handleSend} disabled={loading || !draft.trim()}>
-              {loading ? 'Envoi…' : 'Envoyer'}
+              {loading ? 'Sending…' : 'Send'}
             </SkButton>
             {loading ? (
               <span className="SkSpAiChat-busy">
                 {spreadsheetAgent
-                  ? `Agent tableur… ${loadingElapsedSec}s`
+                  ? `Spreadsheet agent… ${loadingElapsedSec}s`
                   : textOnly
-                    ? `Réponse texte… ${loadingElapsedSec}s`
+                    ? `Text reply… ${loadingElapsedSec}s`
                     : `Agent… ${loadingElapsedSec}s`}
               </span>
             ) : null}

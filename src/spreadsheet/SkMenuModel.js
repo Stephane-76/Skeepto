@@ -117,7 +117,7 @@ export function getCommonSpreadsheetMenuModel() {
       id: 'tools',
       label: 'Tools',
       children: [
-        { id: 'tools-ai-assistant', label: 'Assistant IA', action: 'tools-ai-assistant' },
+        { id: 'tools-ai-assistant', label: 'AI Assistant', action: 'tools-ai-assistant' },
         { type: 'separator' },
         { id: 'tools-unit', label: 'Unit', action: 'tools-unit' },
         { type: 'separator' },

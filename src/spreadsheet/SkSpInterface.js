@@ -1955,12 +1955,12 @@ class SkSpInterface {
       }
       if (!wOk) {
         const wWasmMsg = await this.buildWasmErrorMessage(
-          "Impossible d'appliquer les attributs de l'objet flottant.",
+          "Could not apply floating object attributes.",
         );
         this.m_LastAttributeCommitError =
           wWasmMsg && !wWasmMsg.includes("empty !")
             ? wWasmMsg
-            : "Impossible d'appliquer les attributs de l'objet flottant.";
+            : "Could not apply floating object attributes.";
         await this.notifyOperationFailure(
           this.m_LastAttributeCommitError,
           null,
@@ -2053,12 +2053,12 @@ class SkSpInterface {
       }
       if (!wOk) {
         const wWasmMsg = await this.buildWasmErrorMessage(
-          "Impossible d'appliquer les attributs.",
+          "Could not apply attributes.",
         );
         this.m_LastAttributeCommitError =
           wWasmMsg && !wWasmMsg.includes("empty !")
             ? wWasmMsg
-            : "Impossible d'appliquer les attributs (formule invalide).";
+            : "Could not apply attributes (invalid formula).";
         await this.notifyOperationFailure(
           this.m_LastAttributeCommitError,
           null,
@@ -7865,7 +7865,7 @@ class SkSpInterface {
           wOk = window.SkUISpreadSheet.paste(wDestRef, wSheet);
         }
         if (!wOk) {
-          await this.notifyOperationFailure('Échec du copier-coller');
+          await this.notifyOperationFailure('Copy/paste failed');
           return false;
         }
         await this.reloadViewAfterSpreadsheetMutation();

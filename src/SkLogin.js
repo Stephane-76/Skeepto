@@ -579,7 +579,7 @@ class SkLogin extends SkComponent {
 
                 <footer className="SkLogin-footer">
                     <span className="SkLogin-footerCopy">
-                        Copyright Stéphane ALLEZ 2026 licence MIT
+                        Copyright Stéphane ALLEZ 2026 MIT license
                     </span>
                 </footer>
             </div>

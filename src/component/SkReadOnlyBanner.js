@@ -24,7 +24,7 @@ export default function SkReadOnlyBanner({ className = '' }) {
         <span className="sk-readonly-banner__lock" aria-hidden="true">
           &#128274;
         </span>
-        <span className="sk-readonly-banner__title">Lecture seule</span>
+        <span className="sk-readonly-banner__title">Read-only</span>
         {fileLabel ? (
           <>
             <span className="sk-readonly-banner__sep" aria-hidden="true">
@@ -38,7 +38,7 @@ export default function SkReadOnlyBanner({ className = '' }) {
         <span className="sk-readonly-banner__sep" aria-hidden="true">
           ·
         </span>
-        <span className="sk-readonly-banner__hint">Modifications non enregistrées</span>
+        <span className="sk-readonly-banner__hint">Changes will not be saved</span>
       </div>
     </div>
   );

@@ -399,7 +399,7 @@ class SkSpCommand extends SkComponent {
           <SkTab label="Chat">
             <SkChat />
           </SkTab>
-          <SkTab label="Assistant IA">
+          <SkTab label="AI Assistant">
             <SkSpAiChat SpInterface={this.spInterface} />
           </SkTab>
           <SkTab label="Conditional">

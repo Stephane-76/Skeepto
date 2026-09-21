@@ -32,7 +32,7 @@ function waitForWasmModule(timeoutMs = 30000) {
         });
       }
       if (Date.now() - start > timeoutMs) {
-        reject(new Error('Timeout en attente du module WASM tableur.'));
+        reject(new Error('Timed out waiting for the spreadsheet WASM module.'));
         return;
       }
       setTimeout(check, 100);
@@ -161,7 +161,7 @@ export async function ensureWorkbookLoaded(workbookPath, options = {}) {
     }
     const added = window.SkUISpreadSheet.addWorkBook(uri);
     if (added !== true) {
-      throw new Error(`Impossible d'ajouter le classeur : ${uri}`);
+      throw new Error(`Could not add workbook: ${uri}`);
     }
     const json = openOnServer
       ? await fetchWorkbookJsonAndOpenOnServer(uri)
@@ -171,7 +171,7 @@ export async function ensureWorkbookLoaded(workbookPath, options = {}) {
     }
     const readOk = window.SkUISpreadSheet.readJson(json);
     if (!readOk) {
-      throw new Error('ReadJson a échoué pour le classeur.');
+      throw new Error('ReadJson failed for the workbook.');
     }
     invalidateFloatingObjectsExportCache();
     if (

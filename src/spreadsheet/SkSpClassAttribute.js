@@ -836,7 +836,7 @@ class SkSpClassAttribute extends SkComponent {
       const wOk = await this.commitEnumProperty(wNextProp);
       if (!wOk) {
         this.setState({
-          commitError: "Impossible d'appliquer la valeur sélectionnée.",
+          commitError: "Could not apply the selected value.",
         });
         return;
       }
@@ -844,7 +844,7 @@ class SkSpClassAttribute extends SkComponent {
     } catch (err) {
       console.error("SkSpClassAttribute: enum commit failed", sPropertyName, err);
       this.setState({
-        commitError: "Impossible d'appliquer la valeur sélectionnée.",
+        commitError: "Could not apply the selected value.",
       });
     }
   };
@@ -984,7 +984,7 @@ class SkSpClassAttribute extends SkComponent {
           console.warn("SkSpClassAttribute: Apply ignored — no host cell");
           this.setState({
             commitError:
-              "Impossible d'appliquer les attributs : cellule hôte introuvable (resélectionnez le graphique).",
+              "Could not apply attributes: host cell not found (reselect the chart).",
           });
           return;
         }
@@ -1009,14 +1009,14 @@ class SkSpClassAttribute extends SkComponent {
           typeof wStored === "string" && wStored.trim() !== ""
             ? wStored.trim()
             : await this.m_SpInterface.buildWasmErrorMessage(
-                "Échec de la validation des attributs.",
+                "Attribute validation failed.",
               );
         this.setState({ commitError: wMessage });
         console.error("SkSpClassAttribute: attribute batch commit failed", wValues);
       }
     } catch (error) {
       const wMessage = await this.m_SpInterface.notifyOperationFailure(
-        "Échec de la validation des attributs.",
+        "Attribute validation failed.",
         error,
       );
       this.setState({ commitError: wMessage });

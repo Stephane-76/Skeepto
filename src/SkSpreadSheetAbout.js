@@ -32,7 +32,7 @@ function SkSpreadSheetAbout() {
           Sign in
         </Link>
         {' · '}
-        Copyright Stéphane ALLEZ 2026 licence MIT
+        Copyright Stéphane ALLEZ 2026 MIT license
       </footer>
     </div>
   );

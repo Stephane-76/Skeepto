@@ -63,7 +63,7 @@ class SkListBox extends Component {
     const {
       items = [],
       headerItem = null,
-      emptyText = "Aucune valeur",
+      emptyText = "No values",
       className = "",
       style = {},
       height = 200,
@@ -135,7 +135,7 @@ SkListBox.propTypes = {
 SkListBox.defaultProps = {
   items: [],
   selected: new Set(),
-  emptyText: "Aucune valeur",
+  emptyText: "No values",
   className: "",
   style: {},
   height: 200,

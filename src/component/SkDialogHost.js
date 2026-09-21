@@ -55,8 +55,8 @@ class SkDialogHost extends React.Component {
     title = 'Confirmation',
     message = '',
     detail = '',
-    confirmLabel = 'Confirmer',
-    cancelLabel = 'Annuler',
+    confirmLabel = 'Confirm',
+    cancelLabel = 'Cancel',
     variant = 'warning',
     danger = false,
   } = {}) =>
@@ -146,7 +146,7 @@ class SkDialogHost extends React.Component {
                 className="SkModal-toolbarBtn SkModal-toolbarBtn--secondary"
                 onClick={() => this.closeConfirm(false)}
               >
-                {confirmPayload?.cancelLabel || 'Annuler'}
+                {confirmPayload?.cancelLabel || 'Cancel'}
               </button>
               <button
                 type="button"
@@ -157,7 +157,7 @@ class SkDialogHost extends React.Component {
                 }`}
                 onClick={() => this.closeConfirm(true)}
               >
-                {confirmPayload?.confirmLabel || 'Confirmer'}
+                {confirmPayload?.confirmLabel || 'Confirm'}
               </button>
             </>
           }
