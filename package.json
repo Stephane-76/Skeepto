@@ -98,6 +98,7 @@
       "buildResources": "build-resources"
     },
     "mac": {
+      "artifactName": "Skeepto-mac-${arch}.${ext}",
       "target": [
         "dmg",
         "zip"
@@ -106,6 +107,7 @@
       "icon": "build-resources/icon.icns"
     },
     "win": {
+      "artifactName": "Skeepto-win-${arch}.${ext}",
       "target": [
         "nsis",
         "zip"
@@ -113,10 +115,12 @@
       "icon": "build-resources/icon.png"
     },
     "nsis": {
+      "artifactName": "Skeepto-win-${arch}.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     },
     "linux": {
+      "artifactName": "Skeepto-linux-${arch}.${ext}",
       "target": [
         "AppImage",
         "deb"

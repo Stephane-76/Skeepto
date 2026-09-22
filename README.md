@@ -4,57 +4,48 @@
 [![WebAssembly](https://img.shields.io/badge/engine-C%2B%2B20%20WASM-654FF0?logo=webassembly&logoColor=white)](https://webassembly.org/)
 [![React](https://img.shields.io/badge/UI-React-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 
-A **real spreadsheet engine**, not a React grid widget. The engine is written
-once in **C++20**, compiled to **WebAssembly**, and runs in the **browser**
-(local editing) and on **Node.js** (headless calc, XLSX/PDF, AI). Same binary,
-no JavaScript rewrite.
+Open a workbook and calculate it — formulas, formats, and charts — without
+Excel and without an account. Skeepto is a **real spreadsheet engine**, written
+once in **C++20** and compiled to **WebAssembly**. The same binary edits locally
+in the browser, in a desktop window, and on **Node.js**.
+
+[![Download for Mac](https://img.shields.io/badge/Download-macOS%20Apple%20Silicon-black?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-mac-arm64.dmg)
+[![Download for Windows](https://img.shields.io/badge/Download-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-win-x64.exe)
+[![Download for Linux](https://img.shields.io/badge/Download-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-linux-x64.AppImage)
+
+[macOS Intel](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-mac-x64.dmg) · [Linux .deb](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-linux-x64.deb) · [All files](https://github.com/Stephane-76/Skeepto/releases/latest)
+
+The first time you open it, macOS and Windows warn that the app is unsigned. The file is still the one built from this repository.
 
 ![Skeepto spreadsheet](./docs/budget-sker.png)
 
 ![Virtual disk — Excel workbook ready to convert](./docs/virtual-disk-xlsx.png)
 
-Import a `.xlsx` on the virtual disk, convert it, then open the `.sker`. See
-[`docs/Import-Excel.md`](./docs/Import-Excel.md).
+- **Calculate offline.** A desktop window. No MongoDB, no server, no login. Open a `.sker` or a `.xlsx` from the File menu.
+- **Bring an Excel file with you.** Convert a `.xlsx`, then keep working. On the collaborative app this starts from the virtual disk ([how](./docs/Import-Excel.md)).
+- **Host the same engine.** Collaboration, PDF export, and AI agents run on machines you control.
 
 ## Why Skeepto?
 
-> **One spreadsheet engine, written once in C++, running everywhere.** The exact
-> same WebAssembly binary powers the browser (instant, local editing) and the
-> Node.js server (headless calculation, XLSX/PDF conversion, AI). No logic is
-> ever rewritten in JavaScript.
+Excel Online calculates on the server, so every click waits on the network.
+Google Sheets calculates in the browser, so that engine stays on the client.
+Skeepto does both, from one codebase, on infrastructure you run.
 
-What makes it different from Excel Online and Google Sheets:
-
-- **Local responsiveness _and_ server-side compute** — Google Sheets keeps its
-  engine in the browser (not reusable server-side); Excel Online keeps everything
-  on the server (network latency on every action). Skeepto gives you both, from
-  a single codebase.
-- **Fully self-hostable** — React + WASM + Node.js + MongoDB. Your data and your
-  engine run on _your_ infrastructure.
-- **Open, programmable AI via native MCP** — Copilot (Excel) and Gemini (Sheets)
-  are powerful but **captive**: proprietary, cloud-only, not pilotable by
-  third-party agents. Skeepto exposes its engine over the **Model Context
-  Protocol**, so any agent can drive the spreadsheet, self-hosted end to end,
-  with full data sovereignty.
-- **A real spreadsheet engine**, not a grid widget or a JavaScript clone.
+- **Your data stays on your machines** — React, WebAssembly, Node.js, and MongoDB.
+- **An agent you choose can drive the sheet** — the engine speaks the [Model Context Protocol](https://modelcontextprotocol.io/), on your server.
+- **Formulas and formats live in the C++ core**, with incremental recalculation. The React layer draws the grid.
 
 ## Get started: desktop app (Electron)
 
-The simplest way to try Skeepto is the **standalone Electron app**. It runs
-entirely offline: a native window, **no MongoDB, no server, no login**, and
-local `.sker` / `.xlsx` files via the File menu.
-
-You only need **Node.js 18+** and **npm**. The prebuilt WebAssembly engine
-(`SkReactSpreadSheet.wasm`, `.mjs`) is already under `public/`, so you do
-**not** need a C++ / Emscripten toolchain.
-
-> Electron always loads the compiled front-end from `build/`, so run
-> `npm run build` first (except in hot-reload mode below).
+The download buttons above install the desktop window. To build it yourself,
+three commands. You need **Node.js 18+** and **npm**. The WebAssembly engine
+is already in `public/`, so no C++ toolchain is required. Electron loads the
+compiled front-end from `build/`.
 
 ```bash
 npm install
-npm run build        # required: Electron loads the build/ output
-npm run electron     # launch the desktop window
+npm run build        # Electron loads this output
+npm run electron     # open the window
 ```
 
 ### Development (hot reload)
