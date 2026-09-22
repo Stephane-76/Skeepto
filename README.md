@@ -67,13 +67,44 @@ npm run electron:dev
 
 ### Package installers
 
-Uses `electron-builder`; artifacts are written to `dist-electron/`.
+Uses `electron-builder`; artifacts are written to `dist-electron/`. Each
+script must run on the operating system it packages. It checks that both WASM
+modules are already compiled — the browser module in `public/` and the Node
+module in `Node/Server/` — then builds the React app and the installer.
+`npm run build` copies `public/` into `build/`; these scripts do not
+recompile the C++ engine.
+
+**macOS** (`.dmg` and `.zip`):
 
 ```bash
-npm run pack             # unpacked build (quick local test)
-npm run dist             # packaged installer for the current platform
-npm run dist:mac         # macOS .dmg / .zip
+./build-mac.sh                 # host architecture (Apple Silicon = arm64)
+./build-mac.sh --universal     # Intel + Apple Silicon
+./build-mac.sh --open          # then open the generated .dmg
+```
+
+**Windows** (NSIS `.exe` and `.zip`). `build-win.cmd` bypasses a Restricted
+PowerShell execution policy:
+
+```bat
+.\build-win.cmd
+.\build-win.cmd -Open          # then launch the generated installer
+```
+
+**Linux** (AppImage and `.deb`, host architecture):
+
+```bash
+./build-unix.sh
+```
+
+The same steps without the WASM check:
+
+```bash
+npm run pack                 # unpacked build (quick local test)
+npm run dist                 # packaged installer for the current platform
+npm run dist:mac             # macOS .dmg / .zip
 npm run dist:mac:universal   # macOS universal (Intel + Apple Silicon)
+npm run dist:win             # Windows NSIS installer and .zip
+npm run dist:linux           # Linux AppImage and .deb
 ```
 
 > The engine runs in the renderer process; WebAssembly Memory64 is enabled by
@@ -239,8 +270,10 @@ MONGO_URL=mongodb://localhost:27017/skeepto
 MONGO_NO_AUTH=1
 ```
 
-Restart the server after editing `.env`. On macOS, set `SMTP_*` to send
-registration verification emails.
+Restart the server after editing `.env`. Set `SMTP_*` to send registration
+verification emails. On Linux, if `SMTP_HOST` is unset, the server falls back
+to the system `msmtp` command. macOS and Windows have no `msmtp` by default,
+so `SMTP_HOST` is required there.
 
 ## Development
 

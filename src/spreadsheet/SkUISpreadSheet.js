@@ -47,6 +47,10 @@ class SkUISpreadSheet {
         }
         try {
             this.m_UISpreadSheet = new window.SpreadSheet.UISpreadSheet();
+            // Interactive skeepto UI records undo (tApi default is false).
+            if (typeof this.m_UISpreadSheet.SetIsUndoActif === 'function') {
+                this.m_UISpreadSheet.SetIsUndoActif(true);
+            }
             this.m_ModuleReady = true;
             this.m_InitError = null;
             console.log('[SkUISpreadSheet] UISpreadSheet created successfully');
@@ -358,6 +362,15 @@ class SkUISpreadSheet {
     getExtraUndo() {
         const wEngine = this._requireEngine('getExtraUndo');
         return wEngine.GetExtraUndo();
+    }
+
+    isUndoActif() {
+        const wEngine = this._requireEngine('isUndoActif');
+        return !!wEngine.IsUndoActif();
+    }
+
+    setIsUndoActif(active) {
+        this._requireEngine('setIsUndoActif').SetIsUndoActif(!!active);
     }
 
     // Sheet operations
