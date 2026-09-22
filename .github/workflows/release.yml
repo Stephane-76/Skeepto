@@ -46,9 +46,16 @@ jobs:
 
       - name: Package
         env:
-          # No Apple or Windows certificate on the runners.
-          CSC_IDENTITY_AUTO_DISCOVERY: false
+          # Windows has no certificate. macOS uses an ad-hoc signature
+          # (package.json mac.identity "-"); forcing discovery off would
+          # strip that signature and make Gatekeeper call the app damaged.
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ matrix.platform == 'win' && 'false' || 'true' }}
         run: npm run build && npx electron-builder ${{ matrix.args }} --publish never
+
+      - name: Check the macOS signature
+        if: matrix.platform == 'mac'
+        run: |
+          find dist-electron -name 'Skeepto.app' -type d -maxdepth 3 -print -exec codesign --verify --deep --strict {} \;
 
       - uses: actions/upload-artifact@v4
         with:

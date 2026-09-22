@@ -15,7 +15,14 @@ in the browser, in a desktop window, and on **Node.js**.
 
 [macOS Intel](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-mac-x64.dmg) · [Linux .deb](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-linux-amd64.deb) · [All files](https://github.com/Stephane-76/Skeepto/releases/latest)
 
-The first time you open it, macOS and Windows warn that the app is unsigned. The file is still the one built from this repository.
+On a Mac, the system says the app is damaged and offers the Trash. The file is intact: this build is not notarized by Apple. Click **Cancel**. Copy `Skeepto.app` to Applications, then:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Skeepto.app
+open /Applications/Skeepto.app
+```
+
+The same note is inside the disk image. Windows shows “Windows protected your PC”: choose **More info**, then **Run anyway**.
 
 ![Skeepto spreadsheet](./docs/budget-sker.png)
 

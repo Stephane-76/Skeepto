@@ -29,6 +29,7 @@ Node/Client/node_modules/
 build-resources/*
 !build-resources/icon.png
 !build-resources/icon.icns
+!build-resources/If macOS says the app is damaged.txt
 dist-electron/*
 
 Node/Client/scratch

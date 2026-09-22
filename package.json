@@ -103,12 +103,37 @@
     },
     "mac": {
       "artifactName": "Skeepto-mac-${arch}.${ext}",
+      "identity": "-",
       "target": [
         "dmg",
         "zip"
       ],
       "category": "public.app-category.productivity",
       "icon": "build-resources/icon.icns"
+    },
+    "dmg": {
+      "window": {
+        "width": 540,
+        "height": 420
+      },
+      "contents": [
+        {
+          "x": 270,
+          "y": 80,
+          "type": "file",
+          "path": "build-resources/If macOS says the app is damaged.txt"
+        },
+        {
+          "x": 130,
+          "y": 240
+        },
+        {
+          "x": 410,
+          "y": 240,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     },
     "win": {
       "artifactName": "Skeepto-win-${arch}.${ext}",

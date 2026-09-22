@@ -1,0 +1,13 @@
+macOS says Skeepto.app is damaged and should be moved to the Trash.
+The file is intact. The system says that because this build is not
+notarized by Apple.
+
+Click Cancel. Do not move the app to the Trash.
+
+Copy Skeepto.app to the Applications folder, then paste this in Terminal:
+
+xattr -dr com.apple.quarantine /Applications/Skeepto.app
+open /Applications/Skeepto.app
+
+Or, after clicking Cancel once: System Settings, Privacy & Security,
+then Open Anyway.
