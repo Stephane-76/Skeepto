@@ -11,9 +11,9 @@ in the browser, in a desktop window, and on **Node.js**.
 
 [![Download for Mac](https://img.shields.io/badge/Download-macOS%20Apple%20Silicon-black?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-mac-arm64.dmg)
 [![Download for Windows](https://img.shields.io/badge/Download-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-win-x64.exe)
-[![Download for Linux](https://img.shields.io/badge/Download-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-linux-x64.AppImage)
+[![Download for Linux](https://img.shields.io/badge/Download-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-linux-x86_64.AppImage)
 
-[macOS Intel](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-mac-x64.dmg) · [Linux .deb](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-linux-x64.deb) · [All files](https://github.com/Stephane-76/Skeepto/releases/latest)
+[macOS Intel](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-mac-x64.dmg) · [Linux .deb](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-linux-amd64.deb) · [All files](https://github.com/Stephane-76/Skeepto/releases/latest)
 
 The first time you open it, macOS and Windows warn that the app is unsigned. The file is still the one built from this repository.
 
