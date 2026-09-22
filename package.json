@@ -4,6 +4,10 @@
   "license": "MIT",
   "private": true,
   "description": "Professional spreadsheet: C++20 engine compiled to WebAssembly, React UI, same binary in the browser and Node.js. Self-hosted, Excel import, Electron desktop.",
+  "author": {
+    "name": "Stéphane Allez",
+    "email": "sallez@me.com"
+  },
   "homepage": "https://github.com/Stephane-76/Skeepto",
   "repository": {
     "type": "git",
