@@ -1,10 +1,13 @@
 # Spreadsheet React classes and Unit classes
 
-This document describes the **React** architecture of the Skeepto spreadsheet
+This document describes the **React chrome** of the Skeepto spreadsheet
 (`src/spreadsheet/`) and the **Unit classes** in the C++ engine
-(`skeepto-engine`). The two sides meet through WASM: the canvas paints a JSON
-viewport (`JsonView`), React widgets overlay class-typed cells, and physical /
-monetary units live in the engine.
+(`skeepto-engine`). The canvas paints a JSON viewport (`JsonView`). Physical
+and monetary units are painted on that canvas.
+
+Interactive cell widgets (`SkCellClassCheck`, charts, and any subclass you
+add) are a separate, extensible family. They are documented in
+[`Spreadsheet-CellClass.md`](./Spreadsheet-CellClass.md).
 
 C++ paths are relative to `skeepto-engine/`. JavaScript paths are relative to
 `skeepto/src/spreadsheet/`.
@@ -18,7 +21,7 @@ In the spreadsheet, *class* refers to three distinct families:
 | Family | Where it lives | Role | Rendering |
 |--------|----------------|------|-----------|
 | **React UI** (`SkSpreadSheet`, `SkSpGridCanvas`, …) | `skeepto` | Chrome, grid, menus, editing | React components / canvas |
-| **CellClass widgets** (`SkCellClassCheck`, …) | `skeepto` + WASM factory | Interactive widgets in a cell or as a floating object | React overlay (`SkSpGridPanel`) |
+| **CellClass widgets** (`SkCellClassCheck`, …) | [`Spreadsheet-CellClass.md`](./Spreadsheet-CellClass.md) | Extensible widgets. Subclass `SkCellClass` and register it | React overlay (`SkSpGridPanel`) |
 | **Units** (`tClassUnit`, `tCellClassUnit` / `tCellUnit`) | `skeepto-engine` | Quantity + SI / currency unit, dimensional arithmetic | Painted **on the canvas**, not a React widget |
 
 Units are **not** in the CellClass palette (`SkSpClass` filters them out).
@@ -82,22 +85,10 @@ canvas-painted.
 3. `SkSpInterface.reloadView()` requests a JSON viewport (`JsonView`).
 4. `SkSpGridCanvas` repaints; `SkSpGridPanel` rebuilds visible widgets.
 
-Class cells arrive as:
-
-```json
-{
-  "c_t": "c",
-  "c_v": {
-    "n": "SkCellClassCheck",
-    "co": { },
-    "c": { "t": "b", "v": true }
-  }
-}
-```
-
-- `c_v.n` = React / factory **type** (never the instance name).
-- `c_v.c` = payload (calculable value, attributes).
-- `c_v.co` = marker that this cell has a React renderer.
+A CellClass cell arrives with `c_t === "c"`, a factory name in `c_v.n`, and a
+`c_v.co` marker. The overlay uses that marker to mount the widget. The wire
+format and the extension steps are in
+[`Spreadsheet-CellClass.md`](./Spreadsheet-CellClass.md).
 
 ---
 
@@ -139,143 +130,9 @@ directly in the right column of `SkSpreadSheet`.
 
 ---
 
-## 4. CellClass React widgets
+## 4. Unit classes (engine)
 
-### 4.1 Registry
-
-`SkCellClass` (`CellClass/SkCellClass.js`) is the ancestor. After WASM loads,
-`SkCellClassContainer` calls `registerClassAttribute()` on each widget. That:
-
-1. Registers a JS **renderer** (`GetRender(className)`).
-2. Registers the model on the C++ side (`RegisterClassAttribute` + `AddProperty`).
-
-`addProperty` on the JS model becomes a C++ property on `tCellModelClassAttribute`.
-Each property is a **first-class cell** (`tCellAttribute`) hanging off the host.
-The formula parser treats it as a member of the instance — that is how charts
-are wired (see [4.3](#43-attributes-in-formulas)).
-
-`SkSpGridPanel.RenderObject()` reads `c_v.n` and calls `GetRender`. Cross-cutting
-behavior is declared with `static cellClassCapabilities()`:
-
-| Capability | Effect |
-|------------|--------|
-| `floatingObject` | May live outside a cell (`SkSpFloatingLayer`) |
-| `selfEditing` | Own editor; no generic `SkSpInplaceEdit` overlay |
-| `inplaceEditBlocked` | No in-cell text edit (toggle, sparkline) |
-| `calculableModelValue` | Scalar in `c_v.c.t` / `c_v.c.v` (bool, date, string) |
-
-### 4.2 Registered widgets
-
-| Class | Kind | Capabilities | Notes |
-|-------|------|--------------|--------|
-| `SkCellClassCheck` | Checkbox | inplace blocked, calculable bool | Value in the model, label as attribute |
-| `SkCellClassSwitch` | Switch | same | |
-| `SkCellClassButton` | Button | — | `onClick` event |
-| `SkCellClassComboBox` | List | self-editing, calculable string | |
-| `SkCellClassCalendar` | Date | self-editing, calculable date | |
-| `SkCellClassSparkline` | Mini chart | inplace blocked | Stays in the cell |
-| `SkCellClassCanvas` | Free canvas | floating | |
-| `SkCellClassPieChart` | Pie | floating | |
-| `SkCellClassLineChart` | Line | floating | |
-| `SkCellClassGauge` | Gauge | floating | |
-| `SkCellClassImage` | Image | floating | |
-| `SkCellClassTextBox` | Text box | floating | |
-
-There is **no** `SkCellClassUnit.js`. The unit is an **engine** class.
-
-### 4.3 Attributes in formulas
-
-Placing a class on a cell does more than draw a widget. The instance **exposes
-every registered property** to the worksheet formula language.
-
-Put `MaClasse` on **A1**. If the model registered `myAttribute`, then **B1**
-can read it:
-
-```text
-B1 = A1.myAttribute
-```
-
-The Lemon grammar accepts a cell (or an identifier) followed by `.Attribute`
-(`CELL attribute` / `ID attribute` in `SkLemonSpreadSheet.y`). At evaluation,
-`PushCell` / `PushID` resolve that member to the `tCellAttribute` on the
-host (`tLemonInterface::CellAttribute`). The attribute sits on the calculation
-path like any other cell: dependents recalc when it changes.
-
-Two equivalent spellings:
-
-| You type | What it binds |
-|----------|----------------|
-| `=A1.myAttribute` | Host **address** + property name |
-| `=MaClasse.myAttribute` | Instance **ref name** (`RefName()`) + property name |
-
-The engine often **rewrites** the address form to the instance name when
-displaying the formula. Example from the unit tests: `=A3.Int+1` is stored /
-shown as `tTestClass2.Int+1`. Clearing the host becomes `#REF!.Int`.
-
-An attribute is itself a formula cell:
-
-```text
-A1.Int          = 12              literal
-A1.Temperature  = A1.Int          another attribute of the same instance
-A1.Name         = JSON(B2:B4)     worksheet function
-C1              = A3.Int+1        another cell reading the instance
-```
-
-The Attribute tab (`SkSpClassAttribute`) edits these properties. Range-kind
-properties (`kind: "range"`) store an A1 range (or a formula that evaluates
-to one). The widget reads the **evaluated** value via `GetProperty` /
-`resolvePropertyRangeRef`.
-
-Deleting the host invalidates every `Host.attr` reference (`#REF!.attr`).
-Moving a range updates attribute formulas the same way as ordinary cell refs.
-
-### 4.4 How charts use attributes
-
-Charts are not a separate data pipeline. `SkCellClassLineChart` /
-`SkCellClassPieChart` / `SkCellClassGauge` / `SkCellClassSparkline` register
-properties, then the React widget **reads those attributes** to know what to
-plot.
-
-![Expense report — pie, line, bar and gauge driven by the Attribute panel](./Graphics.png)
-
-The Attribute tab on the selected chart (`Graphics.sker`) binds `Title`,
-label range `B5:B10`, value range `C5:E10`, and series labels `C4:E4` to the
-table on the left. Gauge, pie, line, and bar widgets all consume the same
-kind of properties.
-
-Typical LineChart model (`registerClassAttribute`):
-
-| Property | Kind | Role |
-|----------|------|------|
-| `Title` | string | Chart title (literal or `=Sheet1!A1`) |
-| `chartData` | range | Labels, or combined labels+values |
-| `DataRange` | range | Values (or combined A:B block) |
-| `seriesLabels` | range | Series names |
-| `chartType` | enum | `line` / `bar` / `area` |
-| `barDirection` | enum | `vertical` / `horizontal` |
-
-So if the chart class sits on A1 (or as a floating object anchored on `_$$A`):
-
-```text
-A1.Title          = Expense report
-A1.chartData      = B5:B10
-A1.DataRange      = C5:E10
-A1.seriesLabels   = C4:E4
-```
-
-The widget calls `resolvePropertyRangeRef(cell, "chartData")` (and
-`DataRange`, …), pulls the viewport values, and paints. Another cell can
-still do `=A1.Title` or `=A1.DataRange` — same member syntax as
-`=A1.myAttribute`.
-
-Floating charts keep the same attributes on the hidden host cell `_$$A`;
-the formula language still addresses them by instance name.
-
----
-
-## 5. Unit classes (engine)
-
-### 5.1 `tClassUnit` — unit descriptor
+### 4.1 `tClassUnit` — unit descriptor
 
 Files: `Libraries/SkRoot/include/SkUnit.hpp`, `source/SkUnit.cpp`.
 
@@ -305,7 +162,7 @@ Useful methods:
 `SiCanonicalUnit(family, power)` builds the SI base unit (m, g, s) after a
 multiply / divide that mixes units of the same family (`cm * m` → `m²`).
 
-### 5.2 `tCellClassUnit` — typed value in a cell
+### 4.2 `tCellClassUnit` — typed value in a cell
 
 Files: `Libraries/SkSpreadSheet/include/SkCellClassUnit.hpp`,
 `source/SkCellClassUnit.cpp`.
@@ -354,7 +211,7 @@ the model is not (`SaveModel` = false).
 SI conversion is implemented for Length, Mass, and Time. Other families (and
 money) are not converted.
 
-### 5.3 Applying from the UI
+### 4.3 Applying from the UI
 
 ```
 SkSpUnit / menu unit:Family:unit
@@ -372,7 +229,7 @@ identifiers **must** match `m_Name` in `SkUnit.hpp`.
 The UI catalog is `SkUnitDefinitions.js` (`UNIT_MENU_FAMILIES`). It is kept
 in lockstep with the engine `CstRecUnit*` tables.
 
-### 5.4 Viewport JSON (canvas)
+### 4.4 Viewport JSON (canvas)
 
 `tCellClassUnit::JsonJavaScript` emits a compact object **without** `co`:
 
@@ -405,7 +262,7 @@ text is empty.
 **File** JSON (`.sker`) uses `tClassUnit::Json` with `pw` instead of `p`.
 The canvas accepts both.
 
-### 5.5 `tClassUnitContainer` — broader JSON catalog
+### 4.5 `tClassUnitContainer` — broader JSON catalog
 
 Files: `Libraries/SkRoot/include/SkClassUnitContainer.hpp`,
 `Libraries_test/SkSpreadSheet/data/UnitCurrencyModel.json`.
@@ -419,9 +276,7 @@ Runtime still uses the enums in `SkUnit.hpp`.
 
 ---
 
-## 6. Adding a unit or a widget
-
-### New unit (current runtime)
+## 5. Adding a unit
 
 1. Add the enum and `CstRecUnit*` row in `SkUnit.hpp`.
 2. Extend `GetSymbol` / `SiScaleFactor` in `SkUnit.cpp` if needed.
@@ -429,18 +284,12 @@ Runtime still uses the enums in `SkUnit.hpp`.
 4. Duplicate the entry in `SkUnitDefinitions.js` (`apiFamily` / `apiUnit`
    identical to the C++ `m_Name` values).
 
-### New CellClass widget
-
-1. Create `CellClass/SkCellClassXxx.js` extending `SkCellClass`.
-2. Implement `ClassName()`, `Icon()`, `registerClassAttribute()`, and optionally
-   `cellClassCapabilities()`.
-3. Import and register it in `SkCellClassContainer.js`.
-4. Rebuild WASM only if C++ changes; the JS registry is enough for a widget
-   whose model is already `RegisterClassAttribute` on the engine side.
+A new CellClass widget is not a unit. Add it by subclassing `SkCellClass`,
+as described in [`Spreadsheet-CellClass.md`](./Spreadsheet-CellClass.md).
 
 ---
 
-## 7. Key files
+## 6. Key files
 
 | Topic | File |
 |-------|------|
@@ -448,13 +297,8 @@ Runtime still uses the enums in `SkUnit.hpp`.
 | Hub | `skeepto/src/spreadsheet/SkSpInterface.js` |
 | WASM bridge | `skeepto/src/spreadsheet/SkUISpreadSheet.js` |
 | Unit paint | `skeepto/src/spreadsheet/SkSpCellCanvas.js` |
-| Widget overlay | `skeepto/src/spreadsheet/SkSpGridPanel.js` |
+| Widget overlay | `skeepto/src/spreadsheet/SkSpGridPanel.js` — widgets themselves are in [`Spreadsheet-CellClass.md`](./Spreadsheet-CellClass.md) |
 | Palette / unit exclusion | `skeepto/src/spreadsheet/SkSpClass.js` |
-| Attribute panel | `skeepto/src/spreadsheet/SkSpClassAttribute.js` |
-| Attribute host / `tCellClassAttribute` | `skeepto-engine/Libraries/SkSpreadSheet/include/SkCellClassAttribute.hpp` |
-| Formula `.attr` (`PushCell` / `PushID`) | `skeepto-engine/Libraries/SkSpreadSheet/source/SkLemonInterface.cpp` |
-| Grammar `CELL attribute` | `skeepto-engine/Libraries/SkSpreadSheet/lemon/SkLemonSpreadSheet.y` |
-| Attribute tests (`=A3.Int`) | `skeepto-engine/Libraries_test/SkSpreadSheet/source/TestSkCellClassAttribute.cpp` |
 | Unit menu | `skeepto/src/spreadsheet/SkSpUnit.js` |
 | UI catalog | `skeepto/src/spreadsheet/SkUnitDefinitions.js` |
 | C++ descriptor | `skeepto-engine/Libraries/SkRoot/include/SkUnit.hpp` |

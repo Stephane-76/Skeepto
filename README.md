@@ -26,8 +26,6 @@ The same note is inside the disk image. Windows shows “Windows protected your 
 
 ![Skeepto spreadsheet](./docs/budget-sker.png)
 
-![Virtual disk — Excel workbook ready to convert](./docs/virtual-disk-xlsx.png)
-
 - **Calculate offline.** A desktop window. No MongoDB, no server, no login. Open a `.sker` or a `.xlsx` from the File menu.
 - **Bring an Excel file with you.** Convert a `.xlsx`, then keep working. On the collaborative app this starts from the virtual disk ([how](./docs/Import-Excel.md)).
 - **Host the same engine.** Collaboration, PDF export, and AI agents run on machines you control.
@@ -228,7 +226,22 @@ http://localhost:8000
 
 Hard-refresh the browser (**Cmd+Shift+R**) so the WASM module is reloaded.
 
-To bring an Excel workbook into Skeepto, upload a `.xlsx` on the virtual disk, run **Convert Excel**, then open the new `.sker`. See [`docs/Import-Excel.md`](./docs/Import-Excel.md).
+
+![Virtual disk — Excel workbook ready to convert](./docs/virtual-disk-xlsx.png)
+
+The virtual disk is the signed-in file tree: folders, `.sker` workbooks, HTML files, and Excel files. Select an item, then open **Actions** at the bottom right. The menu groups the operations:
+
+| Section | What it does |
+|---------|----------------|
+| **Create** | Upload a file, or create a folder, a spreadsheet, or an HTML file |
+| **Sharing** | Set who can access the selection |
+| **File** | Download the file, or open an `.xlsx` in Excel |
+| **Workbook history** | Save a snapshot of a `.sker`, or open its versions |
+| **Excel interchange** | **Convert Excel** turns the selected `.xlsx` into a `.sker` next to it. **Export to Excel** writes a `.sker` back to `.xlsx` |
+| **Organize** | Rename the selection |
+| **Remove** | Delete the selection |
+
+Double-click the new `.sker` to open it in the grid. Step-by-step: [`docs/Import-Excel.md`](./docs/Import-Excel.md).
 
 ## Project structure
 
@@ -332,7 +345,9 @@ See [`Node/Server/Model/DATABASE_SCHEMA.md`](./Node/Server/Model/DATABASE_SCHEMA
 for the MongoDB schema, [`docs/Import-Excel.md`](./docs/Import-Excel.md) to
 import `.xlsx` files, and
 [`docs/Spreadsheet-React-Classes.md`](./docs/Spreadsheet-React-Classes.md) for
-the React spreadsheet classes and the engine Unit classes.
+the React chrome and the engine Unit classes, and
+[`docs/Spreadsheet-CellClass.md`](./docs/Spreadsheet-CellClass.md) for the
+extensible CellClass widgets (`SkCellClassCheck`, charts, and subclasses).
 
 ### WebAssembly instance pool
 
