@@ -20,7 +20,7 @@
 | **Modern UI** | **React 18**, a current web experience, extensible. |
 | **Controlled rendering** | Canvas grid: **serialized repaints**, grid lines and merges consistent with an Excel-like model. |
 | **Explicit architecture** | Engine and UI stay separate so contributors can onboard without guessing. |
-| **Real-time collaboration** | `PostMessage` / `GetMessage` undo-based synchronization over WebSocket. |
+| **Shared Undo/Redo with rebase** | Several people edit the same workbook. On Undo or Redo, the WASM engine rebases the action: it recomputes the row and column from the edits the others have made since (`tRebasePlan` / `UndoRebaseLog`). Excel and Google Sheets do not rebase an undo against other users' changes inside the engine. |
 | **Self-hostable, no Docker required** | Runs natively: **Node.js (Fastify)**, **MongoDB**, and **nginx** as a reverse proxy. |
 
 ---
@@ -51,6 +51,7 @@ Skeepto aims for that level of rigor: **code and documentation carrying the same
 - **Engine** — C++20 spreadsheet core (formulas, formats, conditional formatting, merges) compiled to WebAssembly for the browser.
 - **UI** — React 18 driving a Canvas 2D grid fed by `JsonView` snapshots.
 - **Excel import/export** — the `SkExcel` converter runs as **WebAssembly on the server**, executed through an in-process **`child_process` pool** for isolation and guaranteed memory reclamation (no native binary to install).
+- **Collaboration** — several people edit the same workbook. Undo and Redo are shared. Before an undo or a redo runs, the WASM engine rebases it: the stored position is moved according to the inserts, deletes, and other structural edits the other users have applied in between. That rebase (`UndoRebaseLog`, `tRebasePlan`) lives in the engine. Excel and Google Sheets do not do this.
 - **Server** — a native **Node.js (Fastify)** service, **MongoDB** for storage, and **nginx** for HTTP/HTTPS and WebSocket proxying, managed by **systemd**.
 
 ---
@@ -72,7 +73,7 @@ Skeepto aims for that level of rigor: **code and documentation carrying the same
 
 ## Short description (GitHub description)
 
-> Professional spreadsheet: **C++ / WebAssembly** engine, **React** UI, documented **Canvas** rendering — real-time collaboration and self-hosting.
+> Professional spreadsheet: **C++ / WebAssembly** engine, **React** UI, documented **Canvas** rendering — shared Undo/Redo with rebase, and self-hosting.
 
 ---
 
