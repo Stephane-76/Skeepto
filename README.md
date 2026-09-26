@@ -4,10 +4,36 @@
 [![WebAssembly](https://img.shields.io/badge/engine-C%2B%2B20%20WASM-654FF0?logo=webassembly&logoColor=white)](https://webassembly.org/)
 [![React](https://img.shields.io/badge/UI-React-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 
-Open a workbook and calculate it — formulas, formats, and charts — without
-Excel and without an account. Skeepto is a **real spreadsheet engine**, written
-once in **C++20** and compiled to **WebAssembly**. The same binary edits locally
-in the browser, in a desktop window, and on **Node.js**.
+Embed a **spreadsheet calculation core** in your software. 344 Excel-compatible
+functions (`XLOOKUP`, `FILTER`, `LET`, dynamic arrays), incremental recalc,
+same **C++20** binary compiled to **WebAssembly** for the browser and Node.js.
+MIT.
+
+This repository is the **reference UI** (React grid, desktop window, optional
+collab server). The engine lives in
+[SkeeptoEngine](https://github.com/Stephane-76/SkeeptoEngine).
+
+```javascript
+const ss = new SpreadSheet.UISpreadSheet();
+ss.NewWorkBook("demo");
+ss.Value("A1", "10", "Sheet1");
+ss.Value("A2", "20", "Sheet1");
+ss.Value("B1", "=SUM(A1:A2)", "Sheet1");
+ss.GetValue("B1", "Sheet1");   // "30"
+```
+
+The prebuilt WASM module is in `public/` (`SkReactSpreadSheet.mjs` + `.wasm`).
+Load it, then use `SpreadSheet.UISpreadSheet` (~150 methods). The same surface
+is `tApi` in C++. There is no npm package yet — clone this app or the engine.
+
+| | SheetJS / ExcelJS | HyperFormula | Skeepto |
+|---|---|---|---|
+| Read / write `.xlsx` | yes | no | yes |
+| Evaluate Excel formulas | no | JavaScript | C++ → WASM |
+| Same binary in browser and Node | — | — | yes |
+
+Want to see the grid around that engine? Build or download the desktop app
+below.
 
 ## Desktop app (Electron)
 
@@ -75,19 +101,21 @@ then **Run anyway**.
 
 ![Skeepto spreadsheet](./docs/budget-sker.png)
 
-- **Calculate offline.** A desktop window. No MongoDB, no server, no login. Open a `.sker` or a `.xlsx` from the File menu.
+- **Calculate offline.** A desktop window around the same engine. No MongoDB, no server, no login. Open a `.sker` or a `.xlsx` from the File menu.
 - **Bring an Excel file with you.** Convert a `.xlsx`, then keep working. On the collaborative app this starts from the virtual disk ([how](./docs/Import-Excel.md)).
-- **Host the same engine.** Collaboration, PDF export, and AI agents run on machines you control.
+- **Host the same engine.** Collaboration, PDF export, and AI agents (MCP) run on machines you control.
 
 ## Why Skeepto?
 
-Excel Online calculates on the server, so every click waits on the network.
-Google Sheets calculates in the browser, so that engine stays on the client.
-Skeepto does both, from one codebase, on infrastructure you run.
+SheetJS reads workbooks; it does not calculate them. HyperFormula calculates
+in JavaScript. Excel and LibreOffice are apps, not an embeddable core.
 
-- **Your data stays on your machines** — React, WebAssembly, Node.js, and MongoDB.
-- **An agent you choose can drive the sheet** — the engine speaks the [Model Context Protocol](https://modelcontextprotocol.io/), on your server.
-- **Formulas and formats live in the C++ core**, with incremental recalculation. The React layer draws the grid.
+Skeepto is the missing piece: **drop the engine into your product**, keep your
+UI — or use this React grid as a starting point.
+
+- **One codebase, two hosts** — browser WASM and Node.js WASM. Native C++ in the engine repo.
+- **Excel-class formulas** — 344 worksheet functions, incremental recalc (dirty graph, not a full-sheet sweep).
+- **You run it** — optional collab server and [MCP](https://modelcontextprotocol.io/) on infrastructure you control. The desktop build needs neither.
 
 ## Desktop app — development and extra pack commands
 
@@ -419,6 +447,12 @@ for questions, ideas, and feedback. Do not hesitate to post there — it keeps
 the conversation public and useful for everyone.
 
 Bugs and pull requests still go through GitHub Issues and PRs.
+
+## Python (optional)
+
+A native Python client of the same engine — not pandas — lives in
+[SkeeptoPython](https://github.com/Stephane-76/SkeeptoPython). Useful if you
+already drive workbooks from Python; not required to embed the WASM core.
 
 ## License
 
