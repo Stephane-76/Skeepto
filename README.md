@@ -9,43 +9,13 @@ Excel and without an account. Skeepto is a **real spreadsheet engine**, written
 once in **C++20** and compiled to **WebAssembly**. The same binary edits locally
 in the browser, in a desktop window, and on **Node.js**.
 
-[![Download for Mac](https://img.shields.io/badge/Download-macOS%20Apple%20Silicon-black?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-mac-arm64.dmg)
-[![Download for Windows](https://img.shields.io/badge/Download-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-win-x64.exe)
-[![Download for Linux](https://img.shields.io/badge/Download-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-linux-x86_64.AppImage)
+## Desktop app (Electron)
 
-[macOS Intel](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-mac-x64.dmg) · [Linux .deb](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-linux-amd64.deb) · [All files](https://github.com/Stephane-76/Skeepto/releases/latest)
+Build the Electron app on your machine. You need **Node.js 18+** and **npm**.
+The WebAssembly engine is already in `public/`, so no C++ toolchain is
+required. Electron loads the compiled front-end from `build/`.
 
-On a Mac, the system says the app is damaged and offers the Trash. The file is intact: this build is not notarized by Apple. Click **Cancel**. Copy `Skeepto.app` to Applications, then:
-
-```bash
-xattr -dr com.apple.quarantine /Applications/Skeepto.app
-open /Applications/Skeepto.app
-```
-
-The same note is inside the disk image. Windows shows “Windows protected your PC”: choose **More info**, then **Run anyway**.
-
-![Skeepto spreadsheet](./docs/budget-sker.png)
-
-- **Calculate offline.** A desktop window. No MongoDB, no server, no login. Open a `.sker` or a `.xlsx` from the File menu.
-- **Bring an Excel file with you.** Convert a `.xlsx`, then keep working. On the collaborative app this starts from the virtual disk ([how](./docs/Import-Excel.md)).
-- **Host the same engine.** Collaboration, PDF export, and AI agents run on machines you control.
-
-## Why Skeepto?
-
-Excel Online calculates on the server, so every click waits on the network.
-Google Sheets calculates in the browser, so that engine stays on the client.
-Skeepto does both, from one codebase, on infrastructure you run.
-
-- **Your data stays on your machines** — React, WebAssembly, Node.js, and MongoDB.
-- **An agent you choose can drive the sheet** — the engine speaks the [Model Context Protocol](https://modelcontextprotocol.io/), on your server.
-- **Formulas and formats live in the C++ core**, with incremental recalculation. The React layer draws the grid.
-
-## Get started: desktop app (Electron)
-
-The download buttons above install the desktop window. To build it yourself,
-three commands. You need **Node.js 18+** and **npm**. The WebAssembly engine
-is already in `public/`, so no C++ toolchain is required. Electron loads the
-compiled front-end from `build/`.
+Run it locally:
 
 ```bash
 npm install
@@ -53,22 +23,11 @@ npm run build        # Electron loads this output
 npm run electron     # open the window
 ```
 
-### Development (hot reload)
-
-Runs the CRA dev server and Electron together (loads `http://localhost:3000`):
-
-```bash
-npm run electron:dev
-```
-
-### Package installers
-
-Uses `electron-builder`; artifacts are written to `dist-electron/`. Each
-script must run on the operating system it packages. It checks that both WASM
-modules are already compiled — the browser module in `public/` and the Node
-module in `Node/Server/` — then builds the React app and the installer.
-`npm run build` copies `public/` into `build/`; these scripts do not
-recompile the C++ engine.
+Package an installer into `dist-electron/`. Each script must run on the
+operating system it packages. It checks that both WASM modules are already
+compiled — the browser module in `public/` and the Node module in
+`Node/Server/` — then builds the React app and the installer. These scripts
+do not recompile the C++ engine.
 
 **macOS** (`.dmg` and `.zip`):
 
@@ -92,7 +51,54 @@ PowerShell execution policy:
 ./build-unix.sh
 ```
 
-The same steps without the WASM check:
+Otherwise you can download a prebuilt binary. Those files are **not signed by
+a publisher**, so macOS and Windows will show security errors — the app looks
+damaged, or “Windows protected your PC”. A build you make locally does not
+hit that Gatekeeper / SmartScreen path.
+
+[![Download for Mac](https://img.shields.io/badge/Download-macOS%20Apple%20Silicon-black?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-mac-arm64.dmg)
+[![Download for Windows](https://img.shields.io/badge/Download-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-win-x64.exe)
+[![Download for Linux](https://img.shields.io/badge/Download-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-linux-x86_64.AppImage)
+
+[macOS Intel](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-mac-x64.dmg) · [Linux .deb](https://github.com/Stephane-76/Skeepto/releases/latest/download/Skeepto-linux-amd64.deb) · [All files](https://github.com/Stephane-76/Skeepto/releases/latest)
+
+If you use a prebuilt download anyway: on a Mac, click **Cancel** when the
+system offers the Trash. Copy `Skeepto.app` to Applications, then:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Skeepto.app
+open /Applications/Skeepto.app
+```
+
+The same note is inside the disk image. On Windows, choose **More info**,
+then **Run anyway**.
+
+![Skeepto spreadsheet](./docs/budget-sker.png)
+
+- **Calculate offline.** A desktop window. No MongoDB, no server, no login. Open a `.sker` or a `.xlsx` from the File menu.
+- **Bring an Excel file with you.** Convert a `.xlsx`, then keep working. On the collaborative app this starts from the virtual disk ([how](./docs/Import-Excel.md)).
+- **Host the same engine.** Collaboration, PDF export, and AI agents run on machines you control.
+
+## Why Skeepto?
+
+Excel Online calculates on the server, so every click waits on the network.
+Google Sheets calculates in the browser, so that engine stays on the client.
+Skeepto does both, from one codebase, on infrastructure you run.
+
+- **Your data stays on your machines** — React, WebAssembly, Node.js, and MongoDB.
+- **An agent you choose can drive the sheet** — the engine speaks the [Model Context Protocol](https://modelcontextprotocol.io/), on your server.
+- **Formulas and formats live in the C++ core**, with incremental recalculation. The React layer draws the grid.
+
+## Desktop app — development and extra pack commands
+
+Hot reload runs the CRA dev server and Electron together (loads
+`http://localhost:3000`):
+
+```bash
+npm run electron:dev
+```
+
+The same pack steps without the WASM check:
 
 ```bash
 npm run pack                 # unpacked build (quick local test)
