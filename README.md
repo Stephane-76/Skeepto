@@ -19,7 +19,7 @@ ss.NewWorkBook("demo");
 ss.Value("A1", "10", "Sheet1");
 ss.Value("A2", "20", "Sheet1");
 ss.Value("B1", "=SUM(A1:A2)", "Sheet1");
-ss.GetValue("B1", "Sheet1");   // "30"
+let B1=ss.GetValue("B1", "Sheet1");   // "30"
 ```
 
 The prebuilt WASM module is in `public/` (`SkReactSpreadSheet.mjs` + `.wasm`).
@@ -99,7 +99,7 @@ open /Applications/Skeepto.app
 The same note is inside the disk image. On Windows, choose **More info**,
 then **Run anyway**.
 
-![Skeepto spreadsheet](./docs/budget-sker.png)
+![Skeepto spreadsheet](./docs/Electron.png)
 
 - **Calculate offline.** A desktop window around the same engine. No MongoDB, no server, no login. Open a `.sker` or a `.xlsx` from the File menu.
 - **Bring an Excel file with you.** Convert a `.xlsx`, then keep working. On the collaborative app this starts from the virtual disk ([how](./docs/Import-Excel.md)).
