@@ -81,6 +81,7 @@
   "build": {
     "appId": "fr.skeema.skeepto",
     "productName": "Skeepto",
+    "copyright": "Copyright © 2026 Stéphane ALLEZ.",
     "asar": true,
     "files": [
       "electron/**/*",

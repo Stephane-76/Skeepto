@@ -697,6 +697,9 @@ ipcMain.handle('sker:export-xlsx', async (_evt, { skerContent, xlsxPath }) => {
 // App lifecycle
 // -----------------------------------------------------------------------------
 app.whenReady().then(() => {
+  app.setAboutPanelOptions({
+    copyright: 'Copyright © 2026 Stéphane ALLEZ.',
+  });
   loadRecentFiles();
   loadLastDirs();
   buildMenu();
