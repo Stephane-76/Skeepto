@@ -205,6 +205,7 @@ class SkCellClassCalendar extends SkCellClass {
         };
         this.m_EditSessionActive = false;
         this.inputRef = null;
+        this.m_DateWriteQueue = Promise.resolve();
     }
 
     static ClassName() { return("SkCellClassCalendar") }
@@ -317,6 +318,9 @@ class SkCellClassCalendar extends SkCellClass {
 
     async componentDidMount() {
         document.addEventListener('mousedown', this.handleClickOutside, true);
+        if (this.m_SpInterface) {
+            this.m_SpInterface.m_SelfEditFlush = () => this.validateDate();
+        }
         this.handleLangChange = (event) => {
             const lang = event?.detail?.lang || getSpreadsheetLang();
             this.applyLocale(lang);
@@ -349,6 +353,9 @@ class SkCellClassCalendar extends SkCellClass {
 
     componentWillUnmount() {
         document.removeEventListener('mousedown', this.handleClickOutside, true);
+        if (this.m_SpInterface && this.m_SpInterface.m_SelfEditFlush != null) {
+            this.m_SpInterface.m_SelfEditFlush = null;
+        }
         if (this.handleLangChange) {
             window.removeEventListener('skeeptoLangChange', this.handleLangChange);
         }
@@ -357,7 +364,12 @@ class SkCellClassCalendar extends SkCellClass {
     handleClickOutside = (event) => {
         if (this.calendarRef && !this.calendarRef.contains(event.target) && 
             this.containerRef && !this.containerRef.contains(event.target)) {
-            this.setState({ isOpen: false });
+            if (this.state.isOpen || this.m_EditSessionActive) {
+                // Same commit as Enter: keep the date chosen in the popup.
+                this.exitEditSession({ cancel: false }).catch((error) => {
+                    console.error("Error committing calendar on outside click:", error);
+                });
+            }
         }
     }
 
@@ -372,6 +384,48 @@ class SkCellClassCalendar extends SkCellClass {
         if (typeof sp.getUseEdit === "function" && !sp.getUseEdit()) {
             await sp.beginEdit();
         }
+        this.noteFormulaBarBaseline();
+    };
+
+    // Keep the formula bar aligned with the widget so leaving the cell does not
+    // write the previous date back over the popup selection.
+    noteFormulaBarBaseline = (sText) => {
+        const sp = this.m_SpInterface;
+        if (!sp) {
+            return;
+        }
+        const wStatic = sp.m_SkSpInplaceEditStatic;
+        let wText = sText != null ? String(sText) : null;
+        if (wText == null && wStatic && typeof wStatic.text === "function") {
+            wText = String(wStatic.text() ?? "");
+        }
+        if (wText == null) {
+            return;
+        }
+        sp.m_SelfEditFormulaBarBaseline = wText;
+        if (sText != null && wStatic && typeof wStatic.setText === "function") {
+            wStatic.setText(wText);
+        }
+    };
+
+    // The date field is excluded from the grid capture handler, and it stays
+    // read-only until an edit session exists. Start that session on the zone
+    // itself; the icon button still owns opening the popup.
+    handleZoneMouseDown = (event) => {
+        if (event.button !== 0) {
+            return;
+        }
+        if (this.isFormulaPickActive()) {
+            return;
+        }
+        if (this.shouldActivateSelfEditingWidget()) {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        void this.ensureEditSessionForCalendarToggle().then(() => {
+            this.focusInplaceEditor();
+        });
     };
 
     toggleCalendar = (event) => {
@@ -413,31 +467,48 @@ class SkCellClassCalendar extends SkCellClass {
         if (this.state.isOpen) this.setState({ isOpen: false });
     }
 
+    // Blur can start a write of the previous text before the day click commits.
+    // Run date writes one after another so the popup selection stays last.
+    enqueueDateWrite = (fn) => {
+        const wNext = this.m_DateWriteQueue.then(() => fn());
+        this.m_DateWriteQueue = wNext.then(
+            () => {},
+            () => {}
+        );
+        return wNext;
+    };
+
     commitDate = async (wDate) => {
-        const wFormatted = this.formatDate(wDate);
-        this.setState({
-            selectedDate: wFormatted,
-            inputValue: wFormatted,
-            lastValidDate: wDate,
-            currentMonth: wDate.getMonth(),
-            currentYear:  wDate.getFullYear()
+        return this.enqueueDateWrite(async () => {
+            const wFormatted = this.formatDate(wDate);
+            this.noteFormulaBarBaseline(wFormatted);
+            this.setState({
+                selectedDate: wFormatted,
+                inputValue: wFormatted,
+                lastValidDate: wDate,
+                currentMonth: wDate.getMonth(),
+                currentYear:  wDate.getFullYear()
+            });
+            await this.persistValue(wDate);
+            if (this.props.onValueChange) {
+                this.props.onValueChange(wFormatted);
+            }
         });
-        await this.persistValue(wDate);
-        if (this.props.onValueChange) {
-            this.props.onValueChange(wFormatted);
-        }
-    }
+    };
 
     clearDate = async () => {
-        this.setState({
-            selectedDate: "",
-            inputValue: "",
-            lastValidDate: null
+        return this.enqueueDateWrite(async () => {
+            this.noteFormulaBarBaseline("");
+            this.setState({
+                selectedDate: "",
+                inputValue: "",
+                lastValidDate: null
+            });
+            await this.persistValue("");
+            if (this.props.onValueChange) {
+                this.props.onValueChange("");
+            }
         });
-        await this.persistValue("");
-        if (this.props.onValueChange) {
-            this.props.onValueChange("");
-        }
     }
 
     handleDateSelect = (date) => {
@@ -679,6 +750,7 @@ class SkCellClassCalendar extends SkCellClass {
                     onBlur={this.handleBlur}
                     onKeyDown={this.handleKeyDown}
                     onFocus={this.handleFocus}
+                    onMouseDown={this.handleZoneMouseDown}
                     style={{
                         width: '100%',
                         height: '100%',
@@ -813,7 +885,16 @@ class SkCellClassCalendar extends SkCellClass {
         };
 
         return (
-            <div className="SkCellClassCalendar-popup" style={calendarStyle} ref={ref => this.calendarRef = ref}>
+            <div
+                className="SkCellClassCalendar-popup"
+                style={calendarStyle}
+                ref={ref => this.calendarRef = ref}
+                onMouseDown={(event) => {
+                    // Keep the date field focused so picking a day does not blur
+                    // and commit the previous text before the new date.
+                    event.preventDefault();
+                }}
+            >
                 <div style={headerStyle}>
                     <button style={navButtonStyle} onClick={() => this.changeMonth(-1)}>←</button>
                     <div style={monthYearStyle}>
@@ -840,7 +921,11 @@ class SkCellClassCalendar extends SkCellClass {
                             <div
                                 key={i}
                                 style={isSelected ? selectedDayStyle : isToday ? todayStyle : dayStyle}
-                                onClick={() => this.handleDateSelect(date)}
+                                onMouseDown={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    this.handleDateSelect(date);
+                                }}
                             >
                                 {i + 1}
                             </div>

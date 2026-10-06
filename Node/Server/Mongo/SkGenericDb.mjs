@@ -7,6 +7,13 @@
 import { randomUUID } from 'node:crypto'
 import { fastifyMongodb, ObjectId } from '@fastify/mongodb'
 import { ensureUserHomeDirectory } from '../SkVirtualDisk/SkUserHome.mjs'
+import {
+    openRecordImage,
+    persistRecordImages,
+    releaseRecordImages,
+    releaseReplacedRecordImages,
+    storeRecordImageValue,
+} from './SkRecordImage.mjs'
 
 // Login/register store Password; the User form metamodel uses PassWord.
 function normalizeUserPasswordFields(record) {
@@ -89,6 +96,32 @@ async function validateRelationshipRecord(fastify, metaModel, record) {
     return ''
 }
 
+// Query the child table for rows that still point at the record being deleted.
+function externReferenceQuery(foreign, record) {
+    const query = {}
+    for (let i = 0; i < foreign.m_Key.length; i++) {
+        query[foreign.m_Key[i]] = record[foreign.m_Ref[i]]
+    }
+    return query
+}
+
+async function referencingForeignError(fastify, table, record) {
+    for (const foreign of table.m_ExternForeign || []) {
+        const query = externReferenceQuery(foreign, record)
+        if (Object.values(query).some((value) => value === undefined)) {
+            continue
+        }
+        const hit = await fastify.mongo.db.collection(foreign.m_TableOwner).findOne(query)
+        if (hit) {
+            const constraint = foreign.m_Constraint || foreign.m_TableOwner
+            return 'Foreign key error: ' + foreign.m_TableOwner +
+                ' still references this ' + table.m_Name +
+                ' (' + constraint + ') Key' + JSON.stringify(query)
+        }
+    }
+    return ''
+}
+
 function prepareRelationshipRecord(record, operationMode) {
     if (operationMode === 'insert') {
         if (!record.Code) {
@@ -104,6 +137,34 @@ function prepareRelationshipRecord(record, operationMode) {
 
 async function SkGenericDb(fastify, opts) {
     console.log('=== start SkGenericDb ===');
+
+    // Large images are uploaded here so they never ride inside the 1MB record body.
+    fastify.post('/mdb/image', { bodyLimit: 24 * 1024 * 1024 }, async function (req, reply) {
+        try {
+            const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+            const image = await storeRecordImageValue(fastify.mongo.db, body)
+            return { message: 'success', image }
+        } catch (error) {
+            return reply.status(400).send({ message: 'error', error: error.message || String(error) })
+        }
+    })
+
+    fastify.get('/mdb/image/:id', async function (req, reply) {
+        try {
+            const opened = await openRecordImage(fastify.mongo.db, req.params.id)
+            if (!opened) {
+                return reply.status(404).send({ message: 'error', error: 'Image not found' })
+            }
+            reply.header('Content-Type', opened.mime)
+            reply.header('X-Content-Type-Options', 'nosniff')
+            if (opened.mime === 'image/svg+xml') {
+                reply.header('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox")
+            }
+            return reply.send(opened.stream)
+        } catch (error) {
+            return reply.status(400).send({ message: 'error', error: error.message || String(error) })
+        }
+    })
 
     // POST record for insert/update ===========================================
     fastify.post('/mdb/:table', {
@@ -176,15 +237,18 @@ async function SkGenericDb(fastify, opts) {
                     }
                 }
 
-                // Check Foreign Keys
-                for (let wForeign of wTable.m_Foreign) {
-                    const wCollectionForeign = await fastify.mongo.db.collection(wForeign.m_TableRef)
-                    const wKey = wForeign.GetKeyRef(wRecord)
-                    const wDoc = await wCollectionForeign.findOne(wKey)
-                    if (wDoc === null) {
-                        wResult.message = 'error'
-                        wResult.error = 'Foreign key error on ' + wForeign.m_TableRef + ' Key' + JSON.stringify(wKey) + ' does not exist!'
-                        return JSON.stringify(wResult);
+                // Outgoing foreign keys apply to insert and update.
+                // Delete is blocked by the reverse link (another table still references this row).
+                if (wOperationMode !== 'delete') {
+                    for (let wForeign of wTable.m_Foreign) {
+                        const wCollectionForeign = await fastify.mongo.db.collection(wForeign.m_TableRef)
+                        const wKey = wForeign.GetKeyRef(wRecord)
+                        const wDoc = await wCollectionForeign.findOne(wKey)
+                        if (wDoc === null) {
+                            wResult.message = 'error'
+                            wResult.error = 'Foreign key error on ' + wForeign.m_TableRef + ' Key' + JSON.stringify(wKey) + ' does not exist!'
+                            return JSON.stringify(wResult);
+                        }
                     }
                 }
 
@@ -200,9 +264,17 @@ async function SkGenericDb(fastify, opts) {
                 // Perform insert, update or delete
                 const wKeyStr = JSON.stringify(wPrimaryKey)
                 let wResultInsertUpdate = {}
+                let wPreviousImages = null
+                if (wOperationMode === 'insert' || wOperationMode === 'update') {
+                    wPreviousImages = wOperationMode === 'update'
+                        ? await wCollection.findOne(wPrimaryKey)
+                        : null
+                    await persistRecordImages(fastify.mongo.db, wTable, wRecord)
+                }
                 if (wOperationMode === 'insert') {
                     wResultInsertUpdate = await wCollection.insertOne(wRecord);
                     wResult.id = wResultInsertUpdate.insertedId
+                    await releaseReplacedRecordImages(fastify.mongo.db, wTable, wPreviousImages, wRecord)
                     console.log("Insert document " + wCollectionStr + ", " + wKeyStr + " was inserted with the _id: " + wResult.id)
                 } else if (wOperationMode === 'update') {
                     const { _id, ...updateData } = wRecord;
@@ -211,6 +283,9 @@ async function SkGenericDb(fastify, opts) {
                         updateOp.$unset = { PassWord: '' }
                     }
                     wResultInsertUpdate = await wCollection.updateOne(wPrimaryKey, updateOp);
+                    if (wResultInsertUpdate.matchedCount > 0) {
+                        await releaseReplacedRecordImages(fastify.mongo.db, wTable, wPreviousImages, wRecord)
+                    }
                     const wUpdatedDoc = await wCollection.findOne(wPrimaryKey)
                     wResult.id = wUpdatedDoc?._id ?? null
                     console.log(
@@ -220,8 +295,21 @@ async function SkGenericDb(fastify, opts) {
                         " _id=" + wResult.id
                     )
                 } else if (wOperationMode === 'delete') {
+                    const wForeignMessage = await referencingForeignError(fastify, wTable, wRecord)
+                    if (wForeignMessage !== '') {
+                        wResult.message = 'error'
+                        wResult.error = wForeignMessage
+                        return JSON.stringify(wResult);
+                    }
+                    const wPreviousImageDoc = await wCollection.findOne(wPrimaryKey)
                     wResultInsertUpdate = await wCollection.deleteOne(wPrimaryKey);
                     console.log("Delete document " + wCollectionStr + ", " + wKeyStr + " deletedCount=" + wResultInsertUpdate.deletedCount)
+                    if (wResultInsertUpdate.deletedCount !== 1) {
+                        wResult.message = 'error'
+                        wResult.error = 'On table ' + wCollectionStr + " couldn't delete Key(" + wKeyStr + ")!"
+                        return JSON.stringify(wResult);
+                    }
+                    await releaseRecordImages(fastify.mongo.db, wTable, wPreviousImageDoc)
                 }
 
                 wResult.message = 'success'
@@ -259,7 +347,15 @@ async function SkGenericDb(fastify, opts) {
             const wCollection = fastify.mongo.db.collection(wCollectionStr)
             const wQuery = JSON.parse(req.params.id)
             console.log("Delete -->", wCollectionStr, " -_>", wQuery);
+            const wPreviousImageDoc = await wCollection.findOne(wQuery)
             const wResDelete = await wCollection.deleteOne(wQuery)
+            if (wResDelete.deletedCount === 1) {
+                const wMetaModel = global['metamodel']
+                const wTableArray = wMetaModel?.Table(wCollectionStr) || []
+                if (wTableArray.length > 0) {
+                    await releaseRecordImages(fastify.mongo.db, wTableArray[0], wPreviousImageDoc)
+                }
+            }
             if (wResDelete.deletedCount === 1) {
                 wResult.message = 'success'
             } else {

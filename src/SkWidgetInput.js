@@ -27,7 +27,9 @@ class SkWidgetInput extends SkComponent {
     }
 
     onResetCards=() => {
-      this.m_RefCards.current.loadData();
+      if (this.m_RefGrid.current && typeof this.m_RefGrid.current.loadData === 'function') {
+        this.m_RefGrid.current.loadData();
+      }
     }
 
     render() {
@@ -46,6 +48,7 @@ class SkWidgetInput extends SkComponent {
           <SkWidgetForm
             ref={this.m_RefForm}
             widgetname={this.m_WidgetName}
+            onResetCards={this.onResetCards}
           />
         </div>
         <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex' }}>

@@ -373,31 +373,21 @@ class SkVirtualDiskClient {
         }
     }
 
-    // Remove a file or directory
+    // Remove a file or directory. Throws the server error so the caller can show it.
     async rm(sPath) {
-        try {
-            // If path is not provided, use current path
-            const wTargetPath = sPath || this.m_CurrentPath;
-            const wQuery =  JSON.stringify({path: wTargetPath});
-            console.log('Removing:', wTargetPath);
+        const wTargetPath = sPath || this.m_CurrentPath;
+        const wQuery = JSON.stringify({ path: wTargetPath });
+        console.log('Removing:', wTargetPath);
 
-            // First check if the file/directory exists
-            const wCheckResponse = await this.webInterface.deleteJson(`/files`,wQuery);
-            const wCheckData = JSON.parse(wCheckResponse);
+        const wCheckResponse = await this.webInterface.deleteJson('/files', wQuery);
+        const wCheckData = typeof wCheckResponse === 'string'
+            ? JSON.parse(wCheckResponse)
+            : wCheckResponse;
 
-            if (wCheckData.message!=='success') {
-                throw new Error(`File or directory not found: ${wTargetPath}, ${wCheckData.error}`);
-            }
-
-          return true;
-        } catch (error) {
-            console.error('Error removing file/directory:', error);
-            console.error('Error details:', {
-                message: error.message,
-                stack: error.stack
-            });
-            return false;
+        if (!wCheckData || wCheckData.message !== 'success') {
+            throw new Error(wCheckData?.error || `Failed to delete ${wTargetPath}`);
         }
+        return true;
     }
 
     // Get the tree of the file system

@@ -4,6 +4,7 @@ import { SkComponent } from './SkComponent';
 import { SkInput } from './SkInput';
 import { SkButton } from './SkButton';
 import { formatFloat,parseFloat } from './SkNumberFormat';
+import { SkRecordImageThumb } from './SkImageField';
 import './SkComponent.css';
 
 /**
@@ -350,6 +351,10 @@ export class SkGrid extends SkComponent {
      * @param {Object} column - The column definition
      */
     handleCellDoubleClick = (row, rowIndex, column) => {
+        // Images are edited on the form, not as a text cell.
+        if (column.m_TypeField === 'image') {
+            return;
+        }
         // If we're in edit mode and trying to edit a different row, ignore the double click
         if (this.state.editingCell && this.state.editingCell.rowIndex !== rowIndex) {
             return;
@@ -640,6 +645,8 @@ export class SkGrid extends SkComponent {
                 } catch (e) {
                     return "Float error: " + e.message;
                 }
+            case 'image':
+                return <SkRecordImageThumb value={value} sizeImage={column.m_SizeImage} />;
             default:
                 return value;
         }
@@ -736,9 +743,22 @@ export class SkGrid extends SkComponent {
                 onFocus={this.handleFocus}
                 onBlur={this.handleBlur}
             >
-                <div className="SkGridHeader">
+                <div ref={this.bodyRef} className="SkGridBody">
+                    {showScrollIndicator && (
+                        <div className="SkGridScrollIndicator">
+                            {Math.round(scrollPosition)}%
+                        </div>
+                    )}
                     <table className="SkGridTable">
-                        <thead>
+                        <colgroup>
+                            {columns.map((column, index) => (
+                                <col key={index} style={{ width: getColumnWidth(column) }} />
+                            ))}
+                            {!readOnly && (
+                                <col style={{ width: getColumnWidth({ m_Name: 'actions', m_Width: 200 }) }} />
+                            )}
+                        </colgroup>
+                        <thead className="SkGridHeader">
                             <tr>
                                 {columns.map((column, index) => (
                                     <th 
@@ -746,8 +766,7 @@ export class SkGrid extends SkComponent {
                                         className={`SkGridHeader${sortable ? ' SkGridHeader-sortable' : ''}${this.state.sortColumn === column.m_Name ? ' SkGridHeader-sorted' : ''}`}
                                         style={{ 
                                             width: getColumnWidth(column),
-                                            textAlign: getColumnAlignment(column),
-                                            position: 'relative'
+                                            textAlign: getColumnAlignment(column)
                                         }}
                                         aria-sort={getAriaSort(column)}
                                     >
@@ -774,8 +793,7 @@ export class SkGrid extends SkComponent {
                                     <th 
                                         className="SkGridHeader" 
                                         style={{ 
-                                            width: getColumnWidth({ m_Name: 'actions', m_Width: 200 }),
-                                            position: 'relative'
+                                            width: getColumnWidth({ m_Name: 'actions', m_Width: 200 })
                                         }}
                                     >
                                         Actions
@@ -785,20 +803,8 @@ export class SkGrid extends SkComponent {
                                         />
                                     </th>
                                 )}
-                                <th>
-                                <div/>
-                            </th>
                             </tr>
                         </thead>
-                    </table>
-                </div>
-                <div ref={this.bodyRef} className="SkGridBody">
-                    {showScrollIndicator && (
-                        <div className="SkGridScrollIndicator">
-                            {Math.round(scrollPosition)}%
-                        </div>
-                    )}
-                    <table className="SkGridTable">
                         <tbody>
                             {displayOrder.map((originalIndex) => {
                                 const row = data[originalIndex];

@@ -114,6 +114,7 @@ export class SkTable extends SkItem {
                 case 'date' : break;
                 case 'id' : break;
                 case 'boolean' : break;
+                case 'image' : break;
                 default : throw('On Table '+this.m_Name+' Column '+wColumn.m_Name+' bad type '+wColumn.m_TypeColumn)
             }
         }
@@ -453,6 +454,12 @@ export class SkMetaModel extends SkItem {
                     }
                     if (wField.hasOwnProperty("Width")) {
                         wSkField.m_Width=wField.Width
+                    }
+                    if (wField.SizeImage && typeof wField.SizeImage === 'object') {
+                        wSkField.m_SizeImage = {
+                            width: wField.SizeImage.width || wField.SizeImage.Width || '',
+                            height: wField.SizeImage.height || wField.SizeImage.Height || '',
+                        }
                     }
                     wSkGroup.AddField(wSkField)
                 })

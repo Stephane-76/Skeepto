@@ -2749,8 +2749,15 @@ class SkCellClass extends SkComponent {
         if (this.shouldActivateSelfEditingWidget()) {
             return;
         }
-        // Other edit sessions: keep focus in the formula/cell editor (never steal to canvas).
+        // Calendar/ComboBox edit must release when another cell widget is clicked
+        // (Check, Switch, …). Formula-pick sessions are handled above.
         if (sp && typeof sp.getUseEdit === "function" && sp.getUseEdit()) {
+            const wAnchor = typeof sp.getEditAnchorCell === "function" ? sp.getEditAnchorCell() : null;
+            if (isSelfEditingCellClass(wAnchor) && !this.isEditAnchorOnThisCell()) {
+                void this.leaveSelfEditingSessionFor(event);
+                return;
+            }
+            // Other edit sessions: keep focus in the formula/cell editor.
             event.preventDefault();
             event.stopPropagation();
             return;
@@ -2758,6 +2765,36 @@ class SkCellClass extends SkComponent {
         void this.focusCursorOnCell(event).then(() => {
             this.restoreGridKeyboardFocus();
         });
+    };
+
+    // Commit the Calendar/ComboBox editor, then select the widget that was clicked.
+    // endEdit() puts the cursor back on the edited cell, so the new cell is selected after.
+    async leaveSelfEditingSessionFor(event) {
+        const sp = this.m_SpInterface;
+        if (!sp) {
+            return;
+        }
+        try {
+            if (typeof sp.getUseEdit === "function" && sp.getUseEdit() && typeof sp.endEdit === "function") {
+                await sp.endEdit();
+            }
+            await this.focusCursorOnCell(event);
+        } catch (error) {
+            console.error("Error leaving self-editing cell:", error);
+        } finally {
+            // focusCursorOnCell sets m_MouseDown after mouseup may already have run.
+            const wSp = this.m_SpInterface;
+            if (wSp) {
+                wSp.m_MouseDown = false;
+                wSp.m_Selected = false;
+                const wGrid = wSp.m_SkSpGridCanvas;
+                if (wGrid) {
+                    wGrid.m_MouseDown = false;
+                    wGrid.m_DragSelecting = false;
+                }
+            }
+            this.restoreGridKeyboardFocus();
+        }
     };
 
     buildCaptionFontStyle(sCell, sColor, sFontSizeCss) {

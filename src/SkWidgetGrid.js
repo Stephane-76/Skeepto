@@ -1,8 +1,6 @@
 import * as React from "react";
 import { SkComponent } from './component/SkComponent'
 import { SkGrid } from './component/SkGrid'
-import { SkActionButton as ActionButton } from './component/SkActionButton'
-import { ReactComponent as SvgMinus } from './svg/minus.svg'
 export class SkWidgetGrid extends SkComponent {
   constructor(props) {
     super(props)
@@ -12,7 +10,8 @@ export class SkWidgetGrid extends SkComponent {
       selectedRow: null,
       readOnly: true,
       columns: [],
-      Validate: false
+      Validate: false,
+      db_Error: ''
     };
   
     this.m_WidgetName = props.widgetname
@@ -58,7 +57,8 @@ export class SkWidgetGrid extends SkComponent {
           m_Label: field.m_Label || field.m_Name,
           m_Name: field.m_Name,
           m_Width: width,
-          m_TypeField: field.m_TypeField || 'string'
+          m_TypeField: field.m_TypeField || 'string',
+          m_SizeImage: field.m_SizeImage
         };
       });
 
@@ -102,12 +102,33 @@ export class SkWidgetGrid extends SkComponent {
     // or perform other edit-related actions
   }
 
-  handleDeleteClick = (rowIndex) => {
-    console.log('Delete clicked for row:', rowIndex);
-    // Remove row from data
-    const newData = [...this.state.recordList];
-    newData.splice(rowIndex, 1);
-    this.setState({ recordList: newData });
+  handleDeleteClick = async (rowIndexOrEvent) => {
+    let rowIndex = rowIndexOrEvent;
+    if (typeof rowIndex !== 'number') {
+      rowIndex = this.state.recordList.findIndex((row) => row === this.state.selectedRow);
+    }
+    const record = this.state.recordList[rowIndex];
+    if (!record) {
+      this.setState({ db_Error: 'Select a record to delete' });
+      return;
+    }
+
+    try {
+      const wJsonRet = await window.WebInterface.postJson(
+        '/mdb/' + this.m_TableName,
+        JSON.stringify(record),
+        'delete'
+      );
+      const wObjReturn = JSON.parse(wJsonRet);
+      if (wObjReturn.message === 'success') {
+        const newData = this.state.recordList.filter((_, index) => index !== rowIndex);
+        this.setState({ recordList: newData, selectedRow: null, db_Error: '' });
+      } else {
+        this.setState({ db_Error: wObjReturn.error || 'Delete failed' });
+      }
+    } catch (error) {
+      this.setState({ db_Error: error?.message || String(error) });
+    }
   }
 
   handleRowSelect = (row) => {
@@ -146,14 +167,13 @@ export class SkWidgetGrid extends SkComponent {
     return (
       <div className={wClassName} ref={this.m_Ref} style={rootStyle}>
         <div className="SkWidgetGridControls" style={{ flex: '0 0 auto' }}>
-        <div className='SkFlexRow' style={{ display: 'flex', gap: 10, padding: 10, alignItems: 'center' }}>
-        <ActionButton
-                  component={SvgMinus}
-                  label="Delete"
-                  color="#f44336"
-                  onClick={this.handleDeleteClick}
-        />
-        </div>
+        {this.state.db_Error ? (
+          <div className="visible" style={{ padding: '0 10px 10px' }}>
+            <div className="alert alert-error" role="alert">
+              <h4 className="alert-heading">{this.state.db_Error}</h4>
+            </div>
+          </div>
+        ) : null}
         </div>
         <SkGrid
           style={{

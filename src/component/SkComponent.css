@@ -1234,9 +1234,12 @@ button.SkModal-toolbarBtn--danger:hover:not(:disabled) {
 
 .SkGridHeader {
     background-color: var(--sk-color-background-tool);
-    overflow: hidden;
-    flex-shrink: 0;
-    width: 100%;
+}
+
+.SkGridTable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
 
 
@@ -1266,13 +1269,12 @@ button.SkModal-toolbarBtn--danger:hover:not(:disabled) {
     background-color: var(--sk-color-background-tool);
     font-weight: 600;
     border-bottom: 2px solid var(--sk-border-color);
-    position: relative;
     user-select: none;
     line-height: 1;
     color: var(--sk-text-color);
 }
 
-.SkGridHeader-sortable {
+.SkGridTable th.SkGridHeader-sortable {
     padding: 0;
 }
 
@@ -1281,7 +1283,7 @@ button.SkModal-toolbarBtn--danger:hover:not(:disabled) {
     align-items: center;
     justify-content: flex-start;
     gap: 6px;
-    width: calc(100% - 8px);
+    width: 100%;
     min-height: 100%;
     margin: 0;
     padding: 6px 12px;
@@ -1885,6 +1887,47 @@ button.SkModal-toolbarBtn--danger:hover:not(:disabled) {
 
 .SkComboBox.SkComboBox--attribute-enum .SkComboBox-list {
     z-index: 2500;
+}
+
+.SkImageField {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.SkImageField-preview {
+    object-fit: contain;
+    background: transparent;
+    border: none;
+}
+
+.SkImageField-thumb {
+    display: block;
+    object-fit: contain;
+}
+
+.SkImageField-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.SkImageField-pick {
+    display: inline-block;
+    cursor: pointer;
+}
+
+.SkImageField-pick input {
+    display: none;
+}
+
+.SkImageField-pick-disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.SkImageField-error {
+    color: #c62828;
 }
 
 /* Theme tokens must load last — this file is also imported directly from JS modules. */

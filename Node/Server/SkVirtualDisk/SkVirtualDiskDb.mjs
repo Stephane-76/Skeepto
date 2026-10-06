@@ -14,7 +14,8 @@
  * POST /files
  * - Creates a new file or directory
  * - Verifies parent directory existence
- * - Sets default permissions (755 for directories, 644 for files)
+ * - Sets default permissions when the client omits them (770 for directories, 600 for files)
+ * - A client mkdir sends 775 for the new directory
  * - Uses GridFS for files larger than 16MB
  * 
  * GET /files/:id
@@ -257,6 +258,11 @@ function normalizeVirtualPath(p) {
     out = out.slice(0, -1);
   }
   return out;
+}
+
+/** Escape a virtual path before it is interpolated into a MongoDB regex. */
+function escapeRegex(text) {
+  return String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /** After POST /files overwrites a .sker in Mongo, drop SkSpSpreadSheet memory so GET /spreadsheet reloads. */
@@ -1544,9 +1550,10 @@ async function SkVirtualDiskDb(fastify, opts) {
 
         if (file.isDirectory) {
           // If it's a directory, delete the directory and all children 
+          const wEscapedDirPath = escapeRegex(file.path);
           const children = await wCollection.find({ 
             path: { 
-              $regex: `^${file.path}($|/)` 
+              $regex: `^${wEscapedDirPath}($|/)` 
             }
           }).toArray()
 
@@ -1682,7 +1689,7 @@ async function SkVirtualDiskDb(fastify, opts) {
         }
         // For a directory, also refuse if any workbook it contains is open in collaboration.
         if (wFile.isDirectory) {
-          const wEscapedOldCheck = wOldPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+          const wEscapedOldCheck = escapeRegex(wOldPath)
           const wDescendants = await wCollection
             .find({ path: { $regex: `^${wEscapedOldCheck}/` }, isDirectory: { $ne: true } })
             .toArray()
@@ -1710,7 +1717,7 @@ async function SkVirtualDiskDb(fastify, opts) {
 
         // For a directory, re-base every descendant path from oldPath onto newPath.
         if (wFile.isDirectory) {
-          const wEscapedOld = wOldPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+          const wEscapedOld = escapeRegex(wOldPath)
           const wChildren = await wCollection
             .find({ path: { $regex: `^${wEscapedOld}/` } })
             .toArray()
@@ -1762,10 +1769,12 @@ async function SkVirtualDiskDb(fastify, opts) {
               return { message: 'error', error: wListScopeError };
             }
 
-            // Find all files and directories in the specified path
+            // Find all files and directories in the specified path.
+            // Escape so a dot in an email is literal, not "any character".
+            const wEscapedPath = escapeRegex(wPath);
             const files = await wCollection.find({ 
                 path: { 
-                   $regex: `^${wPath}($|/)` 
+                   $regex: `^${wEscapedPath}($|/)` 
                 }
             }).toArray();
 

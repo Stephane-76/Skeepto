@@ -2,6 +2,66 @@ import React from 'react';
 import { SkComponent } from './SkComponent';
 import './SkComponent.css';
 
+// Mongo stores dates as epoch milliseconds (Date.now()). The input shows a locale date.
+function localeDateOrder() {
+    const parts = new Intl.DateTimeFormat(undefined, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).formatToParts(new Date(2000, 11, 31));
+    return parts.filter((part) => part.type === 'day' || part.type === 'month' || part.type === 'year')
+        .map((part) => part.type);
+}
+
+function parseLocaleDate(text) {
+    const bits = String(text).split(/[^0-9]+/).filter(Boolean);
+    if (bits.length !== 3) {
+        return null;
+    }
+    const order = localeDateOrder();
+    const map = {};
+    order.forEach((kind, index) => {
+        map[kind] = Number(bits[index]);
+    });
+    if (!map.year || !map.month || !map.day) {
+        return null;
+    }
+    const year = map.year < 100 ? 2000 + map.year : map.year;
+    const date = new Date(year, map.month - 1, map.day);
+    if (date.getFullYear() !== year || date.getMonth() !== map.month - 1 || date.getDate() !== map.day) {
+        return null;
+    }
+    return date;
+}
+
+function parseDateValue(value) {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+    if (value instanceof Date) {
+        return Number.isNaN(value.getTime()) ? null : value;
+    }
+    if (typeof value === 'number') {
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? null : date;
+    }
+    const text = String(value).trim();
+    if (/^-?\d+$/.test(text)) {
+        const date = new Date(Number(text));
+        return Number.isNaN(date.getTime()) ? null : date;
+    }
+    const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) {
+        const date = new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+        return Number.isNaN(date.getTime()) ? null : date;
+    }
+    return parseLocaleDate(text);
+}
+
+function formatDateDisplay(date) {
+    return date.toLocaleDateString();
+}
+
 export class SkCalendar extends SkComponent {
     // Constants for calendar
     static MONTH_NAMES = [
@@ -19,10 +79,12 @@ export class SkCalendar extends SkComponent {
     */
     constructor(props) {
         super(props);
+        const initialDate = parseDateValue(this.props.value);
         this.state = {
-            value: this.props.value || '',
+            value: initialDate ? formatDateDisplay(initialDate) : '',
+            epoch: initialDate ? initialDate.getTime() : null,
             showPopup: false,
-            currentDate: new Date(),
+            currentDate: initialDate || new Date(),
             enabled: true
         };
         this.popupRef = React.createRef();
@@ -48,36 +110,46 @@ export class SkCalendar extends SkComponent {
         }
     };
 
-    handleInputChange = (event) => {
-        const value = event.target.value;
-        this.setState({ value });
+    notifyChange = () => {
         if (this.props.onChange) {
-            const customEvent = {
+            this.props.onChange({
                 target: {
                     id: this.props.id,
-                    value: value
+                    value: this.value()
                 }
-            };
-            this.props.onChange(customEvent);
+            });
         }
     };
 
-    handleDateSelect = (date) => {
-        // Format date in English format (MM/DD/YYYY)
-        const formattedDate = date.toLocaleDateString('en-US');
-        this.setState({ 
-            value: formattedDate,
-            showPopup: false 
-        });
-        if (this.props.onChange) {
-            const customEvent = {
-                target: {
-                    id: this.props.id,
-                    value: formattedDate
-                }
-            };
-            this.props.onChange(customEvent);
+    handleInputChange = (event) => {
+        const text = event.target.value;
+        const date = parseDateValue(text);
+        this.setState({
+            value: text,
+            epoch: date ? date.getTime() : null,
+            currentDate: date || this.state.currentDate,
+        }, this.notifyChange);
+    };
+
+    handleBlur = () => {
+        const date = parseDateValue(this.state.value);
+        if (!date) {
+            return;
         }
+        this.setState({
+            value: formatDateDisplay(date),
+            epoch: date.getTime(),
+            currentDate: date,
+        });
+    };
+
+    handleDateSelect = (date) => {
+        this.setState({
+            value: formatDateDisplay(date),
+            epoch: date.getTime(),
+            currentDate: date,
+            showPopup: false,
+        }, this.notifyChange);
     };
 
     // Calendar navigation
@@ -94,12 +166,18 @@ export class SkCalendar extends SkComponent {
     };
 
     // SkForm methods
+    // Epoch milliseconds, the same shape Mongo already stores. Empty when the field is blank.
     value() {
-        return this.state.value;
+        return this.state.epoch === null || this.state.epoch === undefined ? '' : this.state.epoch;
     }
     
     setValue(value) {
-        this.setState({ value });
+        const date = parseDateValue(value);
+        this.setState({
+            value: date ? formatDateDisplay(date) : '',
+            epoch: date ? date.getTime() : null,
+            currentDate: date || new Date(),
+        });
     }
     
     setEnabled = (enabled) => {
@@ -156,6 +234,7 @@ export class SkCalendar extends SkComponent {
                     type="text"
                     value={value}
                     onChange={this.handleInputChange}
+                    onBlur={this.handleBlur}
                     onClick={this.togglePopup}
                     placeholder={placeholder}
                     className="SkInput SkCalendar-input"

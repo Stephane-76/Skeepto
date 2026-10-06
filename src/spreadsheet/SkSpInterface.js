@@ -5,6 +5,7 @@
 import SkCellClassContainer  from "./CellClass/SkCellClassContainer.js";
 import SkCellClass, {
     isInplaceEditBlockedCellClass,
+    isSelfEditingCellClass,
     reactCellClassTypeName,
     shouldBypassCellInplaceOverlay,
     usesCalculableModelValue,
@@ -218,6 +219,9 @@ class SkSpInterface {
      
       this.m_UseEdit=false;
       this.m_CursorEdit=null;
+      // Formula-bar text last pushed by a self-editing widget (Calendar, …).
+      // validEdit must not write the bar back when it still matches this snapshot.
+      this.m_SelfEditFormulaBarBaseline=null;
       /** Cache for formula ref highlighting ({ key, data }). */
       this.m_FormulaRefsCache = null;
       /** Canvas cursor rect while editing (matches SkSpInplaceEdit overlay). */
@@ -3136,6 +3140,7 @@ class SkSpInterface {
       }
       this.m_UseEdit=false;
       this.m_FormulaRefsCache = null;
+      this.m_SelfEditFormulaBarBaseline = null;
       this.clearInplaceEditOverlayRect();
       this.endCursorEdit();
     
@@ -3169,6 +3174,23 @@ class SkSpInterface {
         this.syncAttributeEditAnchorCursor();
       } else if (this.m_CursorEdit == null) {
         this.beginCursorEdit();
+      }
+
+      // A Calendar date is stored by the widget (t_date). Writing the formula bar
+      // here puts the previous text back and drops the popup choice. Flush the
+      // widget, same as Enter, then leave the edit.
+      const wSelfEditAnchor = this.getEditAnchorCell();
+      if (
+        reactCellClassTypeName(wSelfEditAnchor) === "SkCellClassCalendar" &&
+        !(wText != null ? String(wText) : "").trim().startsWith("=")
+      ) {
+        if (typeof this.m_SelfEditFlush === "function") {
+          await this.m_SelfEditFlush();
+        }
+        if (this.getUseEdit()) {
+          await this.endEdit();
+        }
+        return true;
       }
 
       if (this.isCursorInplaceEditBlocked()) {

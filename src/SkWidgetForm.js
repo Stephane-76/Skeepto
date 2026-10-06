@@ -7,11 +7,13 @@ import { SkForm } from "./component/SkForm";
 import { SkInput } from "./component/SkInput";
 import { SkPassWord } from "./component/SkPassWord";
 import { SkCalendar } from "./component/SkCalendar";
+import { SkImageField } from "./component/SkImageField";
 import { SkError } from "./component/SkError";
 import { SkActionButton } from "./component/SkActionButton";
 
 import { ReactComponent as SvgPlus } from "./svg/plus.svg";
 import { ReactComponent as SvgUpdate } from "./svg/shift-arrow.svg";
+import { ReactComponent as SvgMinus } from "./svg/minus.svg";
 import { ReactComponent as SvgValid } from "./svg/check.svg";
 import { ReactComponent as SvgClose } from "./svg/close.svg";
 import "./App.css";
@@ -44,6 +46,7 @@ export class SkWidgetForm extends SkComponent {
     }
     this.m_WidgetName=props.widgetname
     this.m_Form = null
+    this.m_Primary = []
     this.setState( {   Validate : true });
     this.inputRefs = {};
     
@@ -84,23 +87,75 @@ export class SkWidgetForm extends SkComponent {
   componentDidUpdate() {
   }
 
-  setStateEnabled() {
-    if (this.m_FormRef.current!==null) {
-      switch(this.state.state) {
-        case 'disabled':
-          this.m_FormRef.current.setEnabled(false);
-          break;
-        case 'insert':
-        case 'update': 
-          this.m_FormRef.current.setEnabled(true);
-          break;
-        case 'delete':
-          this.m_FormRef.current.setEnabled(false);
-          break;
-        default:
-          this.m_FormRef.current.setEnabled(false);
-          break;
+  // A group that contains a password is shown only while creating a record.
+  groupHasPassword(group) {
+    return (group?.m_Fields || []).some((field) => field.m_TypeField === 'password');
+  }
+
+  showPasswordFields() {
+    return this.state.state === 'insert';
+  }
+
+  isPrimaryKey(fieldName) {
+    return this.m_Primary.includes(fieldName);
+  }
+
+  // Primary key fields stay editable only while creating the record.
+  isFieldEditable(fieldName) {
+    const mode = this.state.state;
+    if (mode !== 'insert' && mode !== 'update') {
+      return false;
+    }
+    if (mode !== 'insert' && this.isPrimaryKey(fieldName)) {
+      return false;
+    }
+    return true;
+  }
+
+  focusFirstEditable() {
+    if (!this.m_Form || !this.m_FormRef.current) {
+      return;
+    }
+    for (const group of this.m_Form.m_Groups) {
+      if (this.groupHasPassword(group) && !this.showPasswordFields()) {
+        continue;
       }
+      for (const field of group.m_Fields) {
+        if (this.isFieldEditable(field.m_Name)) {
+          this.m_FormRef.current.setFocus(field.m_Name);
+          return;
+        }
+      }
+    }
+  }
+
+  setStateEnabled() {
+    if (!this.m_Form) {
+      return;
+    }
+    if (this.m_FormRef.current !== null) {
+      this.m_FormRef.current.initializeFields();
+    }
+    this.m_Form.m_Groups.forEach((group) => {
+      group.m_Fields.forEach((field) => {
+        const input = this.inputRefs[field.m_Name];
+        if (input && typeof input.setEnabled === 'function') {
+          input.setEnabled(this.isFieldEditable(field.m_Name));
+        }
+      });
+    });
+  }
+
+  async loadPrimaryKeys() {
+    const tableName = this.m_Form?.m_TableName;
+    if (!tableName) {
+      return;
+    }
+    const wResultStr = await window.WebInterface.getJson('/meta/table/' + tableName);
+    const wResult = JSON.parse(wResultStr);
+    const primary = wResult?.object?.m_Primary;
+    if (wResult.message === 'success' && Array.isArray(primary)) {
+      this.m_Primary = primary.filter((name) => name && name !== '_id');
     }
   }
 
@@ -110,6 +165,7 @@ export class SkWidgetForm extends SkComponent {
 
     if (wResult.message==="success") {
       this.m_Form=wResult.object
+      await this.loadPrimaryKeys();
       this.setState( { Validate : false },() => {
         this.setStateEnabled();
       })
@@ -137,12 +193,14 @@ export class SkWidgetForm extends SkComponent {
         break;
       }
       case 'password' : {
-        let wNode=document.getElementById(sField.m_Name+"Error")
-        wNode.innerText="";
-        // Optional on update when the password is not being changed.
-        if (this.state.state === 'update' && (!sValue || sValue === '')) {
+        if (!this.showPasswordFields()) {
           break;
         }
+        let wNode=document.getElementById(sField.m_Name+"Error")
+        if (!wNode) {
+          break;
+        }
+        wNode.innerText="";
         // Password strength validation
         if (sValue.length < 8) {
           wNode.innerText="The password must be 8 characters or longer"
@@ -212,7 +270,8 @@ export class SkWidgetForm extends SkComponent {
       wGroup.m_Fields.filter(wField => wField.m_Db===true).forEach((wField) => {
         const wValue = this.getValue(wField.m_Name)
         if (wField.m_TypeField === 'password') {
-          if (this.state.state === 'update' && (!wValue || wValue === '')) {
+          // Update keeps the hash already stored. A new password is sent only on insert.
+          if (!this.showPasswordFields()) {
             return
           }
           wRecord[wField.m_Name] = generateHash(wValue)
@@ -236,26 +295,39 @@ export class SkWidgetForm extends SkComponent {
     });
   }
 
+  // Clear every mounted field. SkForm.reset only writes the DOM defaultValue,
+  // which leaves the React state of SkInput and SkCalendar unchanged.
+  clearFields = () => {
+    if (!this.m_Form) {
+      return;
+    }
+    this.m_Form.m_Groups.forEach((group) => {
+      group.m_Fields.forEach((field) => {
+        const input = this.inputRefs[field.m_Name];
+        if (input && typeof input.setValue === 'function') {
+          input.setValue('');
+        }
+      });
+    });
+    this.clearErrors();
+  }
+
   reset = () => {
-    this.m_FormRef.current.reset();
+    this.clearFields();
   }
 
   insert=() => {
-    this.setState( { state : 'insert' },() => {
+    this.setState( { state : 'insert', record : null, db_Error : '' },() => {
       this.setStateEnabled();
-      this.reset();
-      if (this.findFirstField()!==null) {
-        this.m_FormRef.current.setFocus(this.findFirstField().m_Name);
-      }
+      this.clearFields();
+      this.focusFirstEditable();
     })
   }
 
   update=() => {
     this.setState( { state : 'update' },() => {
       this.setStateEnabled();
-      if (this.findFirstField()!==null) {
-        this.m_FormRef.current.setFocus(this.findFirstField().m_Name);
-      }
+      this.focusFirstEditable();
     })
   }
 
@@ -264,12 +336,14 @@ export class SkWidgetForm extends SkComponent {
     event.preventDefault();
     this.setState( { validateError : true } )
     // Verify ===================================================
-    this.m_Form.m_Groups.map(wGroup => (  
-      wGroup.m_Fields.map( wField => ( 
-        this.validate(wField,this.getValue(wField.m_Name))
-        )
-      ) 
-    ))
+    this.m_Form.m_Groups.forEach((wGroup) => {
+      if (this.groupHasPassword(wGroup) && !this.showPasswordFields()) {
+        return
+      }
+      wGroup.m_Fields.forEach((wField) => {
+        this.validate(wField, this.getValue(wField.m_Name))
+      })
+    })
   
     if (this.state.validateError===false) {
         return
@@ -309,10 +383,10 @@ export class SkWidgetForm extends SkComponent {
       })
       this.m_Form.m_Groups.forEach((wGroup) => {
           wGroup.m_Fields.forEach((wField) => {
-            if (sRecord.hasOwnProperty(wField.m_Name)) {
-              if (this.inputRefs[wField.m_Name]) {
-                  this.inputRefs[wField.m_Name].setValue(sRecord[wField.m_Name]);
-              }
+            const input = this.inputRefs[wField.m_Name];
+            if (input && typeof input.setValue === 'function') {
+              const value = sRecord[wField.m_Name];
+              input.setValue(value == null ? '' : value);
             }
         });
     });
@@ -328,16 +402,16 @@ export class SkWidgetForm extends SkComponent {
     const wJsonRet=await window.WebInterface.postJson('/mdb/'+this.m_Form.m_TableName,JSON.stringify(wRecord),'delete')
     const wObjReturn=JSON.parse(wJsonRet)
     if (wObjReturn.message==='success') {
-      this.setState( { state : 'disabled' },() => {
+      this.setState( { state : 'disabled', record : null, db_Error : '' },() => {
+        this.clearFields();
         this.setStateEnabled();
       })
       if (this.props.onResetCards) {
         this.props.onResetCards();
       }
     } else {
-      this.setState( { db_Error : wObjReturn.error }) 
+      this.setState( { db_Error : wObjReturn.error || 'Delete failed' })
     }
-    this.setState( { record : null })
   }
 
 
@@ -395,7 +469,7 @@ export class SkWidgetForm extends SkComponent {
             <div className={sField.m_Style}  key={sField.m_Name} id={sField.m_Name} style={containerStyles}>
             <div>{sField.m_Label}</div>
             <SkPassWord type="password" 
-                placeholder={"Enter "+sField.Label}  
+                placeholder={"Enter "+sField.m_Label}  
                 id={sField.m_Name}
                 ref={this.setInputRef(sField.m_Name)}
                 style={baseStyles}
@@ -416,6 +490,19 @@ export class SkWidgetForm extends SkComponent {
                     id={sField.m_Name}
                     ref={this.setInputRef(sField.m_Name)}
                     style={baseStyles}
+                    onChange={this.handleChange}
+                />
+            </div>
+        );
+      }
+      case 'image': {
+        return (
+            <div className={sField.m_Style} key={sField.m_Name} id={sField.m_Name} style={containerStyles}>
+                <div>{sField.m_Label}</div>
+                <SkImageField
+                    id={sField.m_Name}
+                    ref={this.setInputRef(sField.m_Name)}
+                    sizeImage={sField.m_SizeImage}
                     onChange={this.handleChange}
                 />
             </div>
@@ -446,10 +533,9 @@ export class SkWidgetForm extends SkComponent {
 
   renderBlock() {
      return(
-        this.m_Form.m_Groups.map((wGroup,wIndexGroup) => (  
-               this.renderGroup(wGroup)
-          ) // Group
-        ) // Map Group
+        this.m_Form.m_Groups
+          .filter((wGroup) => !this.groupHasPassword(wGroup) || this.showPasswordFields())
+          .map((wGroup) => this.renderGroup(wGroup))
       )
   }
 
@@ -460,12 +546,12 @@ export class SkWidgetForm extends SkComponent {
 
   // Check if update operation is allowed (returns true when form is disabled and a record exists)
   canUpdate=() => {
-    return (this.state.state==='disabled') && (this.state.record!==undefined)
+    return (this.state.state==='disabled') && (this.state.record!=null)
   }
 
   // Check if delete operation is allowed (returns true when form is disabled and a record exists)
   canDelete=() => {
-    return (this.state.state==='disabled') && (this.state.record!==undefined)
+    return (this.state.state==='disabled') && (this.state.record!=null)
   }
 
   // Check if form submission is allowed (returns true when form is in insert or update state)
@@ -506,34 +592,46 @@ export class SkWidgetForm extends SkComponent {
             </div>
           </div>
           <div className='SkFlexRow' style={{ display: 'flex', gap: 10, padding: 10, alignItems: 'center' }}>
+              {this.canInsert() && (
               <ActionButton
                   component={SvgPlus}
                   label="Insert"
                   color="#4CAF50"
-                  disabled={!this.canInsert()}
                   onClick={this.insert}
               />
+              )}
+              {this.canUpdate() && (
               <ActionButton
                   component={SvgUpdate}
                   label="Update"
                   color="#FF9800"
-                  disabled={!this.canUpdate()}
                   onClick={this.update}
               />
+              )}
+              {this.canDelete() && (
+              <ActionButton
+                  component={SvgMinus}
+                  label="Delete"
+                  color="#f44336"
+                  onClick={this.delete}
+              />
+              )}
+              {this.canSubmit() && (
               <ActionButton
                   component={SvgValid}
                   label="Submit"
                   color="#2196F3"
-                  disabled={!this.canSubmit()}
                   onClick={this.handleSubmit}
               />
+              )}
+              {this.canCancel() && (
               <ActionButton
                   component={SvgClose}
                   label="Cancel"
                   color="#757575"
-                  disabled={!this.canCancel()}
                   onClick={this.handleCancel}
               />
+              )}
           </div>         
         </div>
     )

@@ -13,6 +13,7 @@
                 {  "_comment": "User's first name", "Name" : "FirstName", "Type" : "string", "Json" : "f", "Length" : 30 },
                 {  "_comment": "User's group - Required field", "Name" : "Group", "Type" : "string", "Json" : "g", "Length" : 30, "NotNull" : true }, 
                 {  "_comment": "User's email - Required field and primary key", "Name" : "Email", "Type" : "string", "Json" : "e", "Length" : 60, "NotNull" : true }, 
+                {  "_comment": "User photo - inline when small, GridFS when large", "Name" : "Image", "Type" : "image", "Json" : "img", "NotNull" : false },
                 {  "_comment": "User's password - Stored in encrypted format", "Name" : "PassWord", "Type" : "string", "Json" : "p", "Length" : 60 },
                 {  "_comment": "Email verified via registration code", "Name" : "EmailVerified", "Type" : "boolean", "Json" : "ev", "NotNull" : false },
                 {  "_comment": "User's creation date", "Name" : "Date",  "Type" : "date", "Json" : "d", "NotNull" : false },
@@ -94,7 +95,12 @@
                         { "Name": "FirstName", "Label": "FirstName", "Type": "string", "Width": "100px" },
                         { "Name": "Date", "Label": "Date", "Type": "date", "Width": "150px" },
                         { "Name": "Group", "Label": "Group", "Type": "string", "Width": "100px" },
-                        { "Name": "Email", "Label": "Email adress", "Style": "", "Type": "email", "Width": "200px" } 
+                        { "Name": "Email", "Label": "Email adress", "Style": "", "Type": "email", "Width": "200px" }
+                    ]
+                },
+                { "_commment":"Image management group", "Name": "Image", "Style": "SkGroup", "Label": "Image",
+                    "Fields": [
+                        { "Name": "Image", "Label": "Image", "Type": "image", "Width": "240px", "SizeImage": { "width": "160px", "height": "160px" } }
                     ]
                 },
                 { "_comment": "Password management group", "Name": "PassWord", "Style": "SkGroup", "Label": "password",
@@ -137,7 +143,8 @@
                         { "Name": "FirstName", "Label": "FirstName", "Type": "string", "Width": "100px" },
                         { "Name": "Date", "Label": "Date", "Type": "date", "Width": "150px" },
                         { "Name": "Group", "Label": "Group", "Type": "string", "Width": "100px" },
-                        { "Name": "Email", "Label": "Email adress", "Type": "email", "Width": "200px" } 
+                        { "Name": "Email", "Label": "Email adress", "Type": "email", "Width": "200px" },
+                        { "Name": "Image", "Label": "Image", "Type": "image", "Width": "80px", "SizeImage": { "width": "48px", "height": "28px" } }
                     ]
                 }
             ]

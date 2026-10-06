@@ -33,6 +33,12 @@ export class SkPassWord extends SkComponent {
         this.m_Ref.current.setValue(value);
     }
 
+    setEnabled(enabled) {
+        if (this.m_Ref.current && typeof this.m_Ref.current.setEnabled === 'function') {
+            this.m_Ref.current.setEnabled(enabled);
+        }
+    }
+
     render() {
         const { showPassword } = this.state;
         const { value, onChange, name, placeholder } = this.props;

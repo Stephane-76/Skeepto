@@ -54,7 +54,11 @@ export class SkInput extends SkComponent {
     }
     
     setValue(value) {
-        this.m_Ref.current.value = value;
+        const next = value == null ? '' : String(value);
+        this.setState({ value: next });
+        if (this.m_Ref.current) {
+            this.m_Ref.current.value = next;
+        }
     }
     
     id() {  
