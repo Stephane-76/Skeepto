@@ -87,10 +87,93 @@ if (STATIC_ROOT) {
   fastify.log.warn('STATIC_ROOT not set and default build not found; static files will not be served');
 }
 
-// Serve C++ source files for WASM debugging (Chrome DevTools)
-// These paths are referenced in the .wasm.map source map
-const SKER_ROOT = path.resolve(__dirname, '../../../sker');
-if (fs.existsSync(SKER_ROOT)) {
+// Marketing page in skeepto/promo (filled by the deploy from skeepto-web).
+// Served at / so www.skeema.fr opens it. The app stays on /login, /virtualdisk, /spreadsheet.
+function resolveLandingRoot() {
+  const candidates = [];
+  if (process.env.LANDING_ROOT) {
+    candidates.push(path.resolve(process.env.LANDING_ROOT));
+  }
+  candidates.push(path.resolve(__dirname, '../../promo'));
+  for (const dir of candidates) {
+    if (fs.existsSync(path.join(dir, 'index.html'))) return dir;
+  }
+  return undefined;
+}
+
+const LANDING_ROOT = resolveLandingRoot();
+
+const LANDING_TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
+};
+
+function sendLandingFile(reply, relativePath) {
+  const root = path.resolve(LANDING_ROOT);
+  const file = path.resolve(root, relativePath);
+  const rel = path.relative(root, file);
+  if (rel.startsWith('..') || path.isAbsolute(rel)) {
+    return reply.code(404).send({ message: 'Not Found' });
+  }
+  if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
+    return reply.code(404).send({ message: 'Not Found' });
+  }
+  const type = LANDING_TYPES[path.extname(file).toLowerCase()];
+  if (type) reply.type(type);
+  return reply.send(fs.createReadStream(file));
+}
+
+if (LANDING_ROOT) {
+  fastify.get('/styles.css', (request, reply) => sendLandingFile(reply, 'styles.css'));
+  fastify.get('/site.js', (request, reply) => sendLandingFile(reply, 'site.js'));
+  fastify.get('/robots.txt', (request, reply) => sendLandingFile(reply, 'robots.txt'));
+  fastify.get('/sitemap.xml', (request, reply) => sendLandingFile(reply, 'sitemap.xml'));
+  fastify.get('/googlef893b7cf9728b457.html', (request, reply) => sendLandingFile(reply, 'googlef893b7cf9728b457.html'));
+  fastify.get('/assets/*', (request, reply) => {
+    const name = request.params['*'] || '';
+    return sendLandingFile(reply, path.join('assets', name));
+  });
+  fastify.log.info(`Landing page at / from ${LANDING_ROOT}`);
+} else {
+  fastify.log.warn('Landing page not found (skeepto/promo); / stays the application');
+}
+
+const PROMO_ROOT = path.resolve(__dirname, '../../promo');
+if (fs.existsSync(PROMO_ROOT)) {
+  fastify.get('/promo', (request, reply) => reply.redirect('/promo/'));
+  fastify.register(fastifyStatic, {
+    root: PROMO_ROOT,
+    prefix: '/promo/',
+    decorateReply: false,
+  });
+  fastify.log.info(`Serving promo site from ${PROMO_ROOT} at /promo/`);
+}
+
+// Serve C++ source files for WASM debugging (Chrome DevTools).
+// These paths are referenced in the .wasm.map source map.
+// Prefer the sibling skeepto-engine tree (/opt/skeepto-engine next to /opt/skeepto).
+function resolveEngineRoot() {
+  const candidates = [];
+  if (process.env.ENGINE_ROOT) {
+    candidates.push(path.resolve(process.env.ENGINE_ROOT));
+  }
+  candidates.push(path.resolve(__dirname, '../../../skeepto-engine'));
+  candidates.push(path.resolve(__dirname, '../../../sker'));
+  for (const dir of candidates) {
+    if (fs.existsSync(dir)) return dir;
+  }
+  return undefined;
+}
+
+const SKER_ROOT = resolveEngineRoot();
+if (SKER_ROOT) {
   // Serve Libraries/* source files
   fastify.register(fastifyStatic, {
     root: path.join(SKER_ROOT, 'Libraries'),
@@ -107,7 +190,7 @@ if (fs.existsSync(SKER_ROOT)) {
   
   fastify.log.info(`Serving C++ source files from ${SKER_ROOT} for WASM debugging`);
 } else {
-  fastify.log.warn(`Sker root not found at ${SKER_ROOT}; C++ source files will not be available for debugging`);
+  fastify.log.warn('Engine root not found (skeepto-engine or sker); C++ source files will not be available for debugging');
 }
 
 // Initialize SkChat after server creation
@@ -393,8 +476,11 @@ fastify.get('/index', (request, reply) => {
     reply.sendFile('index.html' )
 })
 
-// Serve root path to index.html when static serving is enabled
+// Serve root path: promo page when skeepto/promo is available, otherwise the app.
 fastify.get('/', (request, reply) => {
+  if (LANDING_ROOT) {
+    return sendLandingFile(reply, 'index.html');
+  }
   try {
     return reply.sendFile('index.html');
   } catch {
@@ -439,6 +525,7 @@ if (STATIC_ROOT) {
         return true;
       case 'libraries':
       case 'skreactspreadsheet':
+      case 'promo':
         return true;
       case 'spreadsheet':
         // React route is GET /spreadsheet; API paths are /spreadsheet/...

@@ -1,0 +1,77 @@
+Idée de projet : NO-CODE
+
+Ne rien faire pour l'instant.
+
+
+Une application se dessine dans le tableur, puis se lit sans le tableur.
+
+Le tableur est l'éditeur. Un petit programme à part est le visualiseur :
+il affiche la feuille, et seulement les zones de saisie et les boutons.
+Pas de barre de formule, pas de grille, pas d'onglets.
+Il reprend les positions déjà posées sur la feuille (cellules et objets flottants).
+Il n'invente pas une deuxième mise en page.
+
+On commence par une form. L'enchaînement des écrans vient après.
+
+
+Form de saisie
+
+Une form est une feuille.
+
+Les zones et les boutons sont des SkCellClass déjà là
+(TextBox, Button, Check, Switch, ComboBox, Calendar, Container).
+Une zone hors de la grille est un objet flottant : son nom et ses propriétés
+vivent sur sa cellule hôte, comme aujourd'hui.
+
+Chaque zone porte un nom, via une cellule nommée.
+Ce nom est le nom du champ dans le fichier.
+Formules, validation et enregistrement parlent ainsi la même langue.
+
+Chaque zone a une propriété enabled.
+Elle peut être une formule, par exemple =ET(Client.Email<>"";Client.Montant>0).
+La zone ou le bouton est alors actif ou grisé selon le calcul.
+Enabled vaut pour toutes les zones, pas seulement les boutons.
+
+Un bouton a un rôle. Trois rôles au début :
+- valider : écrire les cellules nommées ;
+- naviguer : ouvrir une autre feuille comme écran ;
+- annuler.
+
+Les paramètres de la form (titre, feuille, rôle de validation)
+sont des cellules nommées, sur la feuille ou dans un coin masqué.
+Pas une SkCellClass de plus : une classe sert à dessiner un widget.
+
+
+Enchaînement des écrans
+
+Les menus et le passage d'un écran à l'autre sont une autre feuille :
+Menu, Écran, Bouton, Cible.
+Le visualiseur la lit. Le bouton de rôle « naviguer » ouvre la feuille cible.
+Pas d'éditeur de graphe séparé.
+
+
+Difficulté
+
+Le premier travail est le visualiseur : un écran qui ne montre que la form,
+branché sur une feuille déjà dessinée dans le tableur.
+Le lien ensuite est le rôle du bouton : que devient la saisie,
+et quel écran s'ouvre.
+
+
+Enquête
+
+Une enquête part d'un classeur modèle.
+On crée un répertoire, par exemple Enquete1.
+Pour chaque utilisateur d'un groupe, on copie le modèle dans ce répertoire.
+Le fichier s'appelle comme l'e-mail : ada@exemple.fr.sker.
+Le modèle est figé à cette copie. Un changement des questions ensuite
+ne se propage pas aux fichiers déjà générés.
+
+Chaque personne reçoit un e-mail avec le lien vers son fichier,
+ouvert en mode saisie. Le lien n'ouvre que ce classeur.
+Connaître l'e-mail ne suffit pas pour lire la réponse d'un autre.
+
+Le responsable lit un classeur de résultat, régénéré à la demande.
+Une ligne par fichier, une colonne par cellule nommée.
+Une ligne reste vide tant que la personne n'a pas validé.
+Le répertoire montre ainsi qui n'a pas répondu.
