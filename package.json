@@ -1,6 +1,6 @@
 {
   "name": "skeepto",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "license": "MIT",
   "private": true,
   "description": "Professional spreadsheet: C++20 engine compiled to WebAssembly, React UI, same binary in the browser and Node.js. Self-hosted, Excel import, Electron desktop.",
