@@ -290,6 +290,9 @@ class SkSpFloatingLayer extends SkComponent {
     if (event.button !== 0 || this.m_SpInterface == null) {
       return;
     }
+    if (this.m_SpInterface.isForm?.()) {
+      return;
+    }
     event.stopPropagation();
     event.preventDefault();
     this.m_SpInterface.selectFloatingObject(sEntry.n);
@@ -314,6 +317,9 @@ class SkSpFloatingLayer extends SkComponent {
 
   handleResizeMouseDown = (sEntry, event) => {
     if (event.button !== 0 || this.m_SpInterface == null) {
+      return;
+    }
+    if (this.m_SpInterface.isForm?.()) {
       return;
     }
     event.stopPropagation();
@@ -375,7 +381,7 @@ class SkSpFloatingLayer extends SkComponent {
         <div className="SkSpFloatingObject-body">
           {wRender(wCell, this.m_SpInterface)}
         </div>
-        {wSelected ? (
+        {wSelected && !this.m_SpInterface?.isForm?.() ? (
           <>
             <div className="SkSpFloatingObject-frame" aria-hidden="true" />
             <div

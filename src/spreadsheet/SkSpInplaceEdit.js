@@ -13,6 +13,7 @@ import {
 } from "../utility/jsonViewCellText.js";
 import { contrastInplaceEditColors } from "../utility/skCssColorContrast.js";
 import SkCellClass from "./CellClass/SkCellClass.js";
+import { moveFormFocus } from "./SkFormInput.js";
 import {
   loadFormulaFunctionCatalog,
   getFormulaFunctionCatalogSync,
@@ -1471,6 +1472,30 @@ class SkSpInplaceEdit extends SkComponent {
     return(false);
   }
 
+  // Form mode: Tab stays on the sheet widgets, same loop as the other classes.
+  async leaveFormSheetOnTab(event) {
+    if (event.key !== "Tab" || this.m_Static) {
+      return false;
+    }
+    const sp = this.m_SpInterface;
+    if (!sp?.isForm?.()) {
+      return false;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    const wBack = event.shiftKey;
+    let wOk = false;
+    try {
+      wOk = await sp.validEdit();
+    } catch (error) {
+      console.error(error);
+    }
+    if (wOk) {
+      await moveFormFocus(sp, wBack ? -1 : 1);
+    }
+    return true;
+  }
+
   async keyDown(event) {
     if (this.m_Unmount) {
       event.stopPropagation()
@@ -1483,6 +1508,9 @@ class SkSpInplaceEdit extends SkComponent {
     //console.log( "KeyDown InplaceEdit :" + event.key + " " + event.srcElement.id);
 
     if (this.handleFunctionSuggestKeyDown(event)) {
+      return;
+    }
+    if (await this.leaveFormSheetOnTab(event)) {
       return;
     }
     

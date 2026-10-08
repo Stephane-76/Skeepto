@@ -7,9 +7,21 @@ import SkComponent from "../component/SkComponent";
 import SkButton from "../component/SkButton";
 import SkComboBox from "../component/SkComboBox";
 import SkSpInplaceEdit from "./SkSpInplaceEdit";
-import SkCellClass, { GetClass } from "./CellClass/SkCellClass";
+import SkCellClass, { GetClass, usesCalculableModelValue } from "./CellClass/SkCellClass";
+import { applyNumberMode, NUMBER_CLASS_NAME, readStoredNumberMode } from "./CellClass/SkCellClassNumber.js";
 import { hasFloatingObjectAttributes } from "./SkSpFloatingObject.js";
 import { tPoint } from "./SkSpSelect";
+
+// CalculableValue is the cell scalar. Its model property is not an attribute field.
+function visibleAttributeSchema(sClassName, sItems) {
+  if (!Array.isArray(sItems)) {
+    return [];
+  }
+  if (!usesCalculableModelValue(sClassName)) {
+    return sItems;
+  }
+  return sItems.filter((item) => item?.n !== "value");
+}
 
 /** Display hint for attribute value input (value, formula, or grid range). */
 function attributeTypeHint(sTypeCode) {
@@ -41,6 +53,23 @@ function attributeValueHint(sTypeCode, sKind = "") {
     return `(${wBase})`;
   }
   return `(${wBase}|formula)`;
+}
+
+/** Saved enum token on the attribute. Skips live formula decode. */
+function literalEnumAttributeValue(sAttr, sKind) {
+  if (!SkCellClass.isEnumPropertyKind(sKind) || sAttr == null) {
+    return null;
+  }
+  const wChoices = SkCellClass.enumChoicesFromKind(sKind);
+  const wFromValue = sAttr.v != null ? String(sAttr.v).trim() : "";
+  if (wChoices.includes(wFromValue)) {
+    return wFromValue;
+  }
+  const wFormula = sAttr.f != null ? String(sAttr.f).trim().replace(/^=/, "").trim() : "";
+  if (wChoices.includes(wFormula)) {
+    return wFormula;
+  }
+  return null;
 }
 
 /** Model default from JsonCellClass property schema (`d.v`). */
@@ -97,23 +126,6 @@ class SkSpClassAttribute extends SkComponent {
       this.m_EnumComboRefs[sPropertyName] = React.createRef();
     }
     return this.m_EnumComboRefs[sPropertyName];
-  }
-
-  resolveEnumPropertyValue(sPropertyName, sFallbackValue = "") {
-    const wComboRef = this.m_EnumComboRefs[sPropertyName]?.current;
-    if (wComboRef != null && typeof wComboRef.getValue === "function") {
-      const wFromCombo = wComboRef.getValue();
-      if (wFromCombo != null && String(wFromCombo).trim() !== "") {
-        return String(wFromCombo);
-      }
-    }
-    if (
-      this.m_EnumDraftValues != null &&
-      Object.prototype.hasOwnProperty.call(this.m_EnumDraftValues, sPropertyName)
-    ) {
-      return String(this.m_EnumDraftValues[sPropertyName]);
-    }
-    return sFallbackValue != null ? String(sFallbackValue) : "";
   }
 
   isFloatingObjectAttributeMode() {
@@ -391,7 +403,7 @@ class SkSpClassAttribute extends SkComponent {
       this.m_Classe = JSON.parse(wJson);
       const wRawAttrs = wHostCv?.c?.a;
       const wArrayInstance = Array.isArray(wRawAttrs) ? wRawAttrs : [];
-      const wArray = Array.isArray(this.m_Classe.p) ? this.m_Classe.p : [];
+      const wArray = visibleAttributeSchema(this.m_ClassName, this.m_Classe.p);
       const wTargetSheet =
         (typeof sEntry.t === "string" && sEntry.t.trim()) || "";
       const wHostSheet =
@@ -412,7 +424,10 @@ class SkSpClassAttribute extends SkComponent {
           v: "",
         };
         const wInst = wArrayInstance.find((attr) => attr?.n === item.n);
-        if (wInst) {
+        const wEnumLiteral = literalEnumAttributeValue(wInst, wObj.k);
+        if (wEnumLiteral != null) {
+          wObj.v = wEnumLiteral;
+        } else if (wInst) {
           if (SkCellClass.isRangeProperty(item)) {
             wObj.v = await SkCellClass.resolveLiveRangeAttributeDisplayValue(
               wHostRef,
@@ -433,6 +448,23 @@ class SkSpClassAttribute extends SkComponent {
         }
         if (wObj.v == null || String(wObj.v).trim() === "") {
           wObj.v = readModelPropertyDefault(item);
+        }
+        if (wObj.n === "mode" && this.m_ClassName === NUMBER_CLASS_NAME) {
+          const wModeCol = Number(sEntry.hc);
+          const wModeRow = Number(sEntry.hr);
+          const wModeRef = Number.isFinite(wModeCol) && wModeCol >= 1
+            && Number.isFinite(wModeRow) && wModeRow >= 1
+            && typeof window !== "undefined" && window.SkUISpreadSheet
+            ? window.SkUISpreadSheet.base10toAlphaSync(wModeCol) + wModeRow
+            : "";
+          const wEngineMode = readStoredNumberMode(
+            window.SkUISpreadSheet,
+            wModeRef,
+            wHostSheet,
+          );
+          if (wEngineMode) {
+            wObj.v = wEngineMode;
+          }
         }
         if (SkCellClass.isEnumPropertyKind(wObj.k)) {
           wObj.v = SkCellClass.coerceEnumAttributeValue(wObj.v, wObj.k);
@@ -569,7 +601,7 @@ class SkSpClassAttribute extends SkComponent {
       }
       this.m_Classe = JSON.parse(wJson);
       const wArrayInstance = wCell.c_v.c.a || [];
-      const wArray = Array.isArray(this.m_Classe.p) ? this.m_Classe.p : [];
+      const wArray = visibleAttributeSchema(this.m_ClassName, this.m_Classe.p);
       const wTargetSheet = wSp.m_UIView?.sheet || "";
       const wHostRef =
         typeof window !== "undefined" && window.SkUISpreadSheet
@@ -586,7 +618,10 @@ class SkSpClassAttribute extends SkComponent {
           v: "",
         };
         const wInst = wArrayInstance.find((attr) => attr?.n === item.n);
-        if (wInst) {
+        const wEnumLiteral = literalEnumAttributeValue(wInst, wObj.k);
+        if (wEnumLiteral != null) {
+          wObj.v = wEnumLiteral;
+        } else if (wInst) {
           if (SkCellClass.isRangeProperty(item)) {
             wObj.v = await SkCellClass.resolveLiveRangeAttributeDisplayValue(
               wHostRef,
@@ -607,6 +642,16 @@ class SkSpClassAttribute extends SkComponent {
         }
         if (wObj.v == null || String(wObj.v).trim() === "") {
           wObj.v = readModelPropertyDefault(item);
+        }
+        if (wObj.n === "mode" && this.m_ClassName === NUMBER_CLASS_NAME) {
+          const wEngineMode = readStoredNumberMode(
+            window.SkUISpreadSheet,
+            wHostRef,
+            wTargetSheet,
+          );
+          if (wEngineMode) {
+            wObj.v = wEngineMode;
+          }
         }
         if (SkCellClass.isEnumPropertyKind(wObj.k)) {
           wObj.v = SkCellClass.coerceEnumAttributeValue(wObj.v, wObj.k);
@@ -746,11 +791,15 @@ class SkSpClassAttribute extends SkComponent {
     this.m_SpInterface.pushInplaceEdit(wEdit);
     wEdit.setDisabled(false);
     this.onPropertyEditStart(wEdit);
-    await this.m_SpInterface.beginEdit();
-
+    // Focus before beginEdit. A form widget already in edit would otherwise
+    // see this field as unfocused and cancel the property edit.
     const wEl = wEdit.m_Ref?.current;
     if (wEl) {
+      wEl.readOnly = false;
       wEl.focus();
+    }
+    await this.m_SpInterface.beginEdit();
+    if (wEl) {
       const wLen = wEl.value != null ? wEl.value.length : 0;
       wEl.setSelectionRange(wLen, wLen);
     }
@@ -870,9 +919,15 @@ class SkSpClassAttribute extends SkComponent {
     if (sp == null || sProp == null) {
       return false;
     }
-    const wRaw = this.resolveEnumPropertyValue(sProp.n, sProp.v);
-    const wValue = SkCellClass.coerceEnumAttributeValue(wRaw, sProp.k);
-    const wWire = SkCellClass.normalizeScalarAttributeInput(wValue, sProp.k);
+    // The combo's getValue() is still the previous token: setState from the
+    // click has not flushed. The value on sProp is the choice just made.
+    const wValue = SkCellClass.coerceEnumAttributeValue(
+      sProp.v != null ? String(sProp.v) : "",
+      sProp.k,
+    );
+    // Enum tokens are literals. A bare "int" must not become the formula =int.
+    const wWire = wValue;
+    const wSheet = sp.m_UIView?.sheet || "";
     if (this.isFloatingObjectAttributeMode()) {
       const wObjectName = this.resolveFloatingObjectNameForCommit();
       if (!wObjectName) {
@@ -881,14 +936,24 @@ class SkSpClassAttribute extends SkComponent {
       if (sp.getUseEdit?.()) {
         await sp.endEdit();
       }
-      return sp.commitAllFloatingObjectAttributes(wObjectName, [{
+      const wOk = await sp.commitAllFloatingObjectAttributes(wObjectName, [{
         n: sProp.n,
         v: wWire,
         k: sProp.k != null ? String(sProp.k) : "",
       }]);
+      if (wOk && this.m_ClassName === NUMBER_CLASS_NAME && sProp.n === "mode") {
+        this.applyNumberModeOnFloatingHost(wObjectName, wWire);
+      }
+      return wOk;
     }
 
+    const wShownRow = this.m_AnchorRow;
+    const wShownCol = this.m_AnchorCol;
     this.ensureClassAnchorCell();
+    if (wShownRow != null && wShownCol != null) {
+      this.m_AnchorRow = wShownRow;
+      this.m_AnchorCol = wShownCol;
+    }
     if (typeof sp.syncAttributeEditAnchorCursor === "function") {
       sp.syncAttributeEditAnchorCursor();
     }
@@ -897,7 +962,25 @@ class SkSpClassAttribute extends SkComponent {
       return false;
     }
     sp.setExtraUndo();
-    return window.SkUISpreadSheet.valueAttribute(wCellRef, sProp.n, wWire);
+    if (this.m_ClassName === NUMBER_CLASS_NAME && sProp.n === "mode") {
+      return applyNumberMode(window.SkUISpreadSheet, wCellRef, wWire, wSheet);
+    }
+    return window.SkUISpreadSheet.valueAttribute(wCellRef, sProp.n, wWire, wSheet);
+  }
+
+  applyNumberModeOnFloatingHost(sObjectName, sMode) {
+    const sp = this.m_SpInterface;
+    const wEntry = typeof sp?.findFloatingObjectEntry === "function"
+      ? sp.findFloatingObjectEntry(sObjectName)
+      : null;
+    const wRow = Number(wEntry?.hr);
+    const wCol = Number(wEntry?.hc);
+    if (!Number.isFinite(wRow) || wRow < 1 || !Number.isFinite(wCol) || wCol < 1) {
+      return;
+    }
+    const wHostSheet = (typeof wEntry.hs === "string" && wEntry.hs.trim()) || "_$$A";
+    const wHostRef = window.SkUISpreadSheet.base10toAlphaSync(wCol) + wRow;
+    applyNumberMode(window.SkUISpreadSheet, wHostRef, sMode, wHostSheet);
   }
 
   collectPropertyValuesForCommit() {
@@ -914,10 +997,7 @@ class SkSpClassAttribute extends SkComponent {
           wText = SkCellClass.normalizeJsonOptionsAttributeInput(wText);
         }
       } else {
-        wText = SkCellClass.coerceEnumAttributeValue(
-          this.resolveEnumPropertyValue(wItem.n, wText),
-          wItem.k,
-        );
+        wText = SkCellClass.coerceEnumAttributeValue(wText, wItem.k);
       }
       return {
         n: wItem.n,
@@ -1000,6 +1080,21 @@ class SkSpClassAttribute extends SkComponent {
         );
       }
       if (wOk) {
+        if (this.m_ClassName === NUMBER_CLASS_NAME) {
+          const wModeItem = wValues.find((wItem) => wItem && wItem.n === "mode");
+          if (wModeItem) {
+            if (wFloatingName) {
+              this.applyNumberModeOnFloatingHost(wFloatingName, wModeItem.v);
+            } else if (wCellRef) {
+              applyNumberMode(
+                window.SkUISpreadSheet,
+                wCellRef,
+                wModeItem.v,
+                this.m_SpInterface.m_UIView?.sheet || "",
+              );
+            }
+          }
+        }
         this.lockAllPropertyFields();
         this.endEdit();
         await this.reloadAttributePropertiesFromAnchor(true);
@@ -1076,10 +1171,7 @@ class SkSpClassAttribute extends SkComponent {
                   }))
                 : [];
               const wEnumValue = wIsEnum
-                ? SkCellClass.coerceEnumAttributeValue(
-                    this.resolveEnumPropertyValue(wItem.n, wItem.v),
-                    wItem.k,
-                  )
+                ? SkCellClass.coerceEnumAttributeValue(wItem.v, wItem.k)
                 : wItem.v;
               return (
                 <div

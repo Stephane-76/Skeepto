@@ -281,6 +281,7 @@ class SkCellClassButton extends SkCellClass  {
             ...wOverlay.outerStyle,
             display: 'inline-block',
             zIndex : wZIndex,
+            pointerEvents: 'auto',
             padding: wPadding,
             alignItems: wVerticalTextAlign,
             justifyContent : wTextAlign,
@@ -294,6 +295,9 @@ class SkCellClassButton extends SkCellClass  {
         return (
             <div
                 style={wCellStyleParent}
+                className={this.cellClassShellClassName()}
+                {...this.cellClassDomAttrs()}
+                data-sk-form-kind="SkCellClassButton"
                 onMouseDownCapture={this.onCellClassMouseDownCapture}
             >
                 <div style={wCellStyleInner}>

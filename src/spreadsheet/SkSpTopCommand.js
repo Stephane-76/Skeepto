@@ -118,6 +118,7 @@ class SkSpTopCommand extends SkComponent {
     this.textBottom = this.textBottom.bind(this);
     this.textVCenter = this.textVCenter.bind(this);
     this.textWrap = this.textWrap.bind(this);
+    this.toggleForm = this.toggleForm.bind(this);
 
     this.fontBold = this.fontBold.bind(this);
     this.fontItalic = this.fontItalic.bind(this);
@@ -762,6 +763,10 @@ class SkSpTopCommand extends SkComponent {
       });
   }
 
+  toggleForm() {
+    this.spInterface.setIsForm(!this.spInterface.isForm());
+  }
+
   render() {
     return (
       <div ref={this.m_Ref} className="SkSpTopCommand">
@@ -985,6 +990,19 @@ class SkSpTopCommand extends SkComponent {
           <div title="Group / indent columns" onClick={this.treeIndentCol}><SvgIndentCol className="SkSvg"/></div>
           <div title="Ungroup / outdent columns" onClick={this.treeOutdentCol}><SvgDeindentCol className="SkSvg"/></div>
           <div title="Toggle tree view" onClick={this.switchTreeView}><SkPopUpCde className="SkSvg"/></div>
+        </div>
+
+        <div className="SkSeparator_Svg"/>
+
+        {/* Test switch for form input mode (hides row and column headers). */}
+        <div className="SkSpTopTool">
+          <div
+            className={this.spInterface.isForm() ? "SkSpFormToggle active" : "SkSpFormToggle"}
+            title="Form input mode"
+            onClick={this.toggleForm}
+          >
+            Form
+          </div>
         </div>
 
         {/* Desktop (Electron) has no top bar, so the light/dark theme toggle

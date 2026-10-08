@@ -37,6 +37,7 @@ class SkSpControlPanel extends SkComponent {
     };
     this.valid = this.valid.bind(this);
     this.edit = this.edit.bind(this);
+    this.toggleForm = this.toggleForm.bind(this);
     this.goToVirtualDisk = this.goToVirtualDisk.bind(this);
     
     this.spInterface.m_SkSpControlPanel = this;
@@ -65,6 +66,10 @@ class SkSpControlPanel extends SkComponent {
   toggleRibbon = () => {
     setRibbonVisible(!this.state.ribbonVisible);
   };
+
+  toggleForm() {
+    this.spInterface.setIsForm(!this.spInterface.isForm());
+  }
 
   setEditError(message) {
     const text = typeof message === "string" ? message : "";
@@ -194,6 +199,14 @@ class SkSpControlPanel extends SkComponent {
         <div className={`SkSpControlPanel${readOnly ? ' SkSpControlPanel--readOnly' : ''}`}>
         <SkReadOnlyBanner className="sk-readonly-banner--in-control-panel" />
         <SvgEdit className="SkSvg" onClick={this.edit} style={svgStyle}/>
+        <button
+          type="button"
+          className={this.spInterface.isForm() ? "SkSpFormToggle active" : "SkSpFormToggle"}
+          title="Form input mode"
+          onClick={this.toggleForm}
+        >
+          Form
+        </button>
         <div id="ref" className="SkSpControlPanel-ref">{refValue}</div>
         <div
           className="SkSpControlPanel-formula"

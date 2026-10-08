@@ -6,6 +6,7 @@ import React from "react";
 import { GetTextAlign, GetVerticalTextAlign, GetFontStyle, GetFontWeight, buildCanvasFontFamily } from '../../utility/SkUtility.js'
 import { fontSizePtFromCell, fontSizeCssPxFromPt } from '../../utility/SkFontPool.js'
 import SkCellClass from "./SkCellClass.js"
+import { moveFormFocus } from "../SkFormInput.js";
 import { getSpreadsheetLang, normalizeSpreadsheetLang } from '../SkeeptoLang.js'
 
 // Locale settings aligned with SkRoot::tLocale (SkLocale.cpp).
@@ -201,9 +202,13 @@ class SkCellClassCalendar extends SkCellClass {
             currentYear: new Date().getFullYear(),
             locale: resolveCalendarLocale(props.locale || getSpreadsheetLang()),
             inputValue: "",
-            lastValidDate: null
+            lastValidDate: null,
+            keyboardEdit: false
         };
         this.m_EditSessionActive = false;
+        this.m_SuppressBlur = false;
+        this.m_PlaceCaretAtEnd = false;
+        this.m_OverlayLowered = false;
         this.inputRef = null;
         this.m_DateWriteQueue = Promise.resolve();
     }
@@ -321,6 +326,7 @@ class SkCellClassCalendar extends SkCellClass {
         if (this.m_SpInterface) {
             this.m_SpInterface.m_SelfEditFlush = () => this.validateDate();
         }
+        this.registerSelfEditTarget();
         this.handleLangChange = (event) => {
             const lang = event?.detail?.lang || getSpreadsheetLang();
             this.applyLocale(lang);
@@ -352,6 +358,8 @@ class SkCellClassCalendar extends SkCellClass {
     }
 
     componentWillUnmount() {
+        this.unregisterSelfEditTarget();
+        this.releaseEditOverlay();
         document.removeEventListener('mousedown', this.handleClickOutside, true);
         if (this.m_SpInterface && this.m_SpInterface.m_SelfEditFlush != null) {
             this.m_SpInterface.m_SelfEditFlush = null;
@@ -379,7 +387,7 @@ class SkCellClassCalendar extends SkCellClass {
             return;
         }
         if (!this.isCursorOnThisCell()) {
-            await this.focusCursorOnCell(null);
+            await this.focusCursorOnCell(null, { drag: false });
         }
         if (typeof sp.getUseEdit === "function" && !sp.getUseEdit()) {
             await sp.beginEdit();
@@ -549,6 +557,9 @@ class SkCellClassCalendar extends SkCellClass {
     }
 
     handleBlur = () => {
+        if (this.m_SuppressBlur) {
+            return;
+        }
         this.validateDate().catch((error) => {
             console.error("Error validating calendar date on blur:", error);
         });
@@ -561,15 +572,21 @@ class SkCellClassCalendar extends SkCellClass {
         }
     }
 
-    exitEditSession = async ({ cancel = false } = {}) => {
+    exitEditSession = async ({ cancel = false, keepFormFocus = false } = {}) => {
+        this.m_SuppressBlur = true;
         this.m_EditSessionActive = false;
+        this.releaseEditOverlay();
         this.closeCalendar();
         if (cancel) {
             this.setState({
+                keyboardEdit: false,
                 inputValue: this.state.selectedDate || ""
             });
         } else {
             await this.validateDate();
+            if (this.state.keyboardEdit) {
+                this.setState({ keyboardEdit: false });
+            }
         }
         this.releaseInplaceEditorFocus();
         const sp = this.m_SpInterface;
@@ -580,10 +597,52 @@ class SkCellClassCalendar extends SkCellClass {
         ) {
             await sp.endEdit();
         }
+        // reloadView replaces the shell. Put the form ring back on this cell,
+        // unless the caller is about to move it to the next class.
+        if (sp?.isForm?.() && !keepFormFocus) {
+            await this.reassertCursorAfterWidgetEdit();
+        }
         this.restoreGridKeyboardFocus();
+        this.m_SuppressBlur = false;
+    }
+
+    // Leave the date field, then move. endEdit snaps the cursor back here,
+    // so the move has to happen after that or the ring vanishes.
+    leaveEditForNavigation = (e) => {
+        const sp = this.m_SpInterface;
+        if (!sp || e.altKey || e.ctrlKey || e.metaKey) {
+            return false;
+        }
+        const wForm = sp.isForm?.() === true;
+        const wArrow = e.key === "ArrowLeft" || e.key === "ArrowRight"
+            || e.key === "ArrowUp" || e.key === "ArrowDown";
+        const wTab = e.key === "Tab";
+        if (wForm) {
+            if (!wTab && !wArrow) {
+                return false;
+            }
+        } else if (!wArrow) {
+            return false;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        const wBack = e.key === "ArrowLeft" || e.key === "ArrowUp" || (wTab && e.shiftKey);
+        this.exitEditSession({ cancel: false, keepFormFocus: true }).then(async () => {
+            if (wForm) {
+                await moveFormFocus(sp, wBack ? -1 : 1);
+            } else if (typeof sp.cursorMoveKey === "function") {
+                await sp.cursorMoveKey(e);
+            }
+        }).catch((error) => {
+            console.error("Error leaving calendar for navigation:", error);
+        });
+        return true;
     }
 
     handleKeyDown = (e) => {
+        if (this.leaveEditForNavigation(e)) {
+            return;
+        }
         switch (e.key) {
             case 'Enter':
                 e.preventDefault();
@@ -641,11 +700,19 @@ class SkCellClassCalendar extends SkCellClass {
     }
 
     handleFocus = (e) => {
-        if (!this.shouldActivateSelfEditingWidget()) {
+        const wEditing = this.state.keyboardEdit
+            || this.m_EditSessionActive
+            || this.shouldActivateSelfEditingWidget();
+        if (!wEditing) {
             e.target.blur();
             return;
         }
-        e.target.select(); // Select all text on focus for fast typing
+        // A typed digit places the caret after that character. Selecting all
+        // would replace it with the next key.
+        if (this.m_PlaceCaretAtEnd) {
+            return;
+        }
+        e.target.select();
     }
 
     formatDate = (date) => {
@@ -661,8 +728,117 @@ class SkCellClassCalendar extends SkCellClass {
                date.getFullYear() === this.state.lastValidDate.getFullYear();
     }
 
+    selfEditCellKey() {
+        const wCell = this.props.Cell || this.m_Cell;
+        return `${Number(wCell?.c_r)}:${Number(wCell?.c_c)}`;
+    }
+
+    registerSelfEditTarget() {
+        const sp = this.m_SpInterface;
+        if (!sp) {
+            return;
+        }
+        if (!sp.m_SelfEditTargets) {
+            sp.m_SelfEditTargets = new Map();
+        }
+        const wKey = this.selfEditCellKey();
+        if (this.m_SelfEditKey && this.m_SelfEditKey !== wKey) {
+            const wPrev = sp.m_SelfEditTargets.get(this.m_SelfEditKey);
+            if (wPrev === this) {
+                sp.m_SelfEditTargets.delete(this.m_SelfEditKey);
+            }
+        }
+        this.m_SelfEditKey = wKey;
+        sp.m_SelfEditTargets.set(wKey, this);
+    }
+
+    unregisterSelfEditTarget() {
+        const sp = this.m_SpInterface;
+        if (!sp?.m_SelfEditTargets || !this.m_SelfEditKey) {
+            return;
+        }
+        if (sp.m_SelfEditTargets.get(this.m_SelfEditKey) === this) {
+            sp.m_SelfEditTargets.delete(this.m_SelfEditKey);
+        }
+        this.m_SelfEditKey = "";
+    }
+
+    bindShell = (el) => {
+        this.m_Shell = el;
+        if (el) {
+            el.__skWidget = this;
+            this.syncFormFocusShell(el);
+        }
+    };
+
+    // The cursor canvas sits above the widget layer. Drop it while the date
+    // field is focused so the caret and typed text stay visible.
+    lowerEditOverlay() {
+        if (this.m_OverlayLowered || typeof document === "undefined") {
+            return;
+        }
+        const wOverlay = document.getElementById("GridCanvasOverlay");
+        if (!wOverlay) {
+            return;
+        }
+        this.m_OverlayZIndex = wOverlay.style.zIndex;
+        wOverlay.style.zIndex = "1";
+        this.m_OverlayLowered = true;
+    }
+
+    releaseEditOverlay() {
+        if (!this.m_OverlayLowered || typeof document === "undefined") {
+            return;
+        }
+        const wOverlay = document.getElementById("GridCanvasOverlay");
+        if (wOverlay) {
+            wOverlay.style.zIndex = this.m_OverlayZIndex || "";
+        }
+        this.m_OverlayLowered = false;
+    }
+
+    // Keyboard entry: open this field even if the grid has not re-rendered yet.
+    beginKeyboardEdit = (sChar) => {
+        const wChar = sChar != null ? String(sChar) : "";
+        this.m_EditSessionActive = true;
+        this.m_PlaceCaretAtEnd = wChar !== "";
+        this.m_SuppressBlur = true;
+        if (wChar) {
+            this.noteFormulaBarBaseline(wChar);
+        }
+        this.lowerEditOverlay();
+        this.setState((prev) => ({
+            keyboardEdit: true,
+            inputValue: wChar || prev.inputValue
+        }), () => {
+            const wInput = this.inputRef;
+            if (!wInput) {
+                this.m_SuppressBlur = false;
+                this.m_PlaceCaretAtEnd = false;
+                return;
+            }
+            wInput.readOnly = false;
+            wInput.tabIndex = 0;
+            wInput.focus();
+            if (wChar) {
+                const wLen = String(wInput.value || "").length;
+                wInput.setSelectionRange(wLen, wLen);
+            } else if (typeof wInput.select === "function") {
+                wInput.select();
+            }
+            this.m_PlaceCaretAtEnd = false;
+            const sp = this.m_SpInterface;
+            if (wChar && sp && typeof sp.setLastChar === "function") {
+                sp.setLastChar("");
+            }
+            window.setTimeout(() => {
+                this.m_SuppressBlur = false;
+            }, 0);
+        });
+    };
+
     focusInplaceEditor = () => {
-        if (!this.shouldActivateSelfEditingWidget()) {
+        if (!this.state.keyboardEdit && !this.shouldActivateSelfEditingWidget()) {
             return;
         }
         const sp = this.m_SpInterface;
@@ -673,8 +849,11 @@ class SkCellClassCalendar extends SkCellClass {
         const wChar =
             sp && typeof sp.lastChar === "function" ? sp.lastChar() : "";
         if (wChar) {
-            this.setState({ inputValue: wChar }, () => {
-                if (!this.shouldActivateSelfEditingWidget()) {
+            // Replace the displayed date with the typed character and keep
+            // the formula bar in sync without moving focus off this field.
+            this.noteFormulaBarBaseline(wChar);
+            this.setState({ keyboardEdit: true, inputValue: wChar }, () => {
+                if (!this.state.keyboardEdit && !this.shouldActivateSelfEditingWidget()) {
                     return;
                 }
                 wInput.focus();
@@ -694,6 +873,9 @@ class SkCellClassCalendar extends SkCellClass {
 
     // Update when props change
     componentDidUpdate(prevProps) {
+        if (this.props.Cell) {
+            this.m_Cell = this.props.Cell;
+        }
         if (prevProps.locale !== this.props.locale) {
             this.applyLocale(this.props.locale || getSpreadsheetLang());
         }
@@ -709,10 +891,17 @@ class SkCellClassCalendar extends SkCellClass {
             });
         }
 
-        const wEditing = this.shouldActivateSelfEditingWidget();
+        this.registerSelfEditTarget();
+        if (this.state.keyboardEdit && !this.m_SpInterface?.getUseEdit?.()) {
+            this.m_EditSessionActive = false;
+            this.releaseEditOverlay();
+            this.setState({ keyboardEdit: false });
+            return;
+        }
+        const wEditing = this.state.keyboardEdit || this.shouldActivateSelfEditingWidget();
         if (wEditing && !this.m_EditSessionActive) {
             this.m_EditSessionActive = true;
-            requestAnimationFrame(() => this.focusInplaceEditor());
+            this.focusInplaceEditor();
         } else if (!wEditing) {
             this.m_EditSessionActive = false;
             if (this.state.isOpen) {
@@ -1057,7 +1246,7 @@ class SkCellClassCalendar extends SkCellClass {
         wFontSizePt = fontSizePtFromCell(wCell, 11);
         const wFontSizeCss = fontSizeCssPxFromPt(wFontSizePt);
         const wFontFamily = buildCanvasFontFamily(wFontName);
-        const wCalendarEditActive = this.shouldActivateSelfEditingWidget();
+        const wCalendarEditActive = this.state.keyboardEdit || this.shouldActivateSelfEditingWidget();
         const wCellInset = 2;
         const wOverlay = this.CellClassClippedOverlayLayout({
             inset: wCellInset,
@@ -1068,7 +1257,7 @@ class SkCellClassCalendar extends SkCellClass {
         const wCellStyleParent = {
             ...wOverlay.outerStyle,
             display: 'inline-block',
-            zIndex: wZIndex+1, // front of parent
+            zIndex: wCalendarEditActive ? 6 : wZIndex + 1,
             alignItems: wVerticalTextAlign,
             justifyContent: wTextAlign,
             backgroundColor: wBackgroundColor,
@@ -1082,7 +1271,11 @@ class SkCellClassCalendar extends SkCellClass {
 
         return (
             <div
+                ref={this.bindShell}
                 style={wCellStyleParent}
+                className={this.cellClassShellClassName()}
+                {...this.cellClassDomAttrs()}
+                data-sk-form-kind="SkCellClassCalendar"
                 onMouseDownCapture={this.onCellClassMouseDownCapture}
             >
                 <div style={wCellStyleInner}>

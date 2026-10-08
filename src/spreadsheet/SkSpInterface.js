@@ -28,6 +28,7 @@ import {
   isFilterButtonHidden,
 } from "./SkTableFilter.js";
 import { createTableFromSelection } from "./SkCreateTableFromSelection.js";
+import { clearFormFocus, focusFirstFormWidget } from "./SkFormInput.js";
 import { isDesktop } from "../desktop/SkDesktopMode.js";
 import { DrawCell } from "./SkDrawCell.js";
 import {
@@ -218,6 +219,8 @@ class SkSpInterface {
       this.m_Sizer=new tSizer();
      
       this.m_UseEdit=false;
+      // Form input mode: header chrome is hidden and grid events stay on cell classes.
+      this.m_IsForm=false;
       this.m_CursorEdit=null;
       // Formula-bar text last pushed by a self-editing widget (Calendar, …).
       // validEdit must not write the bar back when it still matches this snapshot.
@@ -901,6 +904,44 @@ class SkSpInterface {
       return SK_BASE_TOP_SIZE;
     }
 
+    /** True while the spreadsheet is in form input mode. */
+    isForm() {
+      return this.m_IsForm === true;
+    }
+
+    /**
+     * Toggle form input mode. Header insets drop to zero so the grid fills
+     * the area left by SkSpLeftPanel and SkSpTopPanel.
+     */
+    setIsForm(sOn) {
+      const wOn = sOn === true;
+      if (this.m_IsForm === wOn) {
+        return;
+      }
+      this.m_IsForm = wOn;
+      if (wOn) {
+        this.razAllselect();
+      } else {
+        clearFormFocus(this);
+      }
+      this.syncHeaderChromeCss();
+      if (this.m_SkSpreadSheet != null) {
+        this.m_SkSpreadSheet.setState({ isForm: wOn });
+      }
+      // Chrome size changes on the next layout; repaint once the canvas has it.
+      requestAnimationFrame(() => {
+        this.m_SkSpGridCanvas?.invalidateAll?.();
+        this.m_SkSpFloatingLayer?.notifyDisplayRefresh?.();
+        if (!wOn) {
+          return;
+        }
+        // Widgets are measured after the header chrome collapses.
+        requestAnimationFrame(() => {
+          void focusFirstFormWidget(this);
+        });
+      });
+    }
+
     _clampTreeBand(sPx) {
       return Math.max(
         SK_TREE_BAND_MIN,
@@ -998,6 +1039,13 @@ class SkSpInterface {
       try {
         const root = document.querySelector(":root");
         if (!root) {
+          return;
+        }
+        if (this.m_IsForm === true) {
+          root.style.setProperty("--sk-left-size", "0px");
+          root.style.setProperty("--sk-top-size", "0px");
+          root.style.setProperty("--sk-treeview-left", "0");
+          root.style.setProperty("--sk-treeview-top", "0");
           return;
         }
         const treeLeft = Number(this.m_TreeViewLeft) || 0;
@@ -1880,7 +1928,10 @@ class SkSpInterface {
           sTargetSheet,
         );
       } else if (SkCellClass.isEnumPropertyKind(wKind)) {
-        wWire = SkCellClass.normalizeScalarAttributeInput(wWire, wKind);
+        const wChoices = SkCellClass.enumChoicesFromKind(wKind);
+        wWire = wChoices.includes(wWire)
+          ? wWire
+          : SkCellClass.normalizeScalarAttributeInput(wWire, wKind);
       }
       return { n: sItem.n, v: wWire };
     }
@@ -2335,15 +2386,16 @@ class SkSpInterface {
           if (this.m_SkSpInplaceEditStatic.Disabled()) {
             await this.m_SkSpInplaceEditStatic.setTextByCursorCell();
           }
-          // Attribute panel: follow cursor cell, or clear when no CellClass / no float.
-          if (
-            this.m_SkSpClassAttribute != null &&
-            !this.isAttributePanelPropertyEdit() &&
-            !this.isPropertyRangePickerEdit() &&
-            this.m_Select.last() === null
-          ) {
-            void this.m_SkSpClassAttribute.Resetcursor();
-          }
+        }
+        // Attribute panel follows the cursor even when a widget edit just
+        // set m_CursorEdit (a digit or a click on Calendar / Number).
+        if (
+          this.m_SkSpClassAttribute != null &&
+          !this.isAttributePanelPropertyEdit() &&
+          !this.isPropertyRangePickerEdit() &&
+          this.m_Select.last() === null
+        ) {
+          void this.m_SkSpClassAttribute.Resetcursor();
         }
         // Route range selection updates while dragging: property-level edits
         // (named range ref, attribute fields, ...) must take precedence over the
@@ -3096,20 +3148,116 @@ class SkSpInterface {
         this.m_SkSpGridCanvas.invalidateAll();
       }
       if (!this.shouldShowCellInplaceEdit()) {
-        await this.activateFormulaBarEdit();
-        const wChar = this.lastChar();
-        if (wChar !== "") {
-          const wStatic = this.m_SkSpInplaceEditStatic;
-          const el = wStatic && wStatic.m_Ref && wStatic.m_Ref.current;
-          if (el) {
-            wStatic.setText(wChar);
-            el.value = wChar;
-            const wLen = wChar.length;
-            el.setSelectionRange(wLen, wLen);
-            this.setLastChar("");
+        const wAnchor = this.getEditAnchorCell();
+        if (isSelfEditingCellClass(wAnchor)) {
+          // Calendar and ComboBox own the caret. Focusing the formula bar
+          // here consumes the typed character before the widget can read it.
+          const wChar = this.lastChar();
+          if (!this.openSelfEditingWidget(wChar)) {
+            const wStatic = this.m_SkSpInplaceEditStatic;
+            if (wChar !== "") {
+              if (wStatic && typeof wStatic.setText === "function") {
+                wStatic.setText(wChar);
+              }
+            } else if (
+              wStatic &&
+              typeof wStatic.setTextByCursorCell === "function"
+            ) {
+              await wStatic.setTextByCursorCell();
+            }
+          }
+        } else {
+          await this.activateFormulaBarEdit();
+          const wChar = this.lastChar();
+          if (wChar !== "") {
+            const wStatic = this.m_SkSpInplaceEditStatic;
+            const el = wStatic && wStatic.m_Ref && wStatic.m_Ref.current;
+            if (el) {
+              wStatic.setText(wChar);
+              el.value = wChar;
+              const wLen = wChar.length;
+              el.setSelectionRange(wLen, wLen);
+              this.setLastChar("");
+            }
           }
         }
       }
+    }
+
+    /** Write the in-cell editor on the edit anchor before the formula bar can. */
+    async flushSelfEditingAnchor() {
+      const wCursor = this.m_CursorEdit;
+      let wWidget = null;
+      let wEditing = null;
+      if (this.m_SelfEditTargets) {
+        for (const wCandidate of this.m_SelfEditTargets.values()) {
+          if (wCandidate?.state?.keyboardEdit || wCandidate?.m_EditSessionActive) {
+            wEditing = wCandidate;
+            break;
+          }
+        }
+      }
+      if (wCursor != null && this.m_SelfEditTargets) {
+        const wAtCursor = this.m_SelfEditTargets.get(
+          `${Number(wCursor.row())}:${Number(wCursor.col())}`
+        ) || null;
+        if (wAtCursor?.state?.keyboardEdit || wAtCursor?.m_EditSessionActive) {
+          wWidget = wAtCursor;
+        }
+      }
+      if (wWidget == null) {
+        wWidget = wEditing;
+      }
+      if (wWidget == null && typeof this.m_SelfEditFlush === "function") {
+        await this.m_SelfEditFlush();
+        return;
+      }
+      if (wWidget == null) {
+        return;
+      }
+      if (typeof wWidget.commitString === "function") {
+        await wWidget.commitString();
+        return;
+      }
+      if (typeof wWidget.validateNumber === "function") {
+        await wWidget.validateNumber();
+        return;
+      }
+      if (typeof wWidget.validateDate === "function") {
+        await wWidget.validateDate();
+        return;
+      }
+    }
+
+    /** Hand the typed character to the self-editing widget on the edit anchor. */
+    openSelfEditingWidget(sChar) {
+      const wCursor = this.m_CursorEdit;
+      if (wCursor == null || typeof document === "undefined") {
+        return false;
+      }
+      const wRow = wCursor.row();
+      const wCol = wCursor.col();
+      const wKey = `${Number(wRow)}:${Number(wCol)}`;
+      let wWidget = this.m_SelfEditTargets?.get(wKey) || null;
+      if (wWidget == null && this.m_SelfEditTargets) {
+        for (const wCandidate of this.m_SelfEditTargets.values()) {
+          if (wCandidate?.isCursorOnThisCell?.() || wCandidate?.isEditAnchorOnThisCell?.()) {
+            wWidget = wCandidate;
+            break;
+          }
+        }
+      }
+      if (wWidget == null) {
+        const wShell = document.querySelector(
+          `.SkSpCellClass[data-cell-row="${wRow}"][data-cell-col="${wCol}"]`
+        );
+        wWidget = wShell?.__skWidget || null;
+      }
+      if (wWidget == null || typeof wWidget.beginKeyboardEdit !== "function") {
+        return false;
+      }
+      wWidget.beginKeyboardEdit(sChar != null ? String(sChar) : "");
+      return true;
     }
 
     focusGridCanvas() {
@@ -3176,17 +3324,14 @@ class SkSpInterface {
         this.beginCursorEdit();
       }
 
-      // A Calendar date is stored by the widget (t_date). Writing the formula bar
-      // here puts the previous text back and drops the popup choice. Flush the
-      // widget, same as Enter, then leave the edit.
+      // Self-editing widgets own the scalar. The formula bar still holds the
+      // previous text and would replace the class value on the way out.
       const wSelfEditAnchor = this.getEditAnchorCell();
       if (
-        reactCellClassTypeName(wSelfEditAnchor) === "SkCellClassCalendar" &&
+        isSelfEditingCellClass(wSelfEditAnchor) &&
         !(wText != null ? String(wText) : "").trim().startsWith("=")
       ) {
-        if (typeof this.m_SelfEditFlush === "function") {
-          await this.m_SelfEditFlush();
-        }
+        await this.flushSelfEditingAnchor();
         if (this.getUseEdit()) {
           await this.endEdit();
         }

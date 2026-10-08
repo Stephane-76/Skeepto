@@ -6,6 +6,7 @@ import * as SkA1Ref from '../SkA1Ref.js';
 import SkComponent from "../../component/SkComponent";
 import { GetFontStyle, GetFontWeight, buildCanvasFontFamily, GetTextAlign, GetVerticalTextAlign } from '../../utility/SkUtility.js'
 import { fontSizePtFromCell, fontSizeCssPxFromPt } from '../../utility/SkFontPool.js'
+import { setFormFocus } from '../SkFormInput.js'
 
 // Table of Classes Name and function render
 const  wArrayOfClass = [ ]
@@ -178,6 +179,10 @@ class SkCellClass extends SkComponent {
         
         var wOk=sUISpreadSheet.registerClassAttribute(this.ClassName(),sLabel,sFamily);
         if (!wOk) console.error( "RegisterClass " + this.ClassName() + "," + sLabel + " Error !");
+        // JSON field key for every derived widget (form records). Empty until the user names it.
+        if (wOk && !sUISpreadSheet.addProperty("Name", "string", "Name", 0, "")) {
+            console.error("AddProperty Name Error ! " + this.ClassName());
+        }
         return wOk;
     }
 
@@ -2602,7 +2607,93 @@ class SkCellClass extends SkComponent {
         return this.isEditAnchorOnThisCell();
     }
 
-    async focusCursorOnCell(event) {
+    /** Check and Switch toggle on click. A grid drag-end would drop the selection cursor. */
+    isSelectionPreservingToggle() {
+        const wName = typeof this.constructor.ClassName === "function"
+            ? this.constructor.ClassName()
+            : "";
+        return wName === "SkCellClassCheck" || wName === "SkCellClassSwitch";
+    }
+
+    isFormFocusCell() {
+        const sp = this.m_SpInterface;
+        if (!sp?.isForm?.()) {
+            return false;
+        }
+        const wRow = Number(this.m_Cell?.c_r);
+        const wCol = Number(this.m_Cell?.c_c);
+        if (!Number.isFinite(wRow) || !Number.isFinite(wCol)) {
+            return false;
+        }
+        if (sp.m_FormFocusRow === wRow && sp.m_FormFocusCol === wCol) {
+            return true;
+        }
+        const wEl = sp.m_FormFocusEl;
+        if (wEl?.isConnected) {
+            return Number(wEl.getAttribute("data-cell-row")) === wRow
+                && Number(wEl.getAttribute("data-cell-col")) === wCol;
+        }
+        return false;
+    }
+
+    /** className for the widget shell. Form focus must live here: setState rewrites className. */
+    cellClassShellClassName(sExtra = "") {
+        const wNames = ["SkSpCellClass"];
+        if (sExtra) {
+            wNames.push(sExtra);
+        }
+        if (this.isFormFocusCell()) {
+            wNames.push("SkSpCellClass--formFocus");
+        }
+        return wNames.join(" ");
+    }
+
+    /** Keep the form ring on this shell after React rewrites className. */
+    syncFormFocusShell(sEl) {
+        if (!sEl || !this.isFormFocusCell()) {
+            return;
+        }
+        setFormFocus(this.m_SpInterface, sEl);
+    }
+
+    releaseWidgetPointerFlags() {
+        const sp = this.m_SpInterface;
+        if (sp) {
+            sp.m_MouseDown = false;
+            sp.m_Selected = false;
+        }
+        const wGrid = sp?.m_SkSpGridCanvas;
+        if (wGrid) {
+            wGrid.m_MouseDown = false;
+            wGrid.m_DragSelecting = false;
+        }
+    }
+
+    /** After a toggle reload, put the selection cursor back on this cell. */
+    async reassertCursorAfterWidgetEdit() {
+        const sp = this.m_SpInterface;
+        const wRow = Number(this.props?.Cell?.c_r ?? this.m_Cell?.c_r);
+        const wCol = Number(this.props?.Cell?.c_c ?? this.m_Cell?.c_c);
+        if (!sp || !Number.isFinite(wRow) || !Number.isFinite(wCol)) {
+            return;
+        }
+        if (typeof sp.selectCellAt === "function") {
+            await sp.selectCellAt(wRow, wCol);
+        }
+        if (typeof sp.invalidateOverlays === "function") {
+            sp.invalidateOverlays();
+        }
+        if (sp.isForm?.()) {
+            const wEl = document.querySelector(
+                `.SkSpCellClass[data-cell-row="${wRow}"][data-cell-col="${wCol}"]`
+            );
+            if (wEl) {
+                setFormFocus(sp, wEl);
+            }
+        }
+    }
+
+    async focusCursorOnCell(event, sOptions = {}) {
         const sp = this.m_SpInterface;
         if (!sp || typeof sp.selectCellAt !== "function") {
             return;
@@ -2613,17 +2704,25 @@ class SkCellClass extends SkComponent {
             return;
         }
 
+        const wDrag = sOptions.drag !== false;
         // Synchronous: drag-select from class widgets until global mouseup clears flags.
         // Do not set m_MouseDown after awaits — mouseup may have fired already and would leave wheel blocked.
-        sp.m_MouseDown = true;
-        sp.m_Selected = false;
-        const wGrid = sp.m_SkSpGridCanvas;
-        if (wGrid) {
-            wGrid.m_MouseDown = true;
-            wGrid.m_DragSelecting = false;
+        // Toggle widgets must not arm that drag: mouseup would delete the selection cursor.
+        if (wDrag) {
+            sp.m_MouseDown = true;
+            sp.m_Selected = false;
+            const wGrid = sp.m_SkSpGridCanvas;
+            if (wGrid) {
+                wGrid.m_MouseDown = true;
+                wGrid.m_DragSelecting = false;
+            }
         }
 
         const wExtendSelection = event?.shiftKey === true;
+        const wCursor = typeof sp.cursor === "function" ? sp.cursor() : null;
+        const wSameCell = wCursor != null
+            && wCursor.row() === wRow
+            && wCursor.col() === wCol;
         if (wExtendSelection) {
             if (typeof sp.initKey === "function") {
                 await sp.initKey();
@@ -2631,11 +2730,23 @@ class SkCellClass extends SkComponent {
             if (typeof sp.cursorSelect === "function") {
                 await sp.cursorSelect(wRow, wCol);
             }
-        } else if (typeof sp.razAllselect === "function") {
+        } else if (!(sOptions.keepSelectionIfSameCell && wSameCell)
+            && typeof sp.razAllselect === "function") {
             await sp.razAllselect();
         }
 
         await sp.selectCellAt(wRow, wCol);
+        // A widget click often starts an edit before the grid repaint. The
+        // attribute panel skips that repaint, so refresh it from here.
+        if (
+            sp.m_SkSpClassAttribute != null &&
+            typeof sp.m_SkSpClassAttribute.Resetcursor === "function" &&
+            typeof sp.isAttributePanelPropertyEdit === "function" &&
+            !sp.isAttributePanelPropertyEdit() &&
+            !(typeof sp.isPropertyRangePickerEdit === "function" && sp.isPropertyRangePickerEdit())
+        ) {
+            await sp.m_SkSpClassAttribute.Resetcursor();
+        }
     }
 
     // Return keyboard to the grid canvas so arrow keys keep working after widget clicks.
@@ -2694,6 +2805,9 @@ class SkCellClass extends SkComponent {
         if (this.m_Cell?.c_fo !== true || event.button !== 0) {
             return;
         }
+        if (this.m_SpInterface?.isForm?.()) {
+            return;
+        }
         const wName = SkCellClass.floatingObjectNameFromCell(this.m_Cell);
         const wLayer = this.m_SpInterface?.m_SkSpFloatingLayer;
         if (wName && wLayer != null) {
@@ -2720,13 +2834,64 @@ class SkCellClass extends SkComponent {
         }
     };
 
+    // Check/Switch: keep the selection cursor. A grid mouseup would delete it.
+    onToggleWidgetMouseDownCapture = (event) => {
+        if (event.button != null && event.button !== 0) {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        const sp = this.m_SpInterface;
+        if (sp?.isForm?.()) {
+            setFormFocus(sp, event.currentTarget);
+            if (typeof sp.focusGridCanvas === "function") {
+                sp.focusGridCanvas();
+            }
+        }
+        void this.focusCursorOnCell(event, { drag: false, keepSelectionIfSameCell: true }).then(() => {
+            this.restoreGridKeyboardFocus();
+        });
+    };
+
+    onToggleWidgetMouseUpCapture = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.releaseWidgetPointerFlags();
+    };
+
     // Capture phase: place grid cursor on this class cell before widget handlers run.
     onCellClassMouseDownCapture = (event) => {
+        if (this.isSelectionPreservingToggle()) {
+            this.onToggleWidgetMouseDownCapture(event);
+            return;
+        }
+        const sp = this.m_SpInterface;
+        if (sp?.isForm?.()) {
+            // The form ring is not the grid cursor. Select the cell so the
+            // attribute panel follows this class, then put the ring back.
+            const wField = event.target?.closest?.("input, textarea, select");
+            setFormFocus(sp, event.currentTarget);
+            void this.focusCursorOnCell(event, { drag: false }).then(() => {
+                const wRow = Number(this.m_Cell?.c_r);
+                const wCol = Number(this.m_Cell?.c_c);
+                const wEl = Number.isFinite(wRow) && Number.isFinite(wCol)
+                    ? document.querySelector(
+                        `.SkSpCellClass[data-cell-row="${wRow}"][data-cell-col="${wCol}"]`
+                    )
+                    : null;
+                if (wEl) {
+                    setFormFocus(sp, wEl);
+                }
+                if (!wField && typeof sp.focusGridCanvas === "function") {
+                    sp.focusGridCanvas();
+                }
+            });
+            return;
+        }
         // Floating overlays (SkSpFloatingLayer) handle move/resize themselves.
         if (this.m_Cell?.c_fo === true) {
             return;
         }
-        const sp = this.m_SpInterface;
         if (event.target?.closest?.(
             ".SkCellClassComboBox-toggle, .SkComboBox-list, .SkComboBox-option, "
             + ".SkCellClassCalendar-toggle, .SkCellClassCalendar-popup, .SkCellClassCalendar-input"
@@ -2762,7 +2927,9 @@ class SkCellClass extends SkComponent {
             event.stopPropagation();
             return;
         }
-        void this.focusCursorOnCell(event).then(() => {
+        // drag would arm m_MouseDown; the following mouseup then keeps a range
+        // and the attribute panel never follows this class.
+        void this.focusCursorOnCell(event, { drag: false }).then(() => {
             this.restoreGridKeyboardFocus();
         });
     };
@@ -2775,10 +2942,15 @@ class SkCellClass extends SkComponent {
             return;
         }
         try {
-            if (typeof sp.getUseEdit === "function" && sp.getUseEdit() && typeof sp.endEdit === "function") {
-                await sp.endEdit();
+            if (typeof sp.getUseEdit === "function" && sp.getUseEdit()) {
+                if (typeof sp.flushSelfEditingAnchor === "function") {
+                    await sp.flushSelfEditingAnchor();
+                }
+                if (typeof sp.endEdit === "function") {
+                    await sp.endEdit();
+                }
             }
-            await this.focusCursorOnCell(event);
+            await this.focusCursorOnCell(event, { drag: false });
         } catch (error) {
             console.error("Error leaving self-editing cell:", error);
         } finally {

@@ -32,10 +32,7 @@ function flexAlignFromCellVertical(cellVertical) {
 const COMBOBOX_DEFAULT_OPTIONS = [
     "Option 1",
     "Option 2",
-    "Option 3",
-    "Option 4",
-    "Option 5",
-    "Option 6" ];
+    "Option 3" ];
 
 function comboOptionsFromParsedList(sParsed) {
     if (!Array.isArray(sParsed)) {
@@ -197,6 +194,11 @@ class SkCellClassComboBox extends SkCellClass {
         );
         if (!wOk) {
             console.error("AddProperty comboOptions Error !");
+        }
+        // Model type of CalculableValue. The engine keeps a string when this property is string.
+        const wValueOk = sUISpreadSheet.addProperty("value", "string", "Value", 1, "");
+        if (!wValueOk) {
+            console.error("AddProperty value Error !");
         }
     }
 
@@ -712,8 +714,9 @@ class SkCellClassComboBox extends SkCellClass {
         return (
             <div
                 style={wCellStyleParent}
-                className="SkSpCellClass"
+                className={this.cellClassShellClassName()}
                 {...this.cellClassDomAttrs()}
+                data-sk-form-kind="SkCellClassComboBox"
                 onMouseDownCapture={this.onCellClassMouseDownCapture}
             >
                 <div style={wCellStyleInner}>

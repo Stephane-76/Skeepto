@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Installed as usr/share/metainfo/fr.skeema.skeepto.appdata.xml.
+     The name must match *appdata.xml: that is the pattern appdir-lint looks for.
+     @VERSION@ and @DATE@ are filled in by electron/afterPack.js. -->
+<component type="desktop-application">
+  <id>fr.skeema.skeepto</id>
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Skeepto</name>
+  <summary>Spreadsheet with a C++ calculation engine</summary>
+  <description>
+    <p>
+      Skeepto is a spreadsheet. The calculation engine is written in C++20
+      and compiled to WebAssembly, with Excel workbook import and a desktop window.
+    </p>
+  </description>
+  <launchable type="desktop-id">skeepto.desktop</launchable>
+  <icon type="cached" width="256" height="256">skeepto.png</icon>
+  <url type="homepage">https://github.com/Stephane-76/Skeepto</url>
+  <developer_name>Stéphane Allez</developer_name>
+  <provides>
+    <binary>skeepto</binary>
+  </provides>
+  <categories>
+    <category>Office</category>
+  </categories>
+  <releases>
+    <release version="@VERSION@" date="@DATE@"/>
+  </releases>
+</component>

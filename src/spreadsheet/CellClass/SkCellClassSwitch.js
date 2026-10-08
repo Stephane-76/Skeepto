@@ -84,6 +84,7 @@ class SkCellClassSwitch extends SkCellClass  {
         if (this.m_SpInterface && typeof this.m_SpInterface.reloadView === "function") {
             await this.m_SpInterface.reloadView();
         }
+        await this.reassertCursorAfterWidgetEdit();
     }
 
     async componentDidMount() {
@@ -295,10 +296,11 @@ class SkCellClassSwitch extends SkCellClass  {
         return (
             <div
                 style={wCellStyleParent}
-                className="SkSpCellClass"
+                className={this.cellClassShellClassName()}
                 {...this.cellClassDomAttrs()}
+                data-sk-form-kind="SkCellClassSwitch"
                 onMouseDownCapture={this.onCellClassMouseDownCapture}
-                onClick={this.handleClick}
+                onMouseUpCapture={this.onToggleWidgetMouseUpCapture}
                 onMouseDown={(e) => e.preventDefault()}
             >
                 <div style={wCellStyleInner}>

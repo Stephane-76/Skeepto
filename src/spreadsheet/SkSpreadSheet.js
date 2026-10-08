@@ -59,6 +59,7 @@ class SkSpreadSheet extends SkComponent {
         recalcFinalizing: false,
         error: null,
         ribbonVisible: getRibbonVisible(),
+        isForm: false,
         aboutModalOpen: false,
         shortcutsModalOpen: false,
       })
@@ -1119,12 +1120,12 @@ class SkSpreadSheet extends SkComponent {
       width: "100%",
       height: "100%",
     };
-    const { rightPanelWidth, loadingFile, recalcUiVisible, recalcProgress, didMount, error, ribbonVisible } = this.state;
+    const { rightPanelWidth, loadingFile, recalcUiVisible, recalcProgress, didMount, error, ribbonVisible, isForm } = this.state;
     const wFullScreenLoad = loadingFile || (error !== null);
     return (
       <div className="SkSpContent">
         <div className="SkSpContainer" ref={this.m_Ref}>
-          <div id="SkSpreadSheetColumn" className="SkSpContainerColumn"> 
+          <div id="SkSpreadSheetColumn" className={isForm ? "SkSpContainerColumn SkSpContainerColumn--form" : "SkSpContainerColumn"}> 
             {ribbonVisible ? (
               <SkSpTopCommand SpInterface={this.m_SpInterface}></SkSpTopCommand>
             ) : null}
@@ -1134,7 +1135,7 @@ class SkSpreadSheet extends SkComponent {
             ></SkSpControlPanel>
             <div className="SkSpGridAndRightPanel">
               <div className="SkSpContainerRow SkSpContainerRow--withRecalc">
-                <div className="SkSpreadSheet" style={wStyle}>
+                <div className={isForm ? "SkSpreadSheet SkSpreadSheet--form" : "SkSpreadSheet"} style={wStyle}>
                   <SkSpTopPanel SpInterface={this.m_SpInterface}></SkSpTopPanel>
                   {!didMount && (
                     <SkSpClient ref={this.m_SpreadSheetCanvas} id='canvas' SpInterface={this.m_SpInterface}></SkSpClient>

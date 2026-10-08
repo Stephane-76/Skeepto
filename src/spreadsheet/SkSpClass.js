@@ -7,6 +7,11 @@ import SkComponent from "../component/SkComponent";
 import SkButton from "../component/SkButton";
 import { GetAllClasses, GetIcon, canApplyAsFloatingObject } from "./CellClass/SkCellClass";
 import {
+  NUMBER_CLASS_NAME,
+  applyNumberMode,
+  numberPaletteEntries,
+} from "./CellClass/SkCellClassNumber.js";
+import {
   buildFloatingAnchorCellRef,
   DEFAULT_FLOATING_LAYOUT,
   parseFloatingObjectsJson,
@@ -38,6 +43,26 @@ function isPaletteCellClassName(sClassName) {
     wName !== "SkCellClassUnit" &&
     wName !== "tCellClassUnit"
   );
+}
+
+/** Int, Float and Currency are one class. The palette shows three tools. */
+function expandNumberPalette(sModels) {
+  const wOut = [];
+  for (const wModel of sModels) {
+    if (wModel?.n !== NUMBER_CLASS_NAME) {
+      wOut.push(wModel);
+      continue;
+    }
+    for (const wEntry of numberPaletteEntries()) {
+      wOut.push({
+        n: NUMBER_CLASS_NAME,
+        l: wEntry.label,
+        numberMode: wEntry.mode,
+        icon: wEntry.icon,
+      });
+    }
+  }
+  return wOut;
 }
 
 class SkSpClass extends SkComponent {
@@ -103,6 +128,7 @@ class SkSpClass extends SkComponent {
       }
 
       wModels = wModels.filter((m) => isPaletteCellClassName(m?.n));
+      wModels = expandNumberPalette(wModels);
 
       this.setState({ Classes: { models: wModels } });
     } catch (e) {
@@ -196,7 +222,7 @@ class SkSpClass extends SkComponent {
     return window.SkUISpreadSheet.jsonCellClass();
   }
 
-  applyClassToSelection = async (sClassName) => {
+  applyClassToSelection = async (sClassName, sMode) => {
     if (
       this.m_ApplyingClass ||
       !this.m_SpInterface ||
@@ -213,7 +239,14 @@ class SkSpClass extends SkComponent {
 
     this.m_ApplyingClass = true;
     try {
+      const wSheet = this.m_SpInterface.m_UIView?.sheet || "";
+      if (wSheet && typeof window.SkUISpreadSheet.setActiveSheet === "function") {
+        window.SkUISpreadSheet.setActiveSheet(wSheet);
+      }
       window.SkUISpreadSheet.cellClass(wSelection, sClassName);
+      if (sClassName === NUMBER_CLASS_NAME && sMode) {
+        applyNumberMode(window.SkUISpreadSheet, wSelection, sMode, wSheet);
+      }
       await this.m_SpInterface.reloadView();
       this.m_SpInterface.invalidateAll();
     } catch (e) {
@@ -223,7 +256,7 @@ class SkSpClass extends SkComponent {
     }
   };
 
-  applyFloatToSelection = async (sClassName) => {
+  applyFloatToSelection = async (sClassName, sMode) => {
     if (
       this.m_ApplyingFloat ||
       this.m_ApplyingClass ||
@@ -238,10 +271,10 @@ class SkSpClass extends SkComponent {
       return;
     }
 
-    await this.insertFloatingObjectOfClass(sClassName);
+    await this.insertFloatingObjectOfClass(sClassName, sMode);
   };
 
-  async insertFloatingObjectOfClass(sClassName) {
+  async insertFloatingObjectOfClass(sClassName, sMode) {
     if (
       this.m_ApplyingFloat ||
       this.m_ApplyingClass ||
@@ -310,6 +343,10 @@ class SkSpClass extends SkComponent {
       if (!wInserted) {
         console.error("SkSpClass: insertFloatingObject failed", sClassName, wName);
         return;
+      }
+
+      if (sClassName === NUMBER_CLASS_NAME && sMode) {
+        applyNumberMode(wUi, wCellRef, sMode, wTargetSheet);
       }
 
       await this.m_SpInterface.reloadView();
@@ -388,7 +425,7 @@ class SkSpClass extends SkComponent {
               ? "Pick an image file and insert it as a floating object on the current cell"
               : `Insert ${wItem.l} as a floating object anchored on the current cell`;
             return (
-              <React.Fragment key={wItem.n || wIndex}>
+                <React.Fragment key={wItem.numberMode ? `${wItem.n}:${wItem.numberMode}` : (wItem.n || wIndex)}>
                 {wIndex > 0 ? (
                   <hr className="SkSpClassRow-separator" aria-hidden="true" />
                 ) : null}
@@ -398,12 +435,12 @@ class SkSpClass extends SkComponent {
                 </label>
                 <div className="SkSpClassRow-body">
                   <div className="SkSpClassRow-icon" aria-hidden="true">
-                    {wIconFn ? wIconFn() : null}
+                    {wItem.icon ? wItem.icon() : (wIconFn ? wIconFn() : null)}
                   </div>
                   <div className="SkSpClassRow-actions">
                     <SkButton
                       className="SkSpClassRow-apply"
-                      onClick={() => this.applyClassToSelection(wItem.n)}
+                      onClick={() => this.applyClassToSelection(wItem.n, wItem.numberMode)}
                       title={`Apply ${wItem.l} to the current selection`}
                     >
                       Apply
@@ -411,7 +448,7 @@ class SkSpClass extends SkComponent {
                     {canApplyAsFloatingObject(wItem.n) ? (
                       <SkButton
                         className="SkSpClassRow-apply-float"
-                        onClick={() => this.applyFloatToSelection(wItem.n)}
+                        onClick={() => this.applyFloatToSelection(wItem.n, wItem.numberMode)}
                         title={wFloatButtonTitle}
                       >
                         {wFloatButtonLabel}

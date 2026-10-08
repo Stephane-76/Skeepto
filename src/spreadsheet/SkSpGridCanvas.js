@@ -21,6 +21,7 @@ import {
 } from "./SkSpInsertImage.js";
 import SkMenuPopUp from "../component/SkMenuPopup";
 import SkMenuElement from "../component/SkMenuElement";
+import { formPointerOnSheet, handleFormKeyDown } from "./SkFormInput.js";
 import {
   luminanceFromCssColor,
   parseCssColor,
@@ -456,6 +457,10 @@ class SkSpGridCanvas extends SkCanvas {
     if (!this.m_SpInterface) {
       return;
     }
+    if (this.m_SpInterface.isForm?.()) {
+      await handleFormKeyDown(event, this.m_SpInterface);
+      return;
+    }
     //("Grid Canvas :",event.key, " ",event.srcElement.id);
     // This GridCanvas ========================================================
     if (this.m_Id===event.srcElement.id)  {
@@ -581,10 +586,14 @@ class SkSpGridCanvas extends SkCanvas {
         case 'Shift' : break;
         default : {
           if (!event.ctrlKey && event.key.length === 1) {
+            // preventDefault must run before the first await. After an await
+            // the keydown dispatch is already finished and the character is lost.
+            event.preventDefault();
+            event.stopPropagation();
             this.m_SpInterface.setLastChar(event.key);
             await this.m_SpInterface.beginEdit();
-            event.preventDefault();
             this.m_SpInterface.invalidateAll();
+            return;
           }
           break;
         }
@@ -952,6 +961,13 @@ class SkSpGridCanvas extends SkCanvas {
     if (!this.m_SpInterface) {
       return;
     }
+    if (this.m_SpInterface.isForm?.()) {
+      if (!this.isEventOnScrollbar(event) && formPointerOnSheet(event)) {
+        this.m_MouseDown = false;
+        this.m_SpInterface.m_MouseDown = false;
+      }
+      return;
+    }
     if (this.state.menuPopUp) {
       return;
     }
@@ -1066,6 +1082,9 @@ class SkSpGridCanvas extends SkCanvas {
     if (!this.m_SpInterface) {
       return;
     }
+    if (this.m_SpInterface.isForm?.()) {
+      return;
+    }
     if (this.m_SpInterface?.isFloatingObjectDragging?.()) {
       return;
     }
@@ -1102,6 +1121,12 @@ class SkSpGridCanvas extends SkCanvas {
     // m_SpInterface is nulled on unmount; a lingering window listener from a fast
     // mount/unmount cycle (e.g. StrictMode) can still fire — bail out safely.
     if (!this.m_SpInterface) {
+      return;
+    }
+    if (this.m_SpInterface.isForm?.()) {
+      this.m_MouseDown = false;
+      this.m_DragSelecting = false;
+      this.m_SpInterface.m_MouseDown = false;
       return;
     }
     if (this.m_SpInterface?.isFloatingObjectDragging?.()) {
@@ -1321,6 +1346,9 @@ class SkSpGridCanvas extends SkCanvas {
   }
 
   handleTouchStart = async (e) => {
+    if (this.m_SpInterface?.isForm?.() && e.touches.length < 2) {
+      return;
+    }
     if (e.touches.length === 2) {
       // Two-finger zoom
       this.initialDistance = this.CalculateTouchDistance(e.touches);
@@ -1547,6 +1575,9 @@ class SkSpGridCanvas extends SkCanvas {
 
   contextMenu(event) {
     event.preventDefault();
+    if (this.m_SpInterface?.isForm?.()) {
+      return;
+    }
     if (this.m_RefMenu.current) {
       this.m_RefMenu.current.SetPos(event);
       this.setState({ menuPopUp : true });
@@ -2690,8 +2721,11 @@ class SkSpGridCanvas extends SkCanvas {
     await this.paintSelection(sContext, sUI, sWidth, sHeight, absOffX, absOffY);
     await this.paintSpillRanges(sContext, sUI, absOffX, absOffY);
     await this.paintFormulaRefHighlights(sContext, sUI, absOffX, absOffY);
-    await this.paintCursor(sContext, sUI, sWidth, sHeight, absOffX, absOffY);
-    await this.paintFillHandle(sContext, absOffX, absOffY);
+    // Form mode draws one ring on the widget (SkSpCellClass--formFocus).
+    if (!this.m_SpInterface?.isForm?.()) {
+      await this.paintCursor(sContext, sUI, sWidth, sHeight, absOffX, absOffY);
+      await this.paintFillHandle(sContext, absOffX, absOffY);
+    }
   };
 
   paintOverlayInPane = async (sContext, sUI, paneW, paneH, absOffX, absOffY) => {

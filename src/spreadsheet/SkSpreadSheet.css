@@ -146,6 +146,40 @@
   box-shadow: inset 0 0 0 1px var(--sk-toolbar-active-border);
 }
 
+.SkSpFormToggle {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  user-select: none;
+}
+
+.SkSpControlPanel .SkSpFormToggle {
+  height: 28px;
+  margin: 0;
+  padding: 0 10px;
+  color: var(--sk-color-tool);
+  background: transparent;
+  border: 1px solid var(--sk-color-header-grid);
+  border-radius: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.SkSpControlPanel .SkSpFormToggle.active,
+.SkSpTopTool > div.SkSpFormToggle.active {
+  background-color: var(--sk-toolbar-active-background);
+  box-shadow: inset 0 0 0 1px var(--sk-toolbar-active-border);
+}
+
+/* Form input mode: row and column headers leave the grid the full area. */
+.SkSpreadSheet--form .SkSpTopPanel,
+.SkSpreadSheet--form .SkSpTopPanel-resize,
+.SkSpreadSheet--form .SkSpLeftPanel,
+.SkSpreadSheet--form .SkSpLeftPanel-resize,
+.SkSpContainerColumn--form .SkSpSheetTab {
+  display: none;
+}
+
 .SkSpWH100 {
   width: 100%;
   height: 100%;
@@ -1473,6 +1507,12 @@
   /*border: 3px solid rgb(67, 0, 251);*/
 }
 
+.SkSpCellClass--formFocus {
+  outline: 2px solid var(--sk-color-cursor-border);
+  outline-offset: -2px;
+  z-index: 4;
+}
+
 input[type="checkbox"] {
   cursor: pointer;
   width: 100%;
@@ -2038,6 +2078,14 @@ textarea.SkSpInplaceEditStatic[id^="InplaceEditFunc"] {
   min-height: 28px;
 }
 
+/* Not the formula bar: that rule forces a 56px gray idle field. */
+.SkSpAttribute-field.SkSpControlPanel-formula {
+  height: auto;
+  max-height: none;
+  min-height: 28px;
+  overflow: visible;
+}
+
 .SkSpAttribute-field--enum {
   cursor: default;
   overflow: visible;
@@ -2091,15 +2139,20 @@ textarea.SkSpInplaceEditStatic[id^="InplaceEditFunc"] {
 }
 
 .SkSpListAttribute .SkSpInplaceEditStatic--panel,
-.SkSpListAttribute textarea.SkSpInplaceEditStatic[id^="InplaceEditAttr"] {
+.SkSpListAttribute textarea.SkSpInplaceEditStatic[id^="InplaceEditAttr"],
+.SkSpListAttribute textarea.SkSpInplaceEditStatic[id^="InplaceEditAttr"]:read-only {
   color: var(--sk-dialog-input-color);
-  background-color: var(--sk-dialog-input-bg);
+  background-color: var(--sk-dialog-input-bg, #fff);
+  -webkit-text-fill-color: var(--sk-dialog-input-color);
   border: 1px solid var(--sk-dialog-input-border);
   width: 100%;
   margin: 0;
   padding: 3px;
   min-width: 100px;
   box-sizing: border-box;
+  opacity: 1;
+  cursor: text;
+  user-select: text;
 }
 
 .SkJavascriptEditor {

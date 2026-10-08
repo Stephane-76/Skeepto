@@ -16,6 +16,8 @@ import SkCellClassGauge from "./SkCellClassGauge.js";
 import SkCellClassSparkline from "./SkCellClassSparkline.js";
 import SkCellClassImage from "./SkCellClassImage.js";
 import SkCellClassTextBox from "./SkCellClassTextBox.js";
+import SkCellClassString from "./SkCellClassString.js";
+import SkCellClassNumber from "./SkCellClassNumber.js";
 // The WASM engine keeps a process-wide tClassFactory singleton, so cell classes
 // stay registered across React navigations. Track the engine we registered
 // against to avoid redundant re-registration (which the C++ side reports as an
@@ -53,6 +55,8 @@ class SkCellClassContainer {
         SkCellClassSparkline.registerClassAttribute( window.SkUISpreadSheet);
         SkCellClassImage.registerClassAttribute( window.SkUISpreadSheet);
         SkCellClassTextBox.registerClassAttribute( window.SkUISpreadSheet);
+        SkCellClassString.registerClassAttribute( window.SkUISpreadSheet);
+        SkCellClassNumber.registerClassAttribute( window.SkUISpreadSheet);
         gRegisteredEngine = window.SkUISpreadSheet;
         console.log('[SkCellClassContainer] All cell classes registered successfully');
     }

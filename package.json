@@ -98,6 +98,7 @@
     "extraMetadata": {
       "main": "electron/main.js"
     },
+    "afterPack": "electron/afterPack.js",
     "directories": {
       "output": "dist-electron",
       "buildResources": "build-resources"
@@ -156,7 +157,10 @@
         "deb"
       ],
       "category": "Office",
-      "icon": "build-resources/icon.png"
+      "icon": "icons"
+    },
+    "appImage": {
+      "artifactName": "Skeepto-${version}-${arch}.${ext}"
     }
   },
   "browser": {

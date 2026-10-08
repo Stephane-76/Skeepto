@@ -1,6 +1,6 @@
 //=============================================================================
 // SkCellClassTextBox
-// Floating object that renders plain text from host cell attributes
+// Shows the host cell text with that cell's font, color, and alignment.
 //=============================================================================
 import React from "react";
 import SkCellClass from "./SkCellClass.js";
@@ -15,97 +15,55 @@ function Render(sCell, sSpInterface) {
     );
 }
 
-function textBoxStateFromCell(sCell) {
-    const wText = SkCellClass.readPropertyFromCellJson(sCell, "text") || "";
-    const wColor = SkCellClass.readPropertyFromCellJson(sCell, "color") || "#000000";
-    const wFontSize = SkCellClass.readPropertyFromCellJson(sCell, "fontSize") || "12";
-    const wFontFamily = SkCellClass.readPropertyFromCellJson(sCell, "fontFamily") || "";
-    const wTextAlign = SkCellClass.readPropertyFromCellJson(sCell, "textAlign") || "left";
-    const wBold = SkCellClass.readPropertyFromCellJson(sCell, "bold") || "false";
+function textDecorationFromCell(sCell) {
+    let wDecoration = "";
+    if (sCell?.f_d_u) {
+        wDecoration = "underline";
+    }
+    if (sCell?.f_d_l) {
+        wDecoration = wDecoration ? `${wDecoration} line-through` : "line-through";
+    }
+    return wDecoration;
+}
+
+// The box shows the host cell text. A date scalar is the old coerced 01/01/1900, not the typed string.
+function textBoxDisplayText(sCell, sStyles) {
+    const wClass = sCell?.c_v?.c;
+    const wType = wClass && typeof wClass === "object" ? wClass.t : "";
+    if (wType === "s" || wType === "i" || wType === "d") {
+        const wText = SkCellClass.normalizeWasmCellValue(wClass.v);
+        if (wText) {
+            return wText;
+        }
+    }
+    if (sStyles.displayValue && sStyles.displayValue !== "[object Object]") {
+        return sStyles.displayValue;
+    }
+    return "";
+}
+
+/** Display string and paint styles taken from the host cell. */
+function textBoxFromCell(sCell) {
+    const wStyles = SkCellClass.cellStylesForCanvasExport(sCell);
     return {
-        text: typeof wText === "string" ? wText : String(wText || ""),
-        color: typeof wColor === "string" ? wColor : String(wColor || "#000000"),
-        fontSize: typeof wFontSize === "string" ? wFontSize : String(wFontSize || "12"),
-        fontFamily: typeof wFontFamily === "string" ? wFontFamily : String(wFontFamily || ""),
-        textAlign: typeof wTextAlign === "string" ? wTextAlign : String(wTextAlign || "left"),
-        bold: String(wBold).toLowerCase() === "true",
+        text: textBoxDisplayText(sCell, wStyles),
+        styles: wStyles,
+        textDecoration: textDecorationFromCell(sCell),
     };
 }
 
 class SkCellClassTextBox extends SkCellClass {
-    constructor(props) {
-        super(props);
-        this.m_Cell = props.Cell;
-        this.m_SpInterface = props.SpInterface;
-        this.state = textBoxStateFromCell(props.Cell);
-    }
-
-    cellAttributesDigest(sCell) {
-        const wAttrs = sCell?.c_v?.c?.a;
-        return Array.isArray(wAttrs) ? JSON.stringify(wAttrs) : "";
-    }
-
-    async refreshTextFromCell() {
-        let wText = SkCellClass.readPropertyFromCellJson(this.m_Cell, "text") || "";
-        let wColor = SkCellClass.readPropertyFromCellJson(this.m_Cell, "color") || "#000000";
-        let wFontSize = SkCellClass.readPropertyFromCellJson(this.m_Cell, "fontSize") || "12";
-        let wFontFamily = SkCellClass.readPropertyFromCellJson(this.m_Cell, "fontFamily") || "";
-        let wTextAlign = SkCellClass.readPropertyFromCellJson(this.m_Cell, "textAlign") || "left";
-        let wBold = SkCellClass.readPropertyFromCellJson(this.m_Cell, "bold") || "false";
-
-        if (!wText) {
-            wText = await this.readPropertyValue("text", "");
-        }
-        if (!wColor || wColor === "#000000") {
-            const wLoadedColor = await this.readPropertyValue("color", "");
-            if (wLoadedColor) wColor = wLoadedColor;
-        }
-        if (!wFontSize || wFontSize === "12") {
-            const wLoadedSize = await this.readPropertyValue("fontSize", "");
-            if (wLoadedSize) wFontSize = wLoadedSize;
-        }
-        if (!wFontFamily) {
-            wFontFamily = await this.readPropertyValue("fontFamily", "");
-        }
-        if (!wTextAlign || wTextAlign === "left") {
-            const wLoadedAlign = await this.readPropertyValue("textAlign", "");
-            if (wLoadedAlign) wTextAlign = wLoadedAlign;
-        }
-        if (String(wBold).toLowerCase() !== "true") {
-            const wLoadedBold = await this.readPropertyValue("bold", "");
-            if (wLoadedBold) wBold = wLoadedBold;
-        }
-
-        const wNext = {
-            text: typeof wText === "string" ? wText : String(wText || ""),
-            color: typeof wColor === "string" ? wColor : String(wColor || "#000000"),
-            fontSize: typeof wFontSize === "string" ? wFontSize : String(wFontSize || "12"),
-            fontFamily: typeof wFontFamily === "string" ? wFontFamily : String(wFontFamily || ""),
-            textAlign: typeof wTextAlign === "string" ? wTextAlign : String(wTextAlign || "left"),
-            bold: String(wBold).toLowerCase() === "true",
-        };
-
-        this.setState((prev) => {
-            if (
-                prev.text === wNext.text &&
-                prev.color === wNext.color &&
-                prev.fontSize === wNext.fontSize &&
-                prev.fontFamily === wNext.fontFamily &&
-                prev.textAlign === wNext.textAlign &&
-                prev.bold === wNext.bold
-            ) {
-                return null;
-            }
-            return wNext;
-        });
-    }
-
     static ClassName() {
         return "SkCellClassTextBox";
     }
 
     static cellClassCapabilities() {
-        return { ...SkCellClass.cellClassCapabilities(), floatingObject: true };
+        return {
+            ...SkCellClass.cellClassCapabilities(),
+            floatingObject: true,
+            calculableModelValue: true,
+            calculableWireType: "s",
+        };
     }
 
     static Icon() {
@@ -121,42 +79,39 @@ class SkCellClassTextBox extends SkCellClass {
 
     static registerClassAttribute(sUISpreadSheet) {
         super.registerClassAttribute(sUISpreadSheet, "TextBox", "Javascript", Render);
-        let wOk = sUISpreadSheet.addProperty("text", "string", "Text content", 0, "");
-        if (!wOk) console.error("AddProperty text Error !");
-        wOk = sUISpreadSheet.addProperty("color", "string", "Text color", 1, "#000000");
-        if (!wOk) console.error("AddProperty color Error !");
-        wOk = sUISpreadSheet.addProperty("fontSize", "string", "Font size (pt)", 2, "12");
-        if (!wOk) console.error("AddProperty fontSize Error !");
-        wOk = sUISpreadSheet.addProperty("fontFamily", "string", "Font family", 3, "");
-        if (!wOk) console.error("AddProperty fontFamily Error !");
-        wOk = sUISpreadSheet.addProperty("textAlign", "string", "Text alignment", 4, "left");
-        if (!wOk) console.error("AddProperty textAlign Error !");
-        wOk = sUISpreadSheet.addProperty("bold", "string", "Bold text", 5, "false");
-        if (!wOk) console.error("AddProperty bold Error !");
+        // Model type of CalculableValue. The engine keeps a string when this property is string.
+        const wOk = sUISpreadSheet.addProperty("value", "string", "Value", 1, "");
+        if (!wOk) {
+            console.error("AddProperty value Error !");
+        }
     }
 
     paintExportInk(ctx, width, height) {
+        const wBox = textBoxFromCell(this.m_Cell);
+        const wStyles = wBox.styles;
         const wPad = 4;
-        const wStyles = {
-            color: this.state?.color || "#000000",
-            fontSizePx: parseFloat(this.state?.fontSize) || 12,
-            fontFamily: this.state?.fontFamily || "Roboto",
-            fontStyle: "",
-            fontWeight: this.state?.bold ? "bold" : "normal",
-        };
+        const wAlign = this.m_Cell?.hasOwnProperty("f_ah")
+            ? SkCellClass.canvasExportTextAlign(wStyles.textAlign)
+            : "left";
         SkCellClass.applyCanvasFont(ctx, wStyles);
-        ctx.textAlign = "left";
+        ctx.textAlign = wAlign;
         ctx.textBaseline = "top";
-        const wLineHeight = wStyles.fontSizePx * 1.2;
-        const wMaxW = width - wPad * 2;
-        const wMaxH = height - wPad * 2;
-        const wWords = String(this.state?.text || "").split(/\s+/);
+        const wLineHeight = (wStyles.fontSizePx || 12) * 1.2;
+        const wMaxW = Math.max(0, width - wPad * 2);
+        const wMaxH = Math.max(0, height - wPad * 2);
+        let wX = wPad;
+        if (wAlign === "center") {
+            wX = width / 2;
+        } else if (wAlign === "right") {
+            wX = width - wPad;
+        }
+        const wWords = String(wBox.text || "").split(/\s+/);
         let wLine = "";
         let wCy = wPad;
         for (const wWord of wWords) {
             const wTest = wLine ? `${wLine} ${wWord}` : wWord;
             if (ctx.measureText(wTest).width > wMaxW && wLine) {
-                ctx.fillText(wLine, wPad, wCy);
+                ctx.fillText(wLine, wX, wCy);
                 wCy += wLineHeight;
                 wLine = wWord;
                 if (wCy + wLineHeight > wPad + wMaxH) {
@@ -167,91 +122,66 @@ class SkCellClassTextBox extends SkCellClass {
             }
         }
         if (wLine && wCy + wLineHeight <= wPad + wMaxH) {
-            ctx.fillText(wLine, wPad, wCy);
-        }
-    }
-
-    componentDidMount() {
-        void this.refreshTextFromCell();
-    }
-
-    componentDidUpdate(prevProps) {
-        const wAttrsChanged =
-            this.cellAttributesDigest(this.props.Cell) !==
-            this.cellAttributesDigest(prevProps.Cell);
-        const wDataTick = this.props.Cell?.c_foMeta?.dataTick;
-        const wPrevDataTick = prevProps.Cell?.c_foMeta?.dataTick;
-        const wDisplayTick = this.props.Cell?.c_foMeta?.displayTick;
-        const wPrevDisplayTick = prevProps.Cell?.c_foMeta?.displayTick;
-        if (
-            prevProps.Cell !== this.props.Cell ||
-            wAttrsChanged ||
-            wDataTick !== wPrevDataTick ||
-            wDisplayTick !== wPrevDisplayTick
-        ) {
-            this.m_Cell = this.props.Cell;
-            this.setState(textBoxStateFromCell(this.props.Cell), () => {
-                void this.refreshTextFromCell();
-            });
+            ctx.fillText(wLine, wX, wCy);
         }
     }
 
     render() {
-        const { text, color, fontSize, fontFamily, textAlign, bold } = this.state;
-        const wLayout = this.CellPosSizeChart();
-        const wFontSizePx = (parseFloat(fontSize) || 12) + "px";
+        const wCell = this.props.Cell;
+        const wBox = textBoxFromCell(wCell);
+        const wStyles = wBox.styles;
+        const wOverlay = this.CellClassClippedOverlayLayout({ inset: 2 });
+        // Numbers default to "end". A text box with no explicit align stays left,
+        // inside the visible box (the logical inner box can sit outside the clip).
+        const wCssAlign = wCell?.hasOwnProperty("f_ah")
+            ? SkCellClass.canvasExportTextAlign(wStyles.textAlign)
+            : "left";
+        const wJustify = wCell?.hasOwnProperty("f_av")
+            ? (wStyles.verticalAlign || "center")
+            : "flex-start";
 
         const wCellStyleParent = {
-            position: "absolute",
+            ...wOverlay.outerStyle,
             display: "flex",
             flexDirection: "column",
-            margin: "0px",
-            padding: "0px",
-            left: wLayout.X + "px",
-            top: wLayout.Y + "px",
-            width: wLayout.W + "px",
-            height: wLayout.H + "px",
-            backgroundColor: "transparent",
-            overflow: "hidden",
+            zIndex: 3,
+            pointerEvents: "auto",
+            justifyContent: wJustify,
+            backgroundColor: wStyles.backgroundColor,
             boxSizing: "border-box",
         };
 
         const wTextStyle = {
-            width: wLayout.canvasW + "px",
-            height: wLayout.canvasH + "px",
-            marginLeft: wLayout.offsetX + "px",
-            marginTop: wLayout.offsetY + "px",
+            width: "100%",
             padding: "4px",
             boxSizing: "border-box",
-            color: color || "#000000",
-            fontSize: wFontSizePx,
-            fontFamily: fontFamily || "inherit",
-            fontWeight: bold ? "bold" : "normal",
-            textAlign: textAlign || "left",
+            color: wStyles.color || "black",
+            fontSize: `${wStyles.fontSizePx || 12}px`,
+            fontFamily: wStyles.fontFamily || "inherit",
+            fontWeight: wStyles.fontWeight || "normal",
+            fontStyle: wStyles.fontStyle || "normal",
+            textDecoration: wBox.textDecoration,
+            textAlign: wCssAlign,
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
             userSelect: "none",
             lineHeight: 1.2,
-            flexShrink: 0,
         };
 
         return (
             <div
                 style={wCellStyleParent}
-                className="SkSpCellClass SkSpCellClassTextBox"
+                className={this.cellClassShellClassName("SkSpCellClassTextBox")}
+                {...this.cellClassDomAttrs()}
+                data-sk-form-kind="SkCellClassTextBox"
                 onMouseDownCapture={this.onCellClassMouseDownCapture}
             >
-                <div style={wTextStyle}>{text || ""}</div>
+                <div style={wTextStyle}>{wBox.text}</div>
             </div>
         );
     }
 }
 
-SkCellClass.installPdfExportStatics(SkCellClassTextBox, {
-    initialState: (cell) => textBoxStateFromCell(cell),
-    hydrate: async (painter) => {
-        await painter.refreshTextFromCell();
-    },
-});
+SkCellClass.installPdfExportStatics(SkCellClassTextBox);
 
 export default SkCellClassTextBox;

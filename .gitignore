@@ -30,6 +30,8 @@ build-resources/*
 !build-resources/icon.png
 !build-resources/icon.icns
 !build-resources/If macOS says the app is damaged.txt
+!build-resources/icons/
+!build-resources/icons/*.png
 dist-electron/*
 
 Node/Client/scratch
