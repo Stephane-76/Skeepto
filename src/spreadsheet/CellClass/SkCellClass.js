@@ -2620,20 +2620,22 @@ class SkCellClass extends SkComponent {
         if (!sp?.isForm?.()) {
             return false;
         }
+        // A floating TextBox and the in-cell Switch can share one anchor.
+        // The ring belongs to the named float, or to the in-cell widget, never both.
+        const wMine = SkCellClass.floatingObjectNameFromCell(this.m_Cell);
+        const wFocusName = sp.m_FormFocusName || "";
+        if (wFocusName) {
+            return wMine === wFocusName;
+        }
+        if (wMine) {
+            return false;
+        }
         const wRow = Number(this.m_Cell?.c_r);
         const wCol = Number(this.m_Cell?.c_c);
         if (!Number.isFinite(wRow) || !Number.isFinite(wCol)) {
             return false;
         }
-        if (sp.m_FormFocusRow === wRow && sp.m_FormFocusCol === wCol) {
-            return true;
-        }
-        const wEl = sp.m_FormFocusEl;
-        if (wEl?.isConnected) {
-            return Number(wEl.getAttribute("data-cell-row")) === wRow
-                && Number(wEl.getAttribute("data-cell-col")) === wCol;
-        }
-        return false;
+        return sp.m_FormFocusRow === wRow && sp.m_FormFocusCol === wCol;
     }
 
     /** className for the widget shell. Form focus must live here: setState rewrites className. */
@@ -2642,10 +2644,21 @@ class SkCellClass extends SkComponent {
         if (sExtra) {
             wNames.push(sExtra);
         }
-        if (this.isFormFocusCell()) {
+        // A clipped JsonView slice is a few pixels at the viewport corner.
+        // Outlining it looks like the cursor jumped there while the widget stays put.
+        if (this.isFormFocusCell() && !this._formFocusBoxIsSliver()) {
             wNames.push("SkSpCellClass--formFocus");
         }
         return wNames.join(" ");
+    }
+
+    _formFocusBoxIsSliver() {
+        const wLayout = this.CellPosSizeChart();
+        if (wLayout.W < 8 || wLayout.H < 8) {
+            return true;
+        }
+        // Visible slice is only the clipped edge of a larger zone.
+        return wLayout.canvasW > wLayout.W + 2 || wLayout.canvasH > wLayout.H + 2;
     }
 
     /** Keep the form ring on this shell after React rewrites className. */
@@ -2653,6 +2666,8 @@ class SkCellClass extends SkComponent {
         if (!sEl || !this.isFormFocusCell()) {
             return;
         }
+        // setFormFocus moves the ring onto the full on-screen zone when this
+        // shell is only the clipped corner of that cell.
         setFormFocus(this.m_SpInterface, sEl);
     }
 
@@ -2684,9 +2699,20 @@ class SkCellClass extends SkComponent {
             sp.invalidateOverlays();
         }
         if (sp.isForm?.()) {
-            const wEl = document.querySelector(
+            const wName = SkCellClass.floatingObjectNameFromCell(this.m_Cell);
+            const wNodes = document.querySelectorAll(
                 `.SkSpCellClass[data-cell-row="${wRow}"][data-cell-col="${wCol}"]`
             );
+            let wEl = this.m_Shell?.isConnected ? this.m_Shell : null;
+            if (!wEl) {
+                for (const wNode of wNodes) {
+                    const wNodeName = wNode.getAttribute("data-sk-float-name") || "";
+                    if (wName ? wNodeName === wName : !wNodeName) {
+                        wEl = wNode;
+                        break;
+                    }
+                }
+            }
             if (wEl) {
                 setFormFocus(sp, wEl);
             }
@@ -2783,10 +2809,15 @@ class SkCellClass extends SkComponent {
     cellClassDomAttrs() {
         const wRow = this.m_Cell?.c_r;
         const wCol = this.m_Cell?.c_c;
-        return {
+        const wAttrs = {
             "data-cell-row": wRow,
             "data-cell-col": wCol,
         };
+        const wFloat = SkCellClass.floatingObjectNameFromCell(this.m_Cell);
+        if (wFloat) {
+            wAttrs["data-sk-float-name"] = wFloat;
+        }
+        return wAttrs;
     }
 
     /** Floating object registry name from a synthetic overlay cell (c_fo). */
@@ -2861,11 +2892,28 @@ class SkCellClass extends SkComponent {
 
     // Capture phase: place grid cursor on this class cell before widget handlers run.
     onCellClassMouseDownCapture = (event) => {
+        if (event.button != null && event.button !== 0) {
+            return;
+        }
+        const sp = this.m_SpInterface;
+        const wAnchor = typeof sp?.getEditAnchorCell === "function" ? sp.getEditAnchorCell() : null;
+        const wForeignEdit = sp
+            && typeof sp.getUseEdit === "function"
+            && sp.getUseEdit()
+            && isSelfEditingCellClass(wAnchor)
+            && !this.isEditAnchorOnThisCell()
+            && !this.isFormulaPickActive()
+            && !this.isGridRangePickActive();
+        if (wForeignEdit) {
+            event.preventDefault();
+            event.stopPropagation();
+            void this.claimSelfEditingFromPointer(event);
+            return;
+        }
         if (this.isSelectionPreservingToggle()) {
             this.onToggleWidgetMouseDownCapture(event);
             return;
         }
-        const sp = this.m_SpInterface;
         if (sp?.isForm?.()) {
             // The form ring is not the grid cursor. Select the cell so the
             // attribute panel follows this class, then put the ring back.
@@ -2933,6 +2981,56 @@ class SkCellClass extends SkComponent {
             this.restoreGridKeyboardFocus();
         });
     };
+
+    // Leave the zone that is editing, then open the one under the pointer.
+    async claimSelfEditingFromPointer(event) {
+        await this.leaveSelfEditingSessionFor(event);
+        const sp = this.m_SpInterface;
+        if (!sp) {
+            return;
+        }
+        const wSelf = isSelfEditingCellClass(this.m_Cell)
+            || typeof this.beginKeyboardEdit === "function";
+        if (wSelf && typeof sp.beginEdit === "function" && !sp.getUseEdit?.()) {
+            await sp.beginEdit();
+        }
+        // beginEdit looks the widget up by anchor. This instance is the one under the pointer.
+        if (
+            typeof this.beginKeyboardEdit === "function"
+            && !this.state?.keyboardEdit
+            && !this.m_EditSessionActive
+        ) {
+            this.beginKeyboardEdit("");
+        }
+        if (!sp.isForm?.()) {
+            return;
+        }
+        let wEl = event?.currentTarget?.isConnected ? event.currentTarget : null;
+        if (!wEl) {
+            const wRow = Number(this.m_Cell?.c_r);
+            const wCol = Number(this.m_Cell?.c_c);
+            const wName = SkCellClass.floatingObjectNameFromCell(this.m_Cell);
+            if (wName) {
+                const wEsc = String(wName).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+                wEl = document.querySelector(`.SkSpCellClass[data-sk-float-name="${wEsc}"]`);
+            }
+            if (!wEl && Number.isFinite(wRow) && Number.isFinite(wCol)) {
+                const wNodes = document.querySelectorAll(
+                    `.SkSpCellClass[data-cell-row="${wRow}"][data-cell-col="${wCol}"]`
+                );
+                for (const wNode of wNodes) {
+                    const wNodeName = wNode.getAttribute("data-sk-float-name") || "";
+                    if (wName ? wNodeName === wName : !wNodeName) {
+                        wEl = wNode;
+                        break;
+                    }
+                }
+            }
+        }
+        if (wEl) {
+            setFormFocus(sp, wEl);
+        }
+    }
 
     // Commit the Calendar/ComboBox editor, then select the widget that was clicked.
     // endEdit() puts the cursor back on the edited cell, so the new cell is selected after.

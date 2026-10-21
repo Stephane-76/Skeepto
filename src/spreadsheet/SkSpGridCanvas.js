@@ -152,11 +152,15 @@ class SkSpGridCanvas extends SkCanvas {
 
   async _cursorStrokeColorsForCell(wRow, wCol) {
     const wLum = await this._resolveCellBackgroundLuminance(wRow, wCol);
-    const wDefault = this.m_ColorCursorBorder || "#0078d4";
+    // Normal selection uses a slightly darker blue. Edit keeps the original cursor.
+    const wEditing = this.m_SpInterface?.getUseEdit?.() === true;
+    const wDefault = wEditing
+      ? (this.m_ColorCursorBorder || "#0078d4")
+      : (this.m_ColorCursorNormal || "#005fa3");
     const wOnDark = wLum != null && wLum < 128;
     return {
       cursorColor: wOnDark ? "#FFFFFF" : wDefault,
-      cursorHandleColor: wOnDark ? "#FFFFFF" : (this.m_ColorCursorHandle || wDefault),
+      cursorHandleColor: wOnDark ? "#FFFFFF" : wDefault,
       useContrastHalo: true,
     };
   }
@@ -353,6 +357,7 @@ class SkSpGridCanvas extends SkCanvas {
     this.m_ColorSelect = wStyleComputed.getPropertyValue('--sk-fill-select');
     this.m_ColorCursorBorder = wStyleComputed.getPropertyValue('--sk-color-cursor-border').trim() || '#0078d4';
     this.m_ColorCursorHandle = wStyleComputed.getPropertyValue('--sk-color-cursor-handle').trim() || '#0078d4';
+    this.m_ColorCursorNormal = wStyleComputed.getPropertyValue('--sk-color-cursor-normal').trim() || '#005fa3';
   }
 
   /**
@@ -441,6 +446,104 @@ class SkSpGridCanvas extends SkCanvas {
     this.m_SpInterface.m_SkSpLeftPanel.invalidate();
     // Relaunch render()
     this.setState({ invalidate : !this.state.invalidate });
+  }
+
+  /** True when the caret is already in the formula bar or a cell widget. */
+  _keyboardTargetIsEditor() {
+    const wActive = typeof document !== "undefined" ? document.activeElement : null;
+    if (!wActive || wActive === document.body || wActive === document.documentElement) {
+      return false;
+    }
+    if (wActive === this.m_Ref?.current) {
+      return false;
+    }
+    if (wActive.id === "InplaceEdit" || wActive.id === "InplaceEditStatic") {
+      return true;
+    }
+    if (typeof wActive.closest === "function" && wActive.closest(".SkSpCellClass")) {
+      return true;
+    }
+    const wTag = wActive.tagName;
+    return wTag === "INPUT" || wTag === "TEXTAREA" || wActive.isContentEditable === true;
+  }
+
+  /** Point the caret at the self-edit widget on the edit anchor, if one is mounted. */
+  _focusOpenEditTarget() {
+    const sp = this.m_SpInterface;
+    if (!sp) {
+      return false;
+    }
+    const wCursor = sp.m_CursorEdit || (typeof sp.cursor === "function" ? sp.cursor() : null);
+    if (wCursor == null || !sp.m_SelfEditTargets) {
+      return false;
+    }
+    const wWidget = sp.m_SelfEditTargets.get(
+      `${Number(wCursor.row())}:${Number(wCursor.col())}`
+    );
+    if (wWidget == null) {
+      return false;
+    }
+    if (typeof wWidget.focusInplaceEditor === "function") {
+      wWidget.focusInplaceEditor();
+      return true;
+    }
+    if (typeof wWidget.beginKeyboardEdit === "function") {
+      wWidget.beginKeyboardEdit("");
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * After Enter starts an edit, wait for the widget setState focus.
+   * If that never lands, open the formula bar. If edit did not start, keep the canvas.
+   */
+  settleKeyboardAfterEnter() {
+    const wTry = (sFramesLeft) => {
+      if (!this.m_SpInterface) {
+        return;
+      }
+      if (this._keyboardTargetIsEditor()) {
+        return;
+      }
+      if (sFramesLeft > 0 && typeof window !== "undefined" && window.requestAnimationFrame) {
+        window.requestAnimationFrame(() => wTry(sFramesLeft - 1));
+        return;
+      }
+      if (this.m_SpInterface.getUseEdit?.()) {
+        this._focusOpenEditTarget();
+        const wConfirm = () => {
+          if (!this.m_SpInterface || this._keyboardTargetIsEditor()) {
+            return;
+          }
+          const wOpen = this.m_SpInterface.activateFormulaBarEdit?.();
+          if (wOpen && typeof wOpen.then === "function") {
+            wOpen.then(() => {
+              if (!this._keyboardTargetIsEditor()) {
+                this.restoreCanvasFocus();
+              }
+            }).catch((error) => {
+              console.error(error);
+              this.restoreCanvasFocus();
+            });
+            return;
+          }
+          this.restoreCanvasFocus();
+        };
+        if (typeof window !== "undefined" && window.requestAnimationFrame) {
+          window.requestAnimationFrame(wConfirm);
+        } else {
+          wConfirm();
+        }
+        return;
+      }
+      this.restoreCanvasFocus();
+    };
+    if (typeof window !== "undefined" && window.requestAnimationFrame) {
+      window.requestAnimationFrame(() => wTry(1));
+    } else {
+      wTry(0);
+    }
   }
 
   /** Repaint selection, cursor, and sizer only (no cell text/grid). */
@@ -560,9 +663,23 @@ class SkSpGridCanvas extends SkCanvas {
           }
           break;
         }
+        case 'Enter' : {
+          if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+            break;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          if (!this.m_SpInterface.getUseEdit()) {
+            await this.m_SpInterface.beginEdit();
+          }
+          this.m_SpInterface.invalidateAll();
+          this.settleKeyboardAfterEnter();
+          return;
+        }
         case 'F2' : {
           await this.m_SpInterface.beginEdit();
           this.m_SpInterface.invalidateAll();
+          this.settleKeyboardAfterEnter();
           break;
         }
         case 'F9' : {
@@ -2718,10 +2835,13 @@ class SkSpGridCanvas extends SkCanvas {
     this.paintSizerOverlay(sContext, sWidth, sHeight, absOffX, absOffY);
     await this.paintDragMoveOverlay(sContext, absOffX, absOffY);
     await this.paintFillPreviewOverlay(sContext, absOffX, absOffY);
-    await this.paintSelection(sContext, sUI, sWidth, sHeight, absOffX, absOffY);
+    // Form mode keeps one ring on the widget. The anchor-cell fill collapses
+    // to a speck at the viewport corner once that cell scrolls off.
+    if (!this.m_SpInterface?.isForm?.()) {
+      await this.paintSelection(sContext, sUI, sWidth, sHeight, absOffX, absOffY);
+    }
     await this.paintSpillRanges(sContext, sUI, absOffX, absOffY);
     await this.paintFormulaRefHighlights(sContext, sUI, absOffX, absOffY);
-    // Form mode draws one ring on the widget (SkSpCellClass--formFocus).
     if (!this.m_SpInterface?.isForm?.()) {
       await this.paintCursor(sContext, sUI, sWidth, sHeight, absOffX, absOffY);
       await this.paintFillHandle(sContext, absOffX, absOffY);

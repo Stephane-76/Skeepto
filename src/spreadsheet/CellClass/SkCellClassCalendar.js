@@ -590,20 +590,25 @@ class SkCellClassCalendar extends SkCellClass {
         }
         this.releaseInplaceEditorFocus();
         const sp = this.m_SpInterface;
-        if (
-            sp &&
-            typeof sp.getUseEdit === "function" &&
-            sp.getUseEdit()
-        ) {
-            await sp.endEdit();
+        try {
+            if (
+                sp &&
+                typeof sp.getUseEdit === "function" &&
+                sp.getUseEdit()
+            ) {
+                await sp.endEdit();
+            }
+            // reloadView replaces the shell. Put the form ring back on this cell,
+            // unless the caller is about to move it to the next class.
+            if (sp?.isForm?.() && !keepFormFocus) {
+                await this.reassertCursorAfterWidgetEdit();
+            }
+        } finally {
+            this.restoreGridKeyboardFocus();
+            window.setTimeout(() => {
+                this.m_SuppressBlur = false;
+            }, 0);
         }
-        // reloadView replaces the shell. Put the form ring back on this cell,
-        // unless the caller is about to move it to the next class.
-        if (sp?.isForm?.() && !keepFormFocus) {
-            await this.reassertCursorAfterWidgetEdit();
-        }
-        this.restoreGridKeyboardFocus();
-        this.m_SuppressBlur = false;
     }
 
     // Leave the date field, then move. endEdit snaps the cursor back here,
@@ -611,6 +616,11 @@ class SkCellClassCalendar extends SkCellClass {
     leaveEditForNavigation = (e) => {
         const sp = this.m_SpInterface;
         if (!sp || e.altKey || e.ctrlKey || e.metaKey) {
+            return false;
+        }
+        // Left/Right move the caret. Shift extends the selection.
+        if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+            e.stopPropagation();
             return false;
         }
         const wForm = sp.isForm?.() === true;
@@ -704,7 +714,14 @@ class SkCellClassCalendar extends SkCellClass {
             || this.m_EditSessionActive
             || this.shouldActivateSelfEditingWidget();
         if (!wEditing) {
+            // blur() with nowhere to go leaves focus on body and the canvas
+            // listener stops receiving keys.
+            this.m_SuppressBlur = true;
             e.target.blur();
+            this.restoreGridKeyboardFocus();
+            window.setTimeout(() => {
+                this.m_SuppressBlur = false;
+            }, 0);
             return;
         }
         // A typed digit places the caret after that character. Selecting all
@@ -803,16 +820,15 @@ class SkCellClassCalendar extends SkCellClass {
         this.m_EditSessionActive = true;
         this.m_PlaceCaretAtEnd = wChar !== "";
         this.m_SuppressBlur = true;
-        if (wChar) {
-            this.noteFormulaBarBaseline(wChar);
-        }
+        this.noteFormulaBarBaseline(wChar || this.state.inputValue || "");
         this.lowerEditOverlay();
         this.setState((prev) => ({
             keyboardEdit: true,
             inputValue: wChar || prev.inputValue
         }), () => {
             const wInput = this.inputRef;
-            if (!wInput) {
+            // A cancelled session must not focus a read-only field and then blur onto body.
+            if (!wInput || !this.m_EditSessionActive) {
                 this.m_SuppressBlur = false;
                 this.m_PlaceCaretAtEnd = false;
                 return;

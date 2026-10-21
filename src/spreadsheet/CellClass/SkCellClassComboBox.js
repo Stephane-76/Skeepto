@@ -465,10 +465,13 @@ class SkCellClassComboBox extends SkCellClass {
 
         this.releaseInplaceEditorFocus();
         const sp = this.m_SpInterface;
-        if (sp && typeof sp.getUseEdit === "function" && sp.getUseEdit()) {
-            await sp.endEdit();
+        try {
+            if (sp && typeof sp.getUseEdit === "function" && sp.getUseEdit()) {
+                await sp.endEdit();
+            }
+        } finally {
+            this.restoreGridKeyboardFocus();
         }
-        this.restoreGridKeyboardFocus();
     };
 
     handleComboKeyDown = (event) => {

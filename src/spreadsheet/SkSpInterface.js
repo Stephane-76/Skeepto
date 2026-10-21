@@ -28,7 +28,7 @@ import {
   isFilterButtonHidden,
 } from "./SkTableFilter.js";
 import { createTableFromSelection } from "./SkCreateTableFromSelection.js";
-import { clearFormFocus, focusFirstFormWidget } from "./SkFormInput.js";
+import { clearFormFocus, focusFirstFormWidget, rememberFormStops } from "./SkFormInput.js";
 import { isDesktop } from "../desktop/SkDesktopMode.js";
 import { DrawCell } from "./SkDrawCell.js";
 import {
@@ -1099,6 +1099,37 @@ class SkSpInterface {
       const width = Math.max(1, cw - this.gridTreeViewLeft() - v);
       const height = Math.max(1, ch - this.gridTreeViewTop() - h);
       return { width, height };
+    }
+
+    /**
+     * Layout pixels actually on screen. CSS zoom magnifies the canvas and the
+     * row clips the overflow, so the scroll viewport is smaller than clientWidth.
+     */
+    visibleScrollViewportPx() {
+      const ch = this.m_ClientHeight > 0 ? this.m_ClientHeight : 600;
+      const cw = this.m_ClientWidth > 0 ? this.m_ClientWidth : 800;
+      const el = this.getGridPaintCanvasEl();
+      if (!el) {
+        return { width: cw, height: ch };
+      }
+      const wRect = el.getBoundingClientRect();
+      const wScale = layoutToScreenScale(el);
+      const wClipEl = el.closest(".SkSpContainerRow") || el.parentElement;
+      const wClip = wClipEl instanceof Element ? wClipEl.getBoundingClientRect() : wRect;
+      const wVisW = Math.max(
+        0,
+        Math.min(wRect.right, wClip.right) - Math.max(wRect.left, wClip.left)
+      );
+      const wVisH = Math.max(
+        0,
+        Math.min(wRect.bottom, wClip.bottom) - Math.max(wRect.top, wClip.top)
+      );
+      const wLayoutW = (wScale.x || 1) > 0 ? wVisW / wScale.x : cw;
+      const wLayoutH = (wScale.y || 1) > 0 ? wVisH / wScale.y : ch;
+      return {
+        width: wLayoutW > 0 && wLayoutW < cw - 8 ? wLayoutW : cw,
+        height: wLayoutH > 0 && wLayoutH < ch - 8 ? wLayoutH : ch,
+      };
     }
 
     /**
@@ -3135,7 +3166,8 @@ class SkSpInterface {
       if (
         wEditCursor != null &&
         this.m_UIView != null &&
-        !this.isRowColVisibleInGrid(wEditCursor.row(), wEditCursor.col())
+        !this.isRowColVisibleInGrid(wEditCursor.row(), wEditCursor.col()) &&
+        !this._cellClassWidgetOnScreen(wEditCursor.row(), wEditCursor.col())
       ) {
         await this.resetView(wEditCursor);
         await this.setScrollBar();
@@ -3156,14 +3188,14 @@ class SkSpInterface {
           if (!this.openSelfEditingWidget(wChar)) {
             const wStatic = this.m_SkSpInplaceEditStatic;
             if (wChar !== "") {
+              // Leave lastChar for the widget (ComboBox reads it when it focuses).
               if (wStatic && typeof wStatic.setText === "function") {
                 wStatic.setText(wChar);
               }
-            } else if (
-              wStatic &&
-              typeof wStatic.setTextByCursorCell === "function"
-            ) {
-              await wStatic.setTextByCursorCell();
+            } else {
+              // Enter / F2: no character to deliver. Focus the formula bar so
+              // the edit flag is never on with the keyboard sitting on body.
+              await this.activateFormulaBarEdit();
             }
           }
         } else {
@@ -3676,6 +3708,8 @@ class SkSpInterface {
       if (window.SkUISpreadSheet == null) {
         return;
       }
+      // Capture zones before JsonView is replaced. Scrolling unmounts the ones that leave the window.
+      rememberFormStops(this);
       this.m_ClientWidth = sWidth;
       this.m_ClientHeight = sHeight;
       await this.ensureSheetExtent();
@@ -4866,6 +4900,7 @@ class SkSpInterface {
       await this.ensureSheetExtent();
       const ch = this.m_ClientHeight > 0 ? this.m_ClientHeight : 600;
       const cw = this.m_ClientWidth > 0 ? this.m_ClientWidth : 800;
+      const wVisible = this.visibleScrollViewportPx();
       const offsets = await this._resolveScrollBarOffsetsPx();
 
       let nextTopRow = Number(this.m_UIView.toprow) || 1;
@@ -4877,8 +4912,9 @@ class SkSpInterface {
         const minRow = this.minVerticalScrollRow();
         const minTopPx =
           minRow > 1 ? window.SkUISpreadSheet.sumPixelHeight(1, minRow - 1) : 0;
+        const wVisH = wVisible.height > 0 ? wVisible.height : ch;
         const viewHeight =
-          this.m_FrozenPixH > 0 ? Math.max(1, ch - this.m_FrozenPixH) : ch;
+          this.m_FrozenPixH > 0 ? Math.max(1, wVisH - this.m_FrozenPixH) : wVisH;
         const currentTopPx = offsets.top;
         const targetTopPx = this._clampScrollPixelOffset(
           currentTopPx + dy,
@@ -4914,8 +4950,9 @@ class SkSpInterface {
         const minCol = this.minHorizontalScrollCol();
         const minLeftPx =
           minCol > 1 ? window.SkUISpreadSheet.sumPixelWidth(1, minCol - 1) : 0;
+        const wVisW = wVisible.width > 0 ? wVisible.width : cw;
         const viewWidth =
-          this.m_FrozenPixW > 0 ? Math.max(1, cw - this.m_FrozenPixW) : cw;
+          this.m_FrozenPixW > 0 ? Math.max(1, wVisW - this.m_FrozenPixW) : wVisW;
         const currentLeftPx = offsets.left;
         const targetLeftPx = this._clampScrollPixelOffset(
           currentLeftPx + dx,
@@ -5263,6 +5300,14 @@ class SkSpInterface {
       const wSameCell = wCurrent.row() === wRow && wCurrent.col() === wCol;
       if (!wSameCell) {
         this.m_Select.setCursor(new tPoint(wRow, wCol));
+        // The zone is already on screen. Scrolling to its anchor cell
+        // pulls the sheet away from the widget the pointer hit.
+        if (this._cellClassWidgetOnScreen(wRow, wCol)) {
+          this.invalidateOverlays();
+          this.scheduleInvalidateSelection();
+          this.sendMoveCell(this.cursor());
+          return;
+        }
         const wCursorReturn = await this.resetView(this.m_Select.cursor());
         let wSnapped = await this.snapScrollFirstRowAlignment();
         wSnapped =
@@ -6666,7 +6711,84 @@ class SkSpInterface {
     }
 
     /** Like {@link #getOutlineRectForCursorPaint} but returns one rect per freeze pane (no spanning union). */
+    /**
+     * Cursor box of the on-screen SkCellClass for this anchor.
+     * JsonView geometry collapses to the viewport corner once the anchor
+     * scrolls off; the widget itself stays where it is drawn.
+     */
+    _cellClassCursorRect(sRow, sCol) {
+      const wCanvas = this.m_SkSpGridCanvas?.m_Ref?.current;
+      if (wCanvas == null || typeof document === "undefined") {
+        return null;
+      }
+      const wNodes = document.querySelectorAll(
+        `.SkSpCellClass[data-cell-row="${Number(sRow)}"][data-cell-col="${Number(sCol)}"]`
+      );
+      if (wNodes.length === 0) {
+        return null;
+      }
+      const wFloatName = this.m_SelectedFloatingObjectName || "";
+      let wEl = null;
+      if (wFloatName) {
+        for (const wNode of wNodes) {
+          if (wNode.getAttribute("data-sk-float-name") === wFloatName) {
+            wEl = wNode;
+            break;
+          }
+        }
+      }
+      if (wEl == null) {
+        for (const wNode of wNodes) {
+          if (!wNode.getAttribute("data-sk-float-name")) {
+            wEl = wNode;
+            break;
+          }
+        }
+      }
+      if (wEl == null) {
+        wEl = wNodes[0];
+      }
+      const wCanvasRect = wCanvas.getBoundingClientRect();
+      const wElRect = wEl.getBoundingClientRect();
+      const wScaleX = wCanvasRect.width > 0 && wCanvas.offsetWidth > 0
+        ? wCanvasRect.width / wCanvas.offsetWidth
+        : 1;
+      const wScaleY = wCanvasRect.height > 0 && wCanvas.offsetHeight > 0
+        ? wCanvasRect.height / wCanvas.offsetHeight
+        : 1;
+      const wLeft = (wElRect.left - wCanvasRect.left) / wScaleX;
+      const wTop = (wElRect.top - wCanvasRect.top) / wScaleY;
+      const wWidth = wElRect.width / wScaleX;
+      const wHeight = wElRect.height / wScaleY;
+      if (!(wWidth > 2 && wHeight > 2)) {
+        return null;
+      }
+      return { Left: wLeft, Top: wTop, Width: wWidth, Height: wHeight };
+    }
+
+    /** True when this cell class is already drawn inside the grid window. */
+    _cellClassWidgetOnScreen(sRow, sCol) {
+      const wRect = this._cellClassCursorRect(sRow, sCol);
+      const wCanvas = this.m_SkSpGridCanvas?.m_Ref?.current;
+      if (wRect == null || wCanvas == null) {
+        return false;
+      }
+      const wVp = this.getGridInnerViewportCssPx(wCanvas);
+      const wRight = Math.min(wRect.Left + wRect.Width, wVp.width);
+      const wBottom = Math.min(wRect.Top + wRect.Height, wVp.height);
+      const wLeft = Math.max(wRect.Left, 0);
+      const wTop = Math.max(wRect.Top, 0);
+      return wRight - wLeft > 8 && wBottom - wTop > 8;
+    }
+
     async getOutlineRectFragmentsForCursorPaint(sRow, sCol) {
+      // A self-editing widget owns the caret. The generic edit rect is the
+      // anchor cell, which is not where the zone is drawn.
+      const wWidgetRect = this._cellClassCursorRect(sRow, sCol);
+      if (wWidgetRect != null) {
+        return [wWidgetRect];
+      }
+
       if (
         this.m_UseEdit &&
         this.m_InplaceEditOverlayRect != null &&

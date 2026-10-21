@@ -261,7 +261,8 @@ class SkCellClassString extends SkCellClass {
         this.lowerEditOverlay();
         this.setState({ keyboardEdit: true, inputValue: wSeed }, () => {
             const wInput = this.inputRef;
-            if (!wInput) {
+            // A cancelled session must not focus a read-only field and then blur onto body.
+            if (!wInput || !this.m_EditSessionActive) {
                 this.m_SuppressBlur = false;
                 this.m_PlaceCaretAtEnd = false;
                 return;
@@ -335,19 +336,29 @@ class SkCellClassString extends SkCellClass {
         }
         this.releaseInplaceEditorFocus();
         const sp = this.m_SpInterface;
-        if (sp && typeof sp.getUseEdit === "function" && sp.getUseEdit()) {
-            await sp.endEdit();
+        try {
+            if (sp && typeof sp.getUseEdit === "function" && sp.getUseEdit()) {
+                await sp.endEdit();
+            }
+            if (sp?.isForm?.() && !keepFormFocus) {
+                await this.reassertCursorAfterWidgetEdit();
+            }
+        } finally {
+            this.restoreGridKeyboardFocus();
+            window.setTimeout(() => {
+                this.m_SuppressBlur = false;
+            }, 0);
         }
-        if (sp?.isForm?.() && !keepFormFocus) {
-            await this.reassertCursorAfterWidgetEdit();
-        }
-        this.restoreGridKeyboardFocus();
-        this.m_SuppressBlur = false;
     };
 
     leaveEditForNavigation = (e) => {
         const sp = this.m_SpInterface;
         if (!sp || e.altKey || e.ctrlKey || e.metaKey) {
+            return false;
+        }
+        // Left/Right move the caret. Shift extends the selection.
+        if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+            e.stopPropagation();
             return false;
         }
         const wForm = sp.isForm?.() === true;
@@ -416,7 +427,14 @@ class SkCellClassString extends SkCellClass {
             || this.m_EditSessionActive
             || this.shouldActivateSelfEditingWidget();
         if (!wEditing) {
+            // blur() with nowhere to go leaves focus on body and the canvas
+            // listener stops receiving keys.
+            this.m_SuppressBlur = true;
             e.target.blur();
+            this.restoreGridKeyboardFocus();
+            window.setTimeout(() => {
+                this.m_SuppressBlur = false;
+            }, 0);
             return;
         }
         if (this.m_PlaceCaretAtEnd) {
@@ -480,6 +498,7 @@ class SkCellClassString extends SkCellClass {
                 ref={this.bindShell}
                 onMouseDownCapture={this.onCellClassMouseDownCapture}
             >
+                <div style={{ ...wOverlay.innerStyle, pointerEvents: "auto" }}>
                 <input
                     ref={(ref) => { this.inputRef = ref; }}
                     type="text"
@@ -507,6 +526,7 @@ class SkCellClassString extends SkCellClass {
                         boxSizing: "border-box",
                     }}
                 />
+                </div>
             </div>
         );
     }

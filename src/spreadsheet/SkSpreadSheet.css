@@ -18,6 +18,7 @@
   --sk-fill-select-header : rgba(0, 120, 212, 0.55);
   --sk-color-cursor-border : #0078d4;
   --sk-color-cursor-handle : #0078d4;
+  --sk-color-cursor-normal : #005fa3;
 
   /* Chrome layers (menu / ribbon / formula / tabs) */
   --sk-color-background-chrome : #1e1e1e;
